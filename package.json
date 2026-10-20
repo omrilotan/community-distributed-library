@@ -26,6 +26,7 @@
     "deploy:all": "node scripts/deploy.mjs all",
     "deploy:shared": "node scripts/deploy.mjs shared",
     "provision": "node scripts/provision.mjs",
+    "check:setup": "node scripts/check-setup.mjs",
     "check:libraries": "node scripts/check-libraries.mjs",
     "dev:mcp": "wrangler dev -c services/mcp/wrangler.jsonc --port 8788 --inspector-port 9230 --persist-to .wrangler/state --var APP_URL:http://localhost:3000 --var SELF_URL:http://localhost:8788",
     "db:pull": "node scripts/db-pull.mjs"
