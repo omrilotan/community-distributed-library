@@ -125,6 +125,12 @@ export async function GuestShelves({
 					placeholder={t.searchPlaceholder}
 					aria-label={t.search}
 				/>
+				{/* A new search keeps the filters; only the words change. */}
+				{Object.entries(query)
+					.filter(([name]) => name !== "q")
+					.map(([name, value]) => (
+						<input key={name} type="hidden" name={name} value={value} />
+					))}
 				<button type="submit">{t.search}</button>
 			</form>
 
