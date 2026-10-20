@@ -5,7 +5,13 @@ dist
 .dev.vars
 *.log
 .env
-.claude
+# Your own agent settings and skills; only this project's skills are shared
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/open-a-library/
+!.claude/skills/update-libraries/
+!.claude/skills/make-admin/
 skills-lock.json
 worker-configuration.d.ts
 project/
