@@ -1,0 +1,9 @@
+node_modules
+.wrangler
+dist
+.next
+apps/web/.vinext
+apps/web/test-results
+apps/web/playwright-report
+apps/web/e2e/.auth
+apps/landing/dist

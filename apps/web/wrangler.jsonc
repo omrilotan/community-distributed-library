@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cdl-web",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "main": "./worker.ts",
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+  },
+  // A library's address comes from its manifest; the zone lives in the same account.
+  "workers_dev": false,
+  "preview_urls": false,
+  "services": [
+    { "binding": "CORE", "service": "cdl-core" },
+    // The consent screen reads the pending OAuth request from the MCP server.
+    { "binding": "MCP", "service": "cdl-mcp" },
+  ],
+  "vars": {
+    // The OAuth/MCP server the consent screen hands back to.
+    "MCP_URL": "http://localhost:8788",
+    // This app's own public origin, for absolute URLs on the connect page.
+    // The address the library writes from; /contact.vcf hands it to a phone.
+    "FROM_ADDRESS": "library@example.org",
+    "APP_URL": "http://localhost:3000",
+    // Where this library's photos are served; the CSP allows images from it.
+    "IMAGES_URL": "http://localhost:8787/v1/covers",
+    // Where browsers report CSP refusals and network errors (services/reports).
+    "REPORTS_URL": "http://localhost:8789",
+  },
+}

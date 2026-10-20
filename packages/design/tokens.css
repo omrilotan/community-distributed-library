@@ -1,0 +1,79 @@
+/*
+ * @cdl/design tokens. The only place a colour, radius or typeface is chosen;
+ * everything else refers to these. Rules for using them: README.md.
+ */
+
+/*
+ * Clean, calm, organic, flat. A barely-green white page, one green-tea
+ * accent for everything that acts, hairlines instead of shadows, and colour
+ * kept for meaning. The brand green (#16a085, from the logo) is too light for
+ * text on white, so it marks things (the logo, icons) and a deeper shade of the
+ * same hue, --accent, carries words and buttons. Every text colour here meets WCAG AA (4.5:1) against the surfaces
+ * it sits on, in both schemes; apps/web/e2e/a11y.spec.ts checks it on every page.
+ */
+:root {
+	--gutter: 1rem;
+	--bg: #f5f7f6;
+	--surface: #fcfdfc;
+	--ink: #1d2624;
+	--muted: #57635f;
+	--line: #dfe5e3;
+	--line-strong: #c2ccc8;
+	--brand: #16a085;
+	--accent: #0b7361;
+	--accent-ink: #ffffff;
+	--accent-soft: #dcefe9;
+	--warn: #98501f;
+	--warn-soft: #f5e7da;
+	--danger: #9b2c1f;
+	/* Plain covers, for books without a picture: earthy, quiet, all dark-ink
+	   legible. Chosen per book, so the same book is always the same colour. */
+	--paper-1: #d5ebe5;
+	--paper-2: #eed9c9;
+	--paper-3: #efe4c8;
+	--paper-4: #d9e0e8;
+	--paper-5: #e3e3cc;
+	--paper-6: #ecd9d9;
+	/* Shape: a slight softening, never a pill. Anything that holds things is
+	   rounded by --radius; anything you press or type into, and small boxes,
+	   by --radius-sm. Only true circles (a count, a step number) go round. */
+	--radius: 0.5rem;
+	--radius-sm: 0.3125rem;
+	/* How much of the bottom of the viewport the tab bar owns. Zero until the
+	   bar exists, so anything sticky can offset by it unconditionally. */
+	--tabbar-space: 0px;
+	/* Flat: depth comes from tone and hairlines, never from shadow. */
+	--shadow: none;
+	--header: 3.5rem;
+	/* Heebo, one face for Hebrew and Latin alike, self-hosted by the web app
+	   (@fontsource-variable/heebo). The system's own sans stands in until it
+	   loads, and wherever it does not. */
+	--font:
+		"Heebo Variable", Heebo, system-ui, -apple-system, "Segoe UI",
+		"Noto Sans Hebrew", sans-serif;
+	color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #131817;
+		--surface: #1b2120;
+		--ink: #e6ecea;
+		--muted: #9ea9a5;
+		--line: #2b3331;
+		--line-strong: #414b48;
+		--brand: #16a085;
+		--accent: #4cc3a8;
+		--accent-ink: #0c1f1a;
+		--accent-soft: #1d3530;
+		--warn: #e0a878;
+		--warn-soft: #33271d;
+		--danger: #f0a196;
+		--paper-1: #1f3531;
+		--paper-2: #3a2b22;
+		--paper-3: #38321f;
+		--paper-4: #262d35;
+		--paper-5: #31311f;
+		--paper-6: #372a2a;
+	}
+}

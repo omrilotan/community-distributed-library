@@ -1,0 +1,51 @@
+{
+  "name": "community-distributed-library",
+  "private": true,
+  "license": "Unlicense",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "wrangler dev -c services/core/wrangler.jsonc -c services/metadata/wrangler.jsonc -c services/notify/wrangler.jsonc -c services/convo/wrangler.jsonc --port 8787 --inspector-port 9229 --persist-to .wrangler/state --var COVERS_PUBLIC_URL:http://localhost:8787/v1/covers --var APP_URL:http://localhost:3000 --var DEV_AUTH:true",
+    "dev:web": "npm run dev -w @cdl/web",
+    "db:migrate": "wrangler d1 migrations apply cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc && wrangler d1 migrations apply cdl-metadata --local --persist-to .wrangler/state -c services/metadata/wrangler.jsonc && wrangler d1 migrations apply cdl-convo --local --persist-to .wrangler/state -c services/convo/wrangler.jsonc",
+    "db:seed": "wrangler d1 execute cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc --file services/core/scripts/seed.sql",
+    "db:seed:things": "wrangler d1 execute cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc --file services/core/scripts/seed-things.sql",
+    "library:books": "wrangler d1 execute cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc --command \"UPDATE communities SET type = 'books'\"",
+    "library:things": "wrangler d1 execute cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc --command \"UPDATE communities SET type = 'things'\"",
+    "types": "npm run types --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "node scripts/check-hosts.mjs && npm run test --workspaces --if-present",
+    "format": "prettier --write .",
+    "lint": "prettier --check .",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:all": "node scripts/deploy.mjs all",
+    "deploy:shared": "node scripts/deploy.mjs shared",
+    "provision": "node scripts/provision.mjs",
+    "check:libraries": "node scripts/check-libraries.mjs",
+    "dev:mcp": "wrangler dev -c services/mcp/wrangler.jsonc --port 8788 --inspector-port 9230 --persist-to .wrangler/state --var APP_URL:http://localhost:3000 --var SELF_URL:http://localhost:8788",
+    "db:pull": "node scripts/db-pull.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "wrangler": "^4.134.0"
+  },
+  "overrides": {
+    "@modelcontextprotocol/client": "^2.2.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "sharp": "^0.35.5",
+    "undici": "^7.29.1"
+  },
+  "allowScripts": {
+    "workerd@1.20260815.1": true,
+    "workerd@1.20261006.1": true,
+    "esbuild@0.28.1": true,
+    "esbuild@0.28.2": true
+  }
+}

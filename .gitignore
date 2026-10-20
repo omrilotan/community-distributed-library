@@ -1,0 +1,19 @@
+node_modules
+dist
+.next
+.wrangler
+.dev.vars
+*.log
+.env
+.claude
+skills-lock.json
+worker-configuration.d.ts
+project/
+test-results/
+playwright-report/
+# Written per library at deploy (scripts/libraries.mjs)
+wrangler.*.json
+# Private keys provision.mjs makes; keep a copy elsewhere
+.keys/
+# Your libraries: what each one owns in Cloudflare (docs/self-hosting.md)
+libraries.json
