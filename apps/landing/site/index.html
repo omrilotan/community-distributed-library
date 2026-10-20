@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Community Distributed Library</title>
+		<meta
+			name="description"
+			content="A shared shelf for a neighbourhood: books, tools, board games or camping gear, lent between people who live nearby."
+		/>
+		<meta name="color-scheme" content="light dark" />
+		<meta
+			name="theme-color"
+			content="#f5f7f6"
+			media="(prefers-color-scheme: light)"
+		/>
+		<meta
+			name="theme-color"
+			content="#131817"
+			media="(prefers-color-scheme: dark)"
+		/>
+		<link rel="canonical" href="https://community-distributed-library.com/" />
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+		<meta property="og:title" content="Community Distributed Library" />
+		<meta
+			property="og:description"
+			content="Your street already owns everything you need. A shared shelf for books, tools, board games or camping gear."
+		/>
+		<meta
+			property="og:image"
+			content="https://community-distributed-library.com/images/hero.jpg"
+		/>
+		<meta property="og:type" content="website" />
+		<link
+			rel="preload"
+			href="/fonts/outfit-latin.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link rel="stylesheet" href="/styles.css" />
+	</head>
+	<body>
+		<header class="top">
+			<a class="mark" href="/">
+				<svg viewBox="0 0 1110 936" aria-hidden="true">
+					<path
+						d="M289.6 102.4c135.3 135.2 182.8 323.8 140.6 490.9 167.1-42.2 355.7 5.4 490.9 140.6L820.9 834.1C676.5 689.7 450.1 681.4 314 815.5L208 709.6c134.1-136.2 125.8-362.5-18.6-507Z"
+					/>
+				</svg>
+				<span>Community Distributed Library</span>
+			</a>
+			<nav aria-label="Sections">
+				<a href="#shared">What gets shared</a>
+				<a href="#how">How it works</a>
+			</nav>
+		</header>
+
+		<main>
+			<section class="hero">
+				<div class="hero-copy">
+					<h1>Your street already owns everything you need.</h1>
+					<p>
+						One shared shelf for a neighbourhood: books, tools, board games or
+						camping gear, lent between people who live nearby.
+					</p>
+					<p class="actions">
+						<a class="button" href="#how">How it works</a>
+					</p>
+				</div>
+				<img
+					class="hero-photo"
+					src="/images/hero.jpg"
+					width="1200"
+					height="900"
+					alt="Picnic tables between tall pines in a neighbourhood park"
+					fetchpriority="high"
+				/>
+			</section>
+
+			<section class="shared" id="shared">
+				<h2>Things worth owning together</h2>
+				<div class="tiles">
+					<article class="tile photo">
+						<img
+							src="/images/books.jpg"
+							width="1000"
+							height="750"
+							alt="An open book and a cup of tea on a bed in morning light"
+							loading="lazy"
+						/>
+						<div class="tile-text">
+							<h3><svg data-icon="books" class="icon"></svg> Books</h3>
+							<p>The novel you finished last month is somebody's next read.</p>
+						</div>
+					</article>
+					<article class="tile tint">
+						<svg data-icon="wrench" class="icon big"></svg>
+						<h3>Tools</h3>
+						<p>A drill spends most of its life in a drawer. Let it work.</p>
+					</article>
+					<article class="tile tint">
+						<svg data-icon="dice-five" class="icon big"></svg>
+						<h3>Board games</h3>
+						<p>Game night without buying another box that fits nowhere.</p>
+					</article>
+					<article class="tile photo">
+						<img
+							src="/images/camping.jpg"
+							width="1000"
+							height="750"
+							alt="Mist over a lake at dawn, pines along the shore"
+							loading="lazy"
+						/>
+						<div class="tile-text">
+							<h3><svg data-icon="tent" class="icon"></svg> Camping gear</h3>
+							<p>A tent for the one weekend a year you actually use it.</p>
+						</div>
+					</article>
+				</div>
+			</section>
+
+			<section class="how" id="how">
+				<h2>Ask, meet, hand over, bring back</h2>
+				<ol class="steps">
+					<li>
+						<svg data-icon="tag" class="icon"></svg>
+						<div>
+							<h3>List what you are happy to lend</h3>
+							<p>
+								Add anything else with a name, photo, description and tags. It
+								stays on your shelf until somebody asks.
+							</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="chats-circle" class="icon"></svg>
+						<div>
+							<h3>Ask a neighbour</h3>
+							<p>
+								Browse what is near you, ask for it, and talk it through in a
+								thread. No money changes hands.
+							</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="calendar-check" class="icon"></svg>
+						<div>
+							<h3>Meet and hand it over</h3>
+							<p>
+								Pick a time both your calendars allow, meet, and confirm with a
+								code. Bringing it back works the same way.
+							</p>
+						</div>
+					</li>
+				</ol>
+			</section>
+
+			<img
+				class="breather"
+				src="/images/green.jpg"
+				width="1800"
+				height="700"
+				alt="A dense bed of green succulents"
+				loading="lazy"
+			/>
+
+			<section class="why">
+				<h2>Fewer things bought. More neighbours known.</h2>
+				<div class="why-columns">
+					<div>
+						<h3>Community</h3>
+						<p>
+							Every loan is a doorstep conversation. A library of a few hundred
+							people is small enough that faces become names, and names become
+							the people you call when the boiler goes.
+						</p>
+					</div>
+					<div>
+						<h3>Sustainability</h3>
+						<p>
+							The greenest product is the one nobody had to make. A street that
+							shares its tools and tents buys less, throws away less, and keeps
+							what it has in use.
+						</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="trust" id="trust">
+				<h2>Built for people who live near each other</h2>
+				<ul class="features">
+					<li>
+						<svg data-icon="envelope-simple" class="icon"></svg>
+						<div>
+							<h3>Invitation only</h3>
+							<p>
+								A neighbour lets you in. Nobody arrives from a search engine.
+							</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="hand-heart" class="icon"></svg>
+						<div>
+							<h3>Lent, never rented</h3>
+							<p>Nothing costs anything. Things go out and come back.</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="sliders-horizontal" class="icon"></svg>
+						<div>
+							<h3>Your own rules</h3>
+							<p>Each library sets its loan length and who may invite.</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="handshake" class="icon"></svg>
+						<div>
+							<h3>Face to face</h3>
+							<p>Handoffs happen in person, at a time you both picked.</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="hourglass" class="icon"></svg>
+						<div>
+							<h3>Wait your turn</h3>
+							<p>
+								Something out on loan? Join the queue and hear when it is back.
+							</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="robot" class="icon"></svg>
+						<div>
+							<h3>Works with assistants</h3>
+							<p>
+								An AI assistant can browse the shelf and ask on your behalf.
+							</p>
+						</div>
+					</li>
+				</ul>
+			</section>
+
+			<section class="welcome" id="welcome">
+				<svg data-icon="heart" class="icon big"></svg>
+				<div>
+					<h2>Everyone welcome</h2>
+					<p>
+						There are no ratings here, no reviews and no stars, for items or for
+						people. That is on purpose. A library like this runs on trust
+						between neighbours, and every loan is already a kindness.
+					</p>
+				</div>
+			</section>
+		</main>
+
+		<footer>
+			<span>Community Distributed Library</span>
+		</footer>
+	</body>
+</html>

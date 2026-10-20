@@ -1,0 +1,3454 @@
+@import "tailwindcss";
+
+/*
+ * Direction comes from <html dir>. No physical left/right anywhere, no paired
+ * direction variables, no [dir="rtl"] blocks — packages/design/frontend-conventions.md.
+ */
+
+@import "@cdl/design/tokens.css";
+
+/* Nothing moves for somebody who asked the system for stillness. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition: none !important;
+		animation: none !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* From a tile to its page and back, the cover moves to where it lands; the
+   rest of the page changes as it always did, without a fade. Only where
+   motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+	}
+
+	/* Unanimated, both pages would show through each other until the covers
+	   land; the new one alone is drawn. */
+	::view-transition-old(root) {
+		display: none;
+	}
+
+	::view-transition-group(*) {
+		animation-duration: 0.25s;
+	}
+
+	/* Only the covers move: a page without one changes at once, and is
+	   ready for the next tap at once. */
+	::view-transition-group(root) {
+		animation: none;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font);
+	font-size: 1rem;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+}
+
+a {
+	color: var(--accent);
+	/* Colour alone does not mark a link for everyone reading; a quiet
+	   underline does, without shouting. Controls that look like controls
+	   drop it below. */
+	text-decoration-line: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+	text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+a:hover {
+	text-decoration-color: currentColor;
+}
+
+/* One focus ring for everything a keyboard can reach. */
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: var(--radius-sm);
+}
+
+/* The skip link: invisible until a keyboard lands on it. */
+.skip {
+	position: absolute;
+	inset-inline-start: 0.5rem;
+	inset-block-start: -3rem;
+	z-index: 100;
+	padding: 0.5rem 0.875rem;
+	background: var(--surface);
+	color: var(--ink);
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	text-decoration: none;
+}
+
+.skip:focus {
+	inset-block-start: 0.5rem;
+}
+
+#main:focus {
+	outline: none;
+}
+
+/* Titles in Heebo's bold; the small ones a step lighter. */
+h1,
+h2,
+h3 {
+	line-height: 1.25;
+	margin-block: 0 0.5rem;
+	font-weight: 700;
+	letter-spacing: -0.005em;
+	text-wrap: balance;
+}
+
+h3 {
+	font-weight: 600;
+}
+
+h1 {
+	font-size: 1.625rem;
+}
+
+h2 {
+	font-size: 1.125rem;
+	margin-block-start: 1.5rem;
+}
+
+p {
+	margin-block: 0 0.75rem;
+}
+
+pre {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	padding: 0.75rem;
+	overflow-x: auto;
+	font-size: 0.8125rem;
+}
+
+pre code {
+	background: none;
+	padding: 0;
+}
+
+code {
+	font-size: 0.875em;
+	background: var(--accent-soft);
+	padding: 0.1em 0.35em;
+	border-radius: 0.3em;
+}
+
+/* Shell */
+/* Anchored sections land below the sticky top bar, not under it. */
+section[id] {
+	scroll-margin-block-start: 4.5rem;
+}
+
+.topbar {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 10;
+	background: var(--bg);
+	border-block-end: 1px solid var(--line);
+}
+
+.topbar-inner {
+	max-inline-size: 56rem;
+	margin-inline: auto;
+	padding-inline: var(--gutter);
+	block-size: var(--header);
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+/* The name in the logo's green. #16a085 is under 4.5:1 on the page, so the
+   name is large, bold text, for which WCAG asks 3:1. */
+.brand {
+	font-size: 1.1875rem;
+	font-weight: 700;
+	color: var(--brand);
+	text-decoration: none;
+	margin-inline-end: 0.75rem;
+	white-space: nowrap;
+}
+
+.nav {
+	display: flex;
+	gap: 0.125rem;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.nav a,
+.nav button {
+	color: var(--muted);
+	text-decoration: none;
+	padding: 0.4rem 0.65rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.9375rem;
+	white-space: nowrap;
+	background: none;
+	border: 0;
+	font: inherit;
+	cursor: pointer;
+	margin: 0;
+}
+
+.nav a:hover,
+.nav button:hover {
+	color: var(--ink);
+}
+
+/* Where you are: the word goes dark and sits on a short line, nothing more. */
+.nav a[aria-current="page"] {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-color: var(--accent);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 0.45em;
+}
+
+.spacer {
+	margin-inline-start: auto;
+}
+
+.page {
+	max-inline-size: 56rem;
+	margin-inline: auto;
+	padding-inline: var(--gutter);
+	padding-block: 1.25rem 3rem;
+}
+
+.footer {
+	max-inline-size: 56rem;
+	margin-inline: auto;
+	padding-inline: var(--gutter);
+	padding-block: 1.5rem;
+	font-size: 0.8125rem;
+	color: var(--muted);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	align-items: baseline;
+}
+
+/* The legal pages sit at the end of every page, signed in or not. */
+.footer-links {
+	display: flex;
+	gap: 1rem;
+}
+
+.narrow {
+	max-inline-size: 26rem;
+	margin-inline: auto;
+}
+
+.page-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 1rem;
+	margin-block-end: 1rem;
+}
+
+.page-head .muted {
+	margin: 0;
+}
+
+.muted {
+	color: var(--muted);
+	font-size: 0.875rem;
+}
+
+/* Surfaces */
+.card {
+	display: flex;
+	gap: 0.75rem;
+	align-items: start;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 0.75rem;
+	margin-block-end: 0.5rem;
+}
+
+.card > div {
+	flex: 1;
+	min-inline-size: 0;
+}
+
+/* Titles in a list are names, not headlines. */
+.card strong {
+	font-weight: 500;
+}
+
+.card img,
+.thumb {
+	display: block;
+	inline-size: 3.25rem;
+	aspect-ratio: 5 / 8;
+	object-fit: cover;
+	border-radius: 0.1875rem;
+	background: var(--line);
+	flex: none;
+	overflow: hidden;
+}
+
+.card-link {
+	color: inherit;
+	text-decoration: none;
+	transition: border-color 0.15s;
+}
+
+.card-link:hover {
+	border-color: var(--line-strong);
+}
+
+/* A note from the library: a tint, not a box with a stripe. */
+.callout {
+	background: var(--accent-soft);
+	padding: 0.75rem 1rem;
+	border-radius: var(--radius-sm);
+	overflow-wrap: anywhere;
+}
+
+.callout-warn {
+	background: var(--warn-soft);
+	color: var(--ink);
+}
+
+.empty {
+	text-align: center;
+	color: var(--muted);
+	padding: 1.25rem 1rem;
+	background: var(--surface);
+	border-radius: var(--radius);
+}
+
+/* Nothing here yet is news, not an alarm: said once, in an ordinary voice. */
+.push-nudge {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+}
+
+.push-nudge button {
+	margin: 0;
+}
+
+.empty .btn {
+	display: flex;
+	inline-size: fit-content;
+	margin: 1rem auto 0;
+}
+
+.empty strong {
+	display: block;
+	color: var(--ink);
+	font-size: 1rem;
+	font-weight: 500;
+	margin-block-end: 0.25rem;
+}
+
+/* Forms */
+label {
+	display: block;
+	margin-block: 0.75rem 0.25rem;
+	font-size: 0.9375rem;
+	font-weight: 500;
+}
+
+/* A field that must be filled says so on its label; the `required` on the
+   field tells assistive technology. Everything unmarked may stay empty. */
+label:has(+ :is(input, select, textarea):required)::after,
+label:has(+ .field-with-button > :required)::after,
+.form-key::before {
+	content: "*";
+	margin-inline-start: 0.2em;
+	color: var(--danger);
+	font-weight: 600;
+}
+
+.form-key {
+	margin-block: 0 0.5rem;
+	color: var(--muted);
+	font-size: 0.875rem;
+}
+
+.form-key::before {
+	margin-inline: 0 0.3em;
+}
+
+.check {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 400;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="password"],
+select,
+textarea {
+	inline-size: 100%;
+	padding: 0.5rem 0.7rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: inherit;
+	font: inherit;
+}
+
+/* A swatch to press, not a field to type in: shaped like one, and no wider
+   than the colour needs. */
+input[type="color"] {
+	display: block;
+	inline-size: 4.5rem;
+	block-size: 2.75rem;
+	padding: 0.2rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	cursor: pointer;
+}
+
+input::placeholder,
+textarea::placeholder {
+	color: var(--muted);
+}
+
+/* A hint under a field belongs to it, but should not touch it. */
+input + .muted,
+select + .muted,
+textarea + .muted {
+	margin-block-start: 0.5rem;
+}
+
+button,
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin-block-start: 0.75rem;
+	padding: 0.55rem 1rem;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: var(--accent);
+	color: var(--accent-ink);
+	font: inherit;
+	font-weight: 550;
+	text-decoration: none;
+	cursor: pointer;
+	line-height: 1.2;
+	transition: background-color 0.15s;
+}
+
+button:hover,
+.btn:hover {
+	background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+
+button:active,
+.btn:active {
+	transform: translateY(1px);
+}
+
+button.secondary,
+.btn.secondary {
+	background: transparent;
+	color: var(--ink);
+	border-color: var(--line-strong);
+	font-weight: 500;
+}
+
+button.secondary:hover,
+.btn.secondary:hover {
+	background: var(--surface);
+	border-color: var(--muted);
+}
+
+button.link {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--accent);
+	font-weight: 500;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+	text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+button.link:hover {
+	background: none;
+	text-decoration-color: currentColor;
+}
+
+button.danger,
+.btn.danger {
+	background: var(--danger);
+	color: #fff;
+}
+
+button.quiet {
+	margin: 0;
+	padding: 0.3rem 0.7rem;
+	font-size: 0.875rem;
+	background: transparent;
+	color: var(--ink);
+	border-color: var(--line-strong);
+	font-weight: 500;
+}
+
+button.quiet:hover {
+	background: var(--surface);
+}
+
+.inline {
+	display: inline;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1rem;
+	align-items: end;
+}
+
+.row label {
+	margin-block: 0;
+}
+
+.row input[type="number"] {
+	inline-size: 6rem;
+	margin-block-start: 0.25rem;
+}
+
+.row button {
+	margin-block-start: 0;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.75rem;
+	align-items: center;
+	margin-block-start: 0.5rem;
+}
+
+.actions button {
+	margin: 0;
+}
+
+/* Badges */
+/* A word of state, tinted to say which kind — never a solid block of colour. */
+.badge {
+	display: inline-block;
+	padding: 0.1rem 0.55rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.75rem;
+	line-height: 1.5;
+	font-weight: 500;
+	background: var(--line);
+	color: var(--ink);
+	vertical-align: middle;
+}
+
+.badge-ok {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+/* The same count as the tab bar's, beside "Loans" in the top bar. */
+.nav-badge {
+	display: inline-grid;
+	place-items: center;
+	min-inline-size: 1.25rem;
+	padding-inline: 0.3rem;
+	border-radius: 999px;
+	background: #b4541f;
+	color: #fff;
+	font-size: 0.75rem;
+	line-height: 1.25rem;
+}
+
+/* Something new on a loan: the accent, so it reads as "look here". */
+.badge-unread {
+	background: var(--accent);
+	color: var(--accent-ink);
+}
+
+.badge-warn {
+	background: var(--warn-soft);
+	color: var(--warn);
+}
+
+/* The front door, for somebody not signed in: short, so the shelves under
+   it show on a phone's first screen. */
+.guest-intro {
+	display: grid;
+	gap: 0.75rem;
+	padding-block: 0.5rem 1.25rem;
+	margin-block-end: 1rem;
+	border-block-end: 1px solid var(--line);
+}
+
+@media (min-width: 48rem) {
+	.guest-intro {
+		grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+		align-items: end;
+		gap: 2.5rem;
+		padding-block: 1.5rem 2rem;
+	}
+}
+
+.guest-copy h1 {
+	font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	margin-block: 0 0.5rem;
+}
+
+.guest-lede {
+	font-size: 1rem;
+	line-height: 1.5;
+	color: var(--muted);
+	max-inline-size: 42ch;
+	margin-block: 0 0.25rem;
+}
+
+.front-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.front-actions .btn {
+	white-space: nowrap;
+}
+
+.guest-invite {
+	margin: 0;
+	padding: 0.6rem 0.75rem;
+	border-radius: var(--radius);
+	background: var(--accent-soft);
+	font-size: 0.875rem;
+	line-height: 1.45;
+}
+
+/* A visitor's tile is a button (it opens the members' note), drawn as the
+   members' tile is. */
+button.tile {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: 0.875rem;
+	font-weight: 400;
+	line-height: inherit;
+	text-align: start;
+}
+
+button.tile:hover {
+	background: none;
+}
+
+button.tile:active {
+	transform: none;
+}
+
+/* Borrowing is for members: a sheet from the bottom on a phone, a box in
+   the middle on a wider screen. */
+.sheet {
+	position: fixed;
+	inset: auto 0 0;
+	inline-size: auto;
+	max-inline-size: 30rem;
+	margin: 0 auto;
+	padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+	border: 1px solid var(--line);
+	border-radius: var(--radius) var(--radius) 0 0;
+	background: var(--surface);
+	color: var(--ink);
+}
+
+.sheet::backdrop {
+	background: color-mix(in srgb, #131817 45%, transparent);
+}
+
+@media (min-width: 48rem) {
+	.sheet {
+		inset: 0;
+		block-size: fit-content;
+		margin: auto;
+		border-radius: var(--radius);
+	}
+}
+
+.sheet h2 {
+	margin-block: 0.75rem 0.25rem;
+	font-size: 1.25rem;
+}
+
+.sheet p {
+	margin-block: 0 1rem;
+}
+
+.sheet-book {
+	display: flex;
+	gap: 0.875rem;
+	align-items: flex-start;
+}
+
+.sheet-book > span:last-child {
+	display: grid;
+	min-inline-size: 0;
+}
+
+.sheet-cover {
+	flex: none;
+	inline-size: 3.5rem;
+	aspect-ratio: 5 / 8;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	background: var(--line);
+}
+
+.sheet-cover img,
+.sheet-cover .plain-cover {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+
+.sheet-book-title {
+	font-weight: 700;
+}
+
+.sheet-actions {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.625rem;
+}
+
+.sheet-actions > * {
+	margin: 0;
+	justify-content: center;
+}
+
+.sheet-actions > .btn:first-child {
+	grid-column: 1 / -1;
+}
+
+/* About: one lede, the steps as a list, the assistant beside its picture. */
+.about {
+	max-inline-size: 48rem;
+	margin-inline: auto;
+}
+
+.about-head h1 {
+	font-size: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+	letter-spacing: -0.015em;
+	margin-block-end: 1rem;
+}
+
+.about-lede {
+	font-size: 1.1875rem;
+	line-height: 1.55;
+	max-inline-size: 38ch;
+}
+
+.about-head .muted {
+	font-size: 1rem;
+	max-inline-size: 52ch;
+}
+
+.about-steps ol {
+	list-style: none;
+	padding: 0;
+	margin: 1.25rem 0 0;
+	display: grid;
+	gap: 1.75rem;
+}
+
+/* A step: its name in a narrow column, what happens beside it. */
+.about-steps li {
+	display: grid;
+	gap: 0.25rem 2rem;
+	padding-block-start: 1.25rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.about-steps h3 {
+	font-size: 1.0625rem;
+	margin: 0;
+}
+
+.about-steps p {
+	margin: 0;
+	color: var(--muted);
+	max-inline-size: 58ch;
+}
+
+@media (min-width: 40rem) {
+	.about-steps li {
+		grid-template-columns: 10rem 1fr;
+	}
+}
+
+.about-ask {
+	display: grid;
+	gap: 1.5rem;
+	align-items: start;
+	margin-block-start: 3rem;
+}
+
+.about-ask h2 {
+	margin-block-start: 0;
+}
+
+.about-ask .btn {
+	margin-block-start: 0.5rem;
+}
+
+.about-yours {
+	margin-block-start: 3rem;
+	padding: 1.5rem;
+	background: var(--surface);
+	border-radius: var(--radius);
+}
+
+.about-yours h2 {
+	margin-block-start: 0;
+}
+
+.about-yours p {
+	margin: 0;
+}
+
+/* Storefront */
+/* Field and button read as one control: the same height, a hairline apart.
+   Whole shapes, so nothing depends on which side the text starts. */
+.search {
+	display: flex;
+	align-items: stretch;
+	gap: 0.25rem;
+	margin-block-end: 0.75rem;
+}
+
+.search input {
+	flex: 1;
+	min-inline-size: 0;
+}
+
+.search button {
+	margin-block-start: 0;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+	gap: 1.25rem 1rem;
+}
+
+.tile {
+	display: grid;
+	gap: 0.2rem;
+	color: inherit;
+	text-decoration: none;
+	font-size: 0.875rem;
+	align-content: start;
+}
+
+.tile-cover {
+	position: relative;
+	display: block;
+	aspect-ratio: 5 / 8;
+	border-radius: var(--radius-sm);
+	background: var(--line);
+	overflow: hidden;
+	/* A hairline keeps a pale cover off a pale page without a shadow. */
+	outline: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+	outline-offset: -1px;
+	transition: opacity 0.15s;
+}
+
+.tile:hover .tile-cover {
+	opacity: 0.9;
+}
+
+.tile:hover .tile-title {
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+	text-underline-offset: 0.2em;
+}
+
+/* The cover of a book nobody has photographed: its title on earthy paper. */
+.plain-cover {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	block-size: 100%;
+	padding: 1rem 0.8rem;
+	background: var(--paper, var(--paper-1));
+	color: var(--ink);
+	/* A band across the top, like cloth on a spine. */
+	border-block-start: 0.4rem solid
+		color-mix(in srgb, var(--paper, var(--paper-1)) 82%, var(--ink));
+	overflow: hidden;
+}
+
+.plain-cover-title {
+	font-weight: 700;
+	font-size: 0.9375rem;
+	line-height: 1.3;
+	display: -webkit-box;
+	-webkit-line-clamp: 5;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+}
+
+.plain-cover-author {
+	font-size: 0.75rem;
+	color: color-mix(in srgb, var(--ink) 75%, var(--paper, var(--paper-1)));
+}
+
+.plain-cover-book .plain-cover-title {
+	font-size: 1rem;
+}
+
+.plain-cover-thumb {
+	padding: 0;
+	border-block-start-width: 0.2rem;
+}
+
+.tile-cover img {
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+
+.tile-cover .badge {
+	position: absolute;
+	inset-block-end: 0.5rem;
+	inset-inline-start: 0.5rem;
+	max-inline-size: calc(100% - 0.8rem);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tile-muted .tile-cover img,
+.tile-muted .plain-cover {
+	opacity: 0.6;
+}
+
+.tile-title {
+	font-weight: 500;
+	margin-block-start: 0.5rem;
+	line-height: 1.3;
+}
+
+/* Book page */
+/* One column, phone first: the page is a sequence, not two columns of it. */
+.book > section {
+	margin-block-start: 1.5rem;
+}
+
+.book-head {
+	display: grid;
+	grid-template-columns: 5.5rem 1fr;
+	gap: 1rem;
+	align-items: start;
+}
+
+/* Higher than the wide-screen rule below, so it holds there too. */
+.book-head.no-cover {
+	grid-template-columns: 1fr;
+}
+
+.book-head h1 {
+	margin-block: 0 0.2rem;
+	font-size: 1.25rem;
+	line-height: 1.25;
+}
+
+.book-head p {
+	margin-block: 0 0.25rem;
+}
+
+@media (min-width: 40rem) {
+	.book-head {
+		grid-template-columns: 10rem 1fr;
+		gap: 1.5rem;
+	}
+
+	.book-head h1 {
+		font-size: 1.75rem;
+	}
+}
+
+/* Housekeeping: quieter than the rest of the page. */
+.book-extras {
+	margin-block-start: 2.5rem;
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--line);
+}
+
+/* The grid column sizes this, but cap it anyway: a cover outside the grid
+   would otherwise stretch to the whole page. */
+.book-cover {
+	max-inline-size: 5.5rem;
+}
+
+@media (min-width: 40rem) {
+	.book-cover {
+		max-inline-size: 10rem;
+	}
+}
+
+.book-cover .plain-cover {
+	aspect-ratio: 5 / 8;
+	block-size: auto;
+	border-radius: var(--radius);
+}
+
+.book-cover img {
+	inline-size: 100%;
+	border-radius: var(--radius);
+}
+
+/* Asking is what the page is for: the button leads, loud, and the note
+   for the owner follows it, there for whoever wants it. */
+.request {
+	display: grid;
+	gap: 0.5rem;
+	margin-block-start: 0.75rem;
+}
+
+.request button {
+	justify-self: start;
+	margin: 0;
+	padding: 0.75rem 1.5rem;
+	font-size: 1rem;
+}
+
+.request input[type="number"] {
+	inline-size: 6rem;
+}
+
+@media (max-width: 44rem) {
+	.request button {
+		justify-self: stretch;
+		justify-content: center;
+		padding-block: 0.85rem;
+	}
+}
+
+/* Tables (steward) */
+table {
+	inline-size: 100%;
+	border-collapse: collapse;
+	margin-block: 0.75rem 1.5rem;
+	font-size: 0.875rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+
+th,
+td {
+	text-align: start;
+	padding: 0.6rem 0.75rem;
+	border-block-end: 1px solid var(--line);
+	vertical-align: top;
+}
+
+th {
+	font-weight: 600;
+	color: var(--muted);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+tr:last-child td {
+	border-block-end: 0;
+}
+
+.table-wrap {
+	overflow-x: auto;
+}
+
+/* Admin sections. Phone first: one box saying where you are, opening into
+   the sections in their groups, pushing the page down rather than covering it. */
+.tabs {
+	margin-block-end: 1.25rem;
+}
+
+/* Closed, the box has to look like something that opens, not a heading:
+   boxed like a select, the section's picture at its start, a caret at its
+   end. */
+.tabs summary {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	min-block-size: 3.25rem;
+	padding-block: 0.45rem;
+	padding-inline: 0.45rem 0.75rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	background: var(--surface);
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+}
+
+.tabs summary:hover,
+.tabs details[open] summary {
+	border-color: var(--accent);
+}
+
+.tabs summary::-webkit-details-marker {
+	display: none;
+}
+
+.tabs-icon {
+	flex: none;
+	display: grid;
+	place-items: center;
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	border-radius: var(--radius-sm);
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+/* The group over the section, small over large. */
+.tabs-where {
+	display: grid;
+	line-height: 1.25;
+}
+
+.tabs-where-group {
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+.tabs-here {
+	font-weight: 600;
+}
+
+.tabs-caret {
+	flex: none;
+	margin-inline-start: auto;
+	transition: transform 0.15s;
+}
+
+.tabs details[open] .tabs-caret {
+	transform: rotate(180deg);
+}
+
+/* Open: each group a pair of columns of named pictures, as the profile's
+   shortcuts are, unfolding from the box. */
+.tabs-groups {
+	display: grid;
+	gap: 0.85rem;
+	padding-block: 0.85rem 1rem;
+	border-block-end: 1px solid var(--line);
+}
+
+.tabs details[open] .tabs-groups {
+	animation: tabs-unfold 0.18s ease-out;
+}
+
+@keyframes tabs-unfold {
+	from {
+		opacity: 0;
+		transform: translateY(-0.35rem);
+	}
+}
+
+.tabs-group {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.5rem;
+}
+
+.tabs-group-label {
+	grid-column: 1 / -1;
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+.tabs a {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	min-block-size: 2.75rem;
+	padding: 0.5rem 0.7rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--ink);
+	text-decoration: none;
+	line-height: 1.25;
+}
+
+.tabs a svg {
+	flex: none;
+	color: var(--accent);
+}
+
+.tabs a:hover {
+	border-color: var(--accent);
+}
+
+.tabs a[aria-current="page"] {
+	background: var(--accent-soft);
+	border-color: var(--accent);
+	font-weight: 600;
+}
+
+/* Room enough: the same list, always open, as a row of tabs in words only,
+   with a gap between the groups. Browsers that can't open it by style keep
+   the phone's. */
+@media (min-width: 48rem) {
+	.tabs {
+		border-block-end: 1px solid var(--line);
+	}
+
+	.tabs summary {
+		display: none;
+	}
+
+	.tabs details::details-content {
+		content-visibility: visible;
+		display: contents;
+	}
+
+	.tabs-groups,
+	.tabs details[open] .tabs-groups {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.25rem;
+		padding: 0;
+		border: 0;
+		animation: none;
+	}
+
+	.tabs-group {
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	.tabs-group-label,
+	.tabs a svg {
+		display: none;
+	}
+
+	.tabs a,
+	.tabs a[aria-current="page"] {
+		min-block-size: 0;
+		padding: 0.5rem 0.75rem;
+		border: 0;
+		border-block-end: 2px solid transparent;
+		border-radius: 0;
+		margin-block-end: -1px;
+		background: none;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+
+	.tabs a:hover {
+		color: var(--ink);
+		border-color: var(--line-strong);
+	}
+
+	.tabs a[aria-current="page"] {
+		color: var(--ink);
+		border-color: var(--accent);
+	}
+}
+
+/* A sign-in link for another device: the code big enough to scan. */
+.device-qr {
+	display: block;
+	inline-size: min(16rem, 100%);
+	aspect-ratio: 1;
+	border-radius: var(--radius-sm);
+	background: #fff;
+}
+
+/* Sent by an assistant: said small, on the message itself. */
+.bubble-via {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+/* A moderator's few words about the book, under its facts. */
+.book-note {
+	margin-block: 0.35rem 0;
+	white-space: pre-wrap;
+}
+
+/* A question asked in place: the line is the link, the answer unfolds under it. */
+details.confirm > summary {
+	display: inline;
+	color: var(--accent);
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+	cursor: pointer;
+	list-style: none;
+}
+
+details.confirm > summary::-webkit-details-marker {
+	display: none;
+}
+
+details.confirm[open] > summary {
+	color: var(--muted);
+	text-decoration: none;
+}
+
+details.confirm > .callout {
+	margin-block-start: 0.5rem;
+}
+
+/* A book's private marks: toggles, quiet until pressed. */
+.book-marks {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-block: 0.75rem;
+}
+
+.book-marks form {
+	margin: 0;
+}
+
+.book-marks .form-status {
+	display: none;
+}
+
+button.toggle {
+	margin: 0;
+	padding: 0.4rem 0.75rem;
+	background: transparent;
+	color: var(--ink);
+	border-color: var(--line-strong);
+}
+
+button.toggle svg {
+	opacity: 0.35;
+}
+
+button.toggle[aria-pressed="true"] {
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+	border-color: var(--accent);
+	color: var(--ink);
+}
+
+button.toggle[aria-pressed="true"] svg {
+	opacity: 1;
+	color: var(--accent);
+}
+
+button.toggle:hover {
+	background: var(--line);
+}
+
+/* A table row's actions, behind one button. */
+.row-actions {
+	inline-size: 1%;
+	text-align: end;
+}
+
+.row-menu-button {
+	margin: 0;
+	padding: 0.3rem;
+	background: transparent;
+	color: var(--muted);
+	border-color: transparent;
+}
+
+.row-menu-button:hover {
+	background: var(--line);
+	color: var(--ink);
+}
+
+.row-menu {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	min-inline-size: 11rem;
+	padding: 0.35rem;
+	background: var(--surface);
+	color: var(--ink);
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+}
+
+.row-menu form {
+	margin: 0;
+}
+
+.row-menu a,
+.row-menu button {
+	display: block;
+	inline-size: 100%;
+	margin: 0;
+	padding: 0.5rem 0.65rem;
+	text-align: start;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: var(--ink);
+	font: inherit;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.row-menu a:hover,
+.row-menu button:hover {
+	background: var(--line);
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+	gap: 0.75rem;
+	margin-block: 0.5rem 1.5rem;
+}
+
+.stat {
+	display: grid;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 0.875rem;
+}
+
+.stat strong {
+	font-size: 1.75rem;
+	line-height: 1.1;
+}
+
+/* Chat */
+.chat {
+	display: flex;
+	flex-direction: column;
+	min-block-size: calc(100dvh - var(--header) - 3rem);
+}
+
+.chat-head {
+	display: flex;
+	gap: 0.875rem;
+	align-items: center;
+	padding-block-end: 0.875rem;
+	border-block-end: 1px solid var(--line);
+}
+
+.chat-head h1 {
+	font-size: 1.125rem;
+	margin: 0;
+}
+
+.chat-head .thumb {
+	inline-size: 2.75rem;
+}
+
+.chat-log {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	padding-block: 1rem;
+}
+
+.day {
+	align-self: center;
+	font-size: 0.75rem;
+	color: var(--muted);
+	background: var(--line);
+	padding: 0.15rem 0.6rem;
+	border-radius: var(--radius-sm);
+	margin-block: 0.5rem;
+}
+
+.bubble {
+	max-inline-size: min(78%, 34rem);
+	padding: 0.5rem 0.8rem;
+	border-radius: var(--radius);
+	border-end-start-radius: 0.125rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	align-self: start;
+	overflow-wrap: anywhere;
+}
+
+.bubble-me {
+	align-self: end;
+	border-end-start-radius: var(--radius);
+	border-end-end-radius: 0.125rem;
+	background: var(--accent);
+	color: var(--accent-ink);
+	border-color: transparent;
+}
+
+.bubble time {
+	display: block;
+	font-size: 0.6875rem;
+	opacity: 0.7;
+	margin-block-start: 0.15rem;
+	text-align: end;
+}
+
+.bubble-system {
+	align-self: center;
+	background: var(--warn-soft);
+	color: var(--warn);
+	border-color: transparent;
+	border-radius: var(--radius-sm);
+	font-size: 0.875rem;
+	text-align: center;
+	max-inline-size: 90%;
+}
+
+/* A report in the timeline: what, the comment, and when, one under another. */
+.report-entry {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.report-entry time {
+	font-size: 0.6875rem;
+	opacity: 0.8;
+}
+
+.report-entry {
+	text-align: start;
+	max-inline-size: min(100%, 34rem);
+}
+
+.report-status {
+	margin: 0;
+}
+
+/* The word between the reporter and the moderators, under the report. */
+.report-replies {
+	list-style: none;
+	margin: 0.25rem 0 0;
+	padding: 0.25rem 0 0;
+	border-block-start: 1px solid
+		color-mix(in srgb, currentColor 20%, transparent);
+	display: grid;
+	gap: 0.35rem;
+}
+
+.report-replies li {
+	display: grid;
+	gap: 0.1rem;
+}
+
+.report-reply {
+	display: flex;
+	gap: 0.25rem;
+	margin-block-start: 0.25rem;
+}
+
+.report-reply input {
+	flex: 1;
+	min-inline-size: 0;
+}
+
+.report-reply button {
+	margin: 0;
+}
+
+.composer {
+	position: sticky;
+	/* Above the tab bar, not under it. */
+	inset-block-end: var(--tabbar-space);
+	display: flex;
+	gap: 0.5rem;
+	padding-block: 0.75rem;
+	background: var(--bg);
+	border-block-start: 1px solid var(--line);
+}
+
+.composer input {
+	flex: 1;
+	border-radius: var(--radius-sm);
+	padding-inline: 1rem;
+}
+
+.composer button {
+	margin: 0;
+}
+
+.isbn .request {
+	margin-block-start: 0;
+}
+
+.isbn .request button {
+	white-space: nowrap;
+}
+
+/* Consent */
+.scopes {
+	list-style: none;
+	padding: 0;
+	margin-block: 0.5rem 0;
+	display: grid;
+	gap: 0.25rem;
+}
+
+/* Two weeks as a calendar: a row a day, a cell a part of it. */
+.slot-grid {
+	display: grid;
+	gap: 0.25rem;
+	margin-block: 0.5rem 0.75rem;
+	max-inline-size: 26rem;
+}
+
+.slot-row {
+	display: grid;
+	grid-template-columns: 5.5rem repeat(3, 1fr);
+	gap: 0.25rem;
+	align-items: center;
+}
+
+.slot-week {
+	margin-block-start: 0.5rem;
+}
+
+.slot-head span {
+	font-size: 0.75rem;
+	color: var(--muted);
+	text-align: center;
+}
+
+.slot-date {
+	font-size: 0.875rem;
+	white-space: nowrap;
+}
+
+.slot-date b {
+	font-weight: 600;
+}
+
+.slot-date small {
+	color: var(--muted);
+}
+
+/* A cell: a tap target at the least, a hairline when one of you is free,
+   a tint when both are, the accent when chosen. Nothing where neither is. */
+.slot-cell {
+	display: block;
+	min-block-size: 2.25rem;
+	margin: 0;
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	position: relative;
+}
+
+.slot-none {
+	background: color-mix(in srgb, var(--line) 45%, transparent);
+}
+
+.slot-one {
+	border-color: var(--line-strong);
+	background: var(--surface);
+	cursor: pointer;
+}
+
+.slot-both {
+	border-color: transparent;
+	background: var(--accent-soft);
+	cursor: pointer;
+}
+
+.slot-cell input {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+/* On the table already: a dashed ring, and a dot where a badge would go. */
+.slot-pending {
+	border: 2px dashed var(--accent);
+}
+
+.slot-pending::after {
+	content: "";
+	position: absolute;
+	inset-block-start: 0.3rem;
+	inset-inline-end: 0.3rem;
+	inline-size: 0.5rem;
+	block-size: 0.5rem;
+	border-radius: 50%;
+	background: var(--accent);
+}
+
+.slot-legend .slot-pending::after {
+	inset-block-start: 0.15rem;
+	inset-inline-end: 0.15rem;
+	inline-size: 0.3rem;
+	block-size: 0.3rem;
+}
+
+.slot-cell:has(input:checked) {
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+.slot-cell:has(input:focus-visible) {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.slot-legend {
+	display: flex;
+	gap: 1rem;
+	font-size: 0.8125rem;
+	margin: 0.25rem 0 0;
+}
+
+.slot-legend i {
+	display: inline-block;
+	inline-size: 1.1rem;
+	min-block-size: 1.1rem;
+	vertical-align: middle;
+	margin-inline-end: 0.25rem;
+}
+
+.code {
+	font-size: 1.5rem;
+	letter-spacing: 0.15em;
+	padding: 0.2em 0.5em;
+}
+
+.handoff {
+	margin-block: 0.5rem;
+}
+
+/* Screen-reader only */
+.sr-only {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Brand shrinks before the nav does */
+.brand-short {
+	display: none;
+}
+
+/*
+ * Bottom tab bar: phones only. Above 44rem the topbar carries the same links.
+ * Media queries use `width`, not `inline-size`: logical sizes are a container
+ * query feature, and `@media (max-inline-size: …)` silently never matches.
+ * Logical *properties* elsewhere in this file are correct and stay.
+ */
+.tabbar {
+	display: none;
+}
+
+@media (max-width: 44rem) {
+	:root {
+		--tabbar-space: calc(4rem + env(safe-area-inset-bottom));
+	}
+
+	.nav-main {
+		display: none;
+	}
+
+	.brand-long {
+		display: none;
+	}
+
+	.brand-short {
+		display: inline;
+	}
+
+	.tabbar {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		z-index: 10;
+		display: flex;
+		justify-content: space-around;
+		gap: 0.25rem;
+		padding-block: 0.35rem;
+		padding-block-end: max(0.35rem, env(safe-area-inset-bottom));
+		background: color-mix(in srgb, var(--surface) 94%, transparent);
+		backdrop-filter: blur(10px);
+		border-block-start: 1px solid var(--line);
+	}
+
+	.tabbar-item {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.15rem;
+		padding-block: 0.25rem;
+		color: var(--muted);
+		text-decoration: none;
+		font-size: 0.6875rem;
+		min-inline-size: 0;
+	}
+
+	.tabbar-icon {
+		position: relative;
+		display: block;
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
+	}
+
+	.tabbar-icon svg {
+		inline-size: 100%;
+		block-size: 100%;
+		display: block;
+	}
+
+	.tabbar-label {
+		max-inline-size: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.tabbar-item[aria-current="page"] {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	/* Browse, in the middle: a larger icon in a ring, lifted into the bar's edge. */
+	.tabbar-main .tabbar-icon {
+		inline-size: 3.25rem;
+		block-size: 3.25rem;
+		margin-block: -1.75rem 0;
+		padding: 0.7rem;
+		border-radius: 50%;
+		background: var(--accent);
+		color: var(--accent-ink);
+		box-shadow:
+			0 0 0 4px var(--surface),
+			0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
+	}
+
+	.tabbar-main[aria-current="page"] .tabbar-icon {
+		background: color-mix(in srgb, var(--accent) 85%, var(--ink));
+	}
+
+	.tabbar-badge {
+		position: absolute;
+		inset-block-start: -0.25rem;
+		inset-inline-end: -0.4rem;
+		min-inline-size: 1.05rem;
+		padding-inline: 0.25rem;
+		border-radius: 999px;
+		background: #b4541f;
+		color: #fff;
+		font-size: 0.6875rem;
+		line-height: 1.05rem;
+		text-align: center;
+		font-weight: 700;
+	}
+
+	/* Room for the bar, plus the home indicator on iOS. */
+	.page,
+	.footer {
+		padding-block-end: calc(var(--tabbar-space) + 1rem);
+	}
+}
+
+/* A moderator standing in a member's shoes: quiet, but never invisible. */
+.viewing-as {
+	max-inline-size: 56rem;
+	margin: 0 auto;
+	padding: 0.5rem var(--gutter);
+	font-size: 0.8125rem;
+	color: var(--muted);
+	background: var(--surface, transparent);
+	border-block-end: 1px solid var(--line);
+}
+
+/* Copyable: the value and the button that takes it. */
+.copyable {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	margin-block: 0.75rem;
+	max-inline-size: 100%;
+}
+
+.copyable code {
+	overflow-wrap: anywhere;
+}
+
+.copyable-block {
+	display: flex;
+	align-items: flex-start;
+}
+
+.copyable-block pre {
+	flex: 1;
+	margin: 0;
+	min-inline-size: 0;
+}
+
+.copy-button {
+	flex: none;
+}
+
+/* Tags: filter chips, read-only chips, and the picker on the forms */
+
+/* Filters, then what is chosen and a few tags to tap, on one row. The chips
+   scroll sideways rather than wrap, so the books start right under the row. */
+.filter-bar {
+	position: relative;
+	/* Above the shelves as a whole: the panel opens over the covers, and the
+	   row becomes a layer of its own while a choice settles (opacity). Below
+	   the top bar (10), so the menu and the sticky bar stay over it. */
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-block: 0.25rem 1rem;
+}
+
+.filter-strip {
+	display: flex;
+	gap: 0.5rem;
+	min-inline-size: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+	/* Room for a focus ring, which the scroller would otherwise clip. */
+	padding: 2px;
+}
+
+.filter-strip::-webkit-scrollbar {
+	display: none;
+}
+
+/* What is chosen, then the suggestions: one line, however many. */
+.filter-strip > .quick-tags,
+.filter-strip > .quick-suggest {
+	display: flex;
+	flex: none;
+	gap: 0.5rem;
+}
+
+.filter-strip .chip {
+	flex: none;
+	white-space: nowrap;
+	min-block-size: 2.25rem;
+	padding-inline: 0.75rem;
+	border-color: transparent;
+	background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+.filter-strip .chip:hover {
+	border-color: transparent;
+	background: color-mix(in srgb, var(--ink) 11%, transparent);
+}
+
+.filter-strip .chip[aria-current="true"] {
+	background: var(--accent-soft);
+}
+
+/* Filters reads as a button: an icon, its word, and how many are on. */
+.filters {
+	flex: none;
+}
+
+.filters > summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	min-block-size: 2.25rem;
+	padding: 0.25rem 0.75rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	font-size: 0.9375rem;
+	font-weight: 500;
+	color: var(--ink);
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+	white-space: nowrap;
+	transition:
+		background-color 0.15s,
+		border-color 0.15s;
+}
+
+.filters > summary::-webkit-details-marker {
+	display: none;
+}
+
+.filters > summary:hover,
+.filters[open] > summary {
+	border-color: var(--ink);
+}
+
+.filters-count {
+	display: inline-grid;
+	place-items: center;
+	min-inline-size: 1.25rem;
+	block-size: 1.25rem;
+	padding-inline: 0.3rem;
+	border-radius: 999px;
+	background: var(--accent);
+	color: var(--surface);
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+/* The panel opens under the row, over the shelves, as wide as the row. */
+.filters-panel {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: calc(100% + 0.5rem);
+	z-index: 20;
+	max-block-size: 70vh;
+	overflow-y: auto;
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+/* A label, then its chips in their own column, so a second line of chips
+   lines up under the first rather than under the label. */
+.filter-row {
+	display: grid;
+	grid-template-columns: 5rem minmax(0, 1fr);
+	align-items: baseline;
+	gap: 0.5rem;
+	margin-block: 0.3rem;
+}
+
+.filter-row > .muted:first-child {
+	font-size: 0.8125rem;
+}
+
+/* One group with nothing to name it: the chips take the whole row. */
+.filter-row > .filter-chips:only-child {
+	grid-column: 1 / -1;
+}
+
+.filter-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+
+/* A chip is a word you can tap: a hairline at rest, a tint when chosen. */
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	/* 24px at the least — WCAG 2.2's target size — and more on a phone. */
+	min-block-size: 1.75rem;
+	padding: 0.125rem 0.6rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	font-size: 0.875rem;
+	color: var(--ink);
+	text-decoration: none;
+	background: transparent;
+	cursor: pointer;
+	transition:
+		background-color 0.15s,
+		border-color 0.15s;
+}
+
+.chip:hover {
+	border-color: var(--line-strong);
+	background: var(--surface);
+}
+
+.chip[aria-current="true"],
+.chip:has(input:checked) {
+	background: var(--accent-soft);
+	border-color: transparent;
+	color: var(--accent);
+	font-weight: 500;
+}
+
+/* A tick-box chip is a label, but not a field's heading. */
+.chip-check {
+	margin: 0;
+	font-weight: 400;
+}
+
+.chip-check input {
+	inline-size: 0.9rem;
+	block-size: 0.9rem;
+	margin: 0;
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	margin-block: 0.5rem;
+}
+
+.tag-picker {
+	border: 0;
+	padding: 0;
+	margin-block: 0.75rem;
+}
+
+.tag-edit {
+	margin-block: 1rem;
+}
+
+.tag-edit summary {
+	cursor: pointer;
+}
+
+/* The moderator's vocabulary: a group per section, a tag per chip that opens
+   into its own small form. */
+.tag-add {
+	margin-block: 1rem 2rem;
+}
+
+.tag-add > summary {
+	cursor: pointer;
+	color: var(--accent);
+	font-weight: 500;
+	inline-size: fit-content;
+}
+
+.tag-new-group {
+	border: 0;
+	border-inline-start: 2px solid var(--line);
+	margin: 1rem 0 0;
+	padding: 0;
+	padding-inline-start: 1rem;
+}
+
+.tag-new-group legend {
+	padding: 0;
+}
+
+.tag-group {
+	padding-block-start: 1.25rem;
+	margin-block-start: 1.25rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.tag-group h3 {
+	margin-block-end: 0.25rem;
+}
+
+.tag-group h3 code {
+	font-size: 0.75rem;
+	margin-inline-start: 0.35rem;
+}
+
+.tag-list {
+	list-style: none;
+	padding: 0;
+	margin: 0.75rem 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.tag-list details[open] {
+	flex-basis: 100%;
+	padding: 0.75rem 1rem 1rem;
+	background: var(--surface);
+	border-radius: var(--radius);
+}
+
+.tag-list summary {
+	list-style: none;
+	cursor: pointer;
+	inline-size: fit-content;
+}
+
+.tag-list summary::-webkit-details-marker {
+	display: none;
+}
+
+.more {
+	text-align: center;
+	margin-block-start: 1.5rem;
+}
+
+/* Steward: approving a tag suggestion */
+.approve {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 0.5rem;
+	margin-block: 0.75rem;
+}
+
+.approve label {
+	display: grid;
+	gap: 0.2rem;
+	font-size: 0.8125rem;
+	color: var(--muted);
+	margin: 0;
+}
+
+.approve input {
+	margin: 0;
+	inline-size: 9rem;
+}
+
+.tile-who {
+	display: block;
+	line-height: 1.35;
+}
+
+/* Choosing whose copy to ask for */
+.choose {
+	list-style: none;
+	padding: 0;
+	margin-block: 0.75rem 1.5rem;
+	display: grid;
+	gap: 0.5rem;
+	counter-reset: copy;
+}
+
+.choose-row {
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+	padding: 0.7rem 0.9rem;
+}
+
+.choose-row details > summary {
+	cursor: pointer;
+	list-style: none;
+}
+
+.choose-row details > summary::-webkit-details-marker {
+	display: none;
+}
+
+.choose-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+
+.choose-who {
+	font-weight: 600;
+}
+
+.choose-row p {
+	margin-block: 0.35rem 0;
+	font-size: 0.875rem;
+}
+
+/* Two records of one book, side by side */
+.pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: 0.75rem;
+	align-items: start;
+	margin-block: 0.5rem;
+}
+
+.twin .pair {
+	grid-template-columns: auto 1fr;
+	align-items: center;
+}
+
+.twin-cover {
+	inline-size: 3rem;
+	block-size: auto;
+	border-radius: var(--radius-sm);
+}
+
+/* Everything that is not a daily destination */
+.menu {
+	position: relative;
+}
+
+.menu > summary {
+	cursor: pointer;
+	list-style: none;
+	display: grid;
+	place-items: center;
+	/* 44px: a thumb's worth, as the tab bar has. */
+	min-inline-size: 2.75rem;
+	min-block-size: 2.75rem;
+	border-radius: var(--radius-sm);
+	line-height: 1;
+	color: var(--muted);
+	user-select: none;
+}
+
+.menu > summary::-webkit-details-marker {
+	display: none;
+}
+
+.menu > summary:hover,
+.menu[open] > summary {
+	color: var(--ink);
+	background: var(--line);
+}
+
+.menu-panel {
+	position: absolute;
+	inset-block-start: calc(100% + 0.4rem);
+	inset-inline-end: 0;
+	z-index: 20;
+	min-inline-size: 12rem;
+	display: flex;
+	flex-direction: column;
+	padding: 0.35rem;
+	background: var(--surface);
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+}
+
+.menu-panel a,
+.menu-panel button {
+	display: block;
+	text-align: start;
+	padding: 0.5rem 0.65rem;
+	border-radius: var(--radius-sm);
+	color: var(--ink);
+	text-decoration: none;
+	font: inherit;
+	background: none;
+	border: 0;
+	cursor: pointer;
+	inline-size: 100%;
+	margin: 0;
+}
+
+.menu-panel a:hover,
+.menu-panel button:hover {
+	background: var(--line);
+}
+
+.menu-note {
+	display: block;
+	padding: 0.35rem 0.65rem 0.5rem;
+	font-size: 0.8125rem;
+	color: var(--muted);
+}
+
+/* Inviting a neighbour is what grows the library: the menu's one green item. */
+.menu-panel a.menu-invite {
+	margin-block-end: 0.35rem;
+	background: var(--accent);
+	color: var(--accent-ink);
+	font-weight: 600;
+}
+
+.menu-panel a.menu-invite:hover {
+	background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+
+/* The pages read once: smaller, two to a row, after the ones used. */
+.menu-panel .menu-minor {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	margin-block-start: 0.35rem;
+	padding-block-start: 0.35rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.menu-panel .menu-minor a {
+	padding: 0.35rem 0.65rem;
+	font-size: 0.8125rem;
+	color: var(--muted);
+}
+
+/* The profile's shortcuts: what is about this account, not this page. */
+.quick-links {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5rem;
+	margin-block: 0.75rem 1.25rem;
+}
+
+.quick-links a {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--ink);
+	text-decoration: none;
+	line-height: 1.3;
+}
+
+.quick-links a:hover {
+	border-color: var(--accent);
+}
+
+.quick-links svg {
+	flex: none;
+	color: var(--accent);
+}
+
+/* Signing out is not a destination; set it apart from the pages. */
+.menu-panel form {
+	margin-block-start: 0.35rem;
+	padding-block-start: 0.35rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.menu-panel button {
+	color: var(--muted);
+}
+
+/* Figures: a quiet grid, not a dashboard */
+.stats-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+	gap: 0.75rem;
+	margin-block: 0.75rem;
+}
+
+.stats-list dt {
+	font-size: 0.75rem;
+	color: var(--muted);
+}
+
+.stats-list dd {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+/* First run: what this is, in three steps */
+.lede {
+	font-size: 1.0625rem;
+	color: var(--muted);
+}
+
+.steps {
+	list-style: none;
+	padding: 0;
+	margin-block: 1.5rem;
+	display: grid;
+	gap: 1rem;
+}
+
+.steps li {
+	display: grid;
+	grid-template-columns: 2rem 1fr;
+	gap: 0.75rem;
+	align-items: start;
+}
+
+.steps-number {
+	inline-size: 2rem;
+	block-size: 2rem;
+	display: grid;
+	place-items: center;
+	border-radius: 999px;
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-weight: 700;
+}
+
+.steps p {
+	margin-block: 0.15rem 0;
+}
+
+.start-go {
+	margin-block-start: 1.5rem;
+}
+
+.cookie-note {
+	font-size: 0.8125rem;
+	margin-block-start: 1.5rem;
+}
+
+/* A tap, not a menu: the commonest filter sits in the open */
+/* Availability and order: two groups of chips on one line where there is room. */
+.listing-controls {
+	margin-block-start: 0.25rem;
+}
+
+/* Chips tapped, the shelves about to follow: said quietly, not with a spinner. */
+html[data-filters-settling] .filter-strip,
+html[data-filters-settling] .filters > summary,
+html[data-filters-settling] .filters-panel > * {
+	opacity: 0.75;
+	transition: opacity 0.2s;
+}
+
+/* Wanted books */
+.wanted-ask {
+	margin-block: 1rem;
+}
+
+.wanted-ask summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.wanted {
+	margin-block-start: 2rem;
+}
+
+/* Webhook list */
+.hooks {
+	list-style: none;
+	padding: 0;
+	margin-block: 0.75rem;
+	display: grid;
+	gap: 0.5rem;
+}
+
+.hooks li {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+.hooks code {
+	overflow-wrap: anywhere;
+}
+
+/* Report a problem */
+.report {
+	margin-block: 0.5rem;
+}
+
+.report summary {
+	cursor: pointer;
+}
+
+/* Maps */
+.map-wrap {
+	margin-block: 0.75rem 1rem;
+}
+
+.map {
+	block-size: 18rem;
+	border-radius: var(--radius);
+	border: 1px solid var(--line);
+	overflow: hidden;
+	/* Leaflet stacks its panes up to z-index 1000; keep that inside the map,
+	   so the top bar and its menu stay above it. */
+	isolation: isolate;
+}
+
+/* Street maps are loud: every road a colour. Quieten the tiles so the few
+   circles that matter — whose books, and you — are what the eye finds. */
+.map .leaflet-tile-pane {
+	filter: saturate(0.3) sepia(0.12) contrast(0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+	.map .leaflet-tile-pane {
+		filter: saturate(0.25) brightness(0.72) contrast(1.05);
+	}
+}
+
+/* Leaflet's own furniture, made flat to match: no shadows, our hairlines. */
+.map .leaflet-bar,
+.map .leaflet-tooltip {
+	box-shadow: none;
+	border: 1px solid var(--line-strong);
+}
+
+.map .leaflet-bar a {
+	background: var(--surface);
+	color: var(--ink);
+	border-color: var(--line);
+}
+
+.map .leaflet-tooltip {
+	background: var(--surface);
+	color: var(--ink);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: 0.8125rem;
+}
+
+.map .leaflet-tooltip-top::before {
+	border-top-color: var(--line-strong);
+}
+
+/* The map element is the Leaflet container itself, and Leaflet's own rule
+   names it; match that, or the credit stays white in the dark. */
+.map.leaflet-container .leaflet-control-attribution {
+	background: color-mix(in srgb, var(--surface) 85%, transparent);
+	color: var(--muted);
+}
+
+.map.leaflet-container .leaflet-control-attribution a {
+	color: var(--muted);
+}
+
+/* Leaflet's own furniture, made flat to match: no shadows, our hairlines. */
+.map .leaflet-bar,
+.map .leaflet-tooltip {
+	box-shadow: none;
+	border: 1px solid var(--line-strong);
+}
+
+.map .leaflet-bar a {
+	background: var(--surface);
+	color: var(--ink);
+	border-color: var(--line);
+}
+
+.map .leaflet-tooltip {
+	background: var(--surface);
+	color: var(--ink);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	font-size: 0.8125rem;
+}
+
+.map .leaflet-tooltip-top::before {
+	border-top-color: var(--line-strong);
+}
+
+.map .leaflet-control-attribution {
+	background: color-mix(in srgb, var(--surface) 85%, transparent);
+	color: var(--muted);
+}
+
+.map .leaflet-control-attribution a {
+	color: var(--muted);
+}
+
+.map-wrap .row {
+	margin-block: 0.5rem 0;
+	align-items: center;
+}
+
+/* Cover picker: a fixed 5:8 frame the member pans and zooms an image under. */
+/* The picker's heading reads like the labels above it. */
+.picker-label {
+	margin-block: 0.75rem 0.25rem;
+	font-size: 0.9375rem;
+	font-weight: 500;
+}
+
+.picker {
+	display: grid;
+	gap: 0.5rem;
+	max-inline-size: 16rem;
+}
+
+.picker-choose {
+	display: inline-block;
+	padding: 0.4rem 0.8rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	margin-block: 0;
+	font-weight: 500;
+}
+
+.picker-choose input {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	opacity: 0;
+}
+
+.picker-frame {
+	inline-size: 100%;
+	aspect-ratio: 5 / 8;
+	border-radius: var(--radius-sm);
+	background: var(--line);
+	touch-action: none; /* the canvas owns pointer gestures */
+	cursor: grab;
+}
+
+.picker-frame:active {
+	cursor: grabbing;
+}
+
+.picker input[type="range"] {
+	inline-size: 100%;
+}
+
+.picker-remove {
+	margin-block-start: 0;
+	background: transparent;
+	color: var(--muted);
+	border: 1px solid var(--line-strong);
+}
+
+/*
+ * The only direction-aware rule in the app: icons that encode direction.
+ * Everything else flips on its own.
+ */
+:dir(rtl) .icon-directional {
+	transform: scaleX(-1);
+}
+
+/* A member's page: a few facts in two columns, lists without bullets. */
+.facts {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	gap: 0.25rem 1rem;
+	margin: 0.5rem 0;
+}
+
+.facts dt {
+	color: var(--muted);
+	font-size: 0.875rem;
+}
+
+.facts dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.member-card h2 {
+	margin-block-start: 0;
+}
+
+.plain-list {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 1rem;
+	display: grid;
+	gap: 0.35rem;
+}
+
+/* Newest at the top, the one who started it at the bottom. */
+.trail {
+	margin: 0 0 1rem;
+	padding-inline-start: 1.25rem;
+	display: grid;
+	gap: 0.25rem;
+}
+
+/* Sent: locked and dimmed until the answer arrives (app/form-guard.tsx). */
+form[aria-busy="true"] {
+	opacity: 0.6;
+	transition: opacity 0.15s;
+}
+
+/* Tagging, one book at a time: the book, then its chips, then go on. */
+.tagging-book {
+	display: flex;
+	gap: 0.75rem;
+	align-items: start;
+	margin-block: 0.75rem;
+}
+
+.tagging-book h2 {
+	margin: 0;
+}
+
+.tagging-book p {
+	margin: 0;
+}
+
+.tagging-cover {
+	flex: none;
+	inline-size: 4.5rem;
+}
+
+.tagging-cover img,
+.tagging-cover .plain-cover {
+	display: block;
+	inline-size: 100%;
+	aspect-ratio: 5 / 8;
+	object-fit: cover;
+	border-radius: 0.1875rem;
+}
+
+/* A value the vocabulary lacks, typed straight into its group. */
+input.tag-quick-add[type="text"] {
+	inline-size: 9rem;
+	min-block-size: 1.75rem;
+	padding: 0.125rem 0.5rem;
+	font-size: 0.875rem;
+}
+
+/* Back and Skip as one pair, Save and next beside them: same height, one row. */
+.tagging-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	justify-content: space-between;
+	gap: 0.5rem;
+	margin-block-start: 1rem;
+}
+
+.tagging-steps {
+	display: flex;
+	gap: 0.25rem;
+}
+
+.tagging-actions .btn,
+.tagging-actions button {
+	margin: 0;
+}
+
+.tagging-actions button {
+	flex: 1 1 auto;
+	justify-content: center;
+	max-inline-size: 16rem;
+}
+
+.tagging-actions [aria-disabled="true"] {
+	opacity: 0.45;
+	pointer-events: none;
+}
+
+/* Adding a tag: each label over its field, the three fields in a row where
+   there is room. The new-group fields show only while a new group is chosen. */
+.tag-add-form .field label {
+	margin-block: 0.5rem 0.25rem;
+	font-size: 0.8125rem;
+}
+
+.tag-fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: 0 0.75rem;
+}
+
+.tag-add-form .tag-new-group {
+	display: none;
+}
+
+.tag-add-form:has(#tag-group option[value=""]:checked) .tag-new-group {
+	display: block;
+}
+
+/* Messages to the library: one card each, dealt-with ones quieter. */
+.messages-log {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.messages-log .card.handled {
+	opacity: 0.7;
+}
+
+.messages-log .muted {
+	margin: 0;
+}
+
+.message-body {
+	white-space: pre-wrap;
+	margin-block: 0.5rem;
+}
+
+.pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	margin-block: 1rem;
+}
+
+/* The moderation log: the request's own words, small and wrapping. */
+.log-toggle {
+	margin-block-start: 0.25rem;
+}
+
+.log-toggle summary {
+	display: inline;
+	color: var(--accent);
+	font-size: 0.8125rem;
+	cursor: pointer;
+}
+
+/* A row's details, across the whole table under it, while its toggle is open. */
+.log tr:has(.log-toggle:not([open])) + .log-more {
+	display: none;
+}
+
+.log tr:has(.log-toggle[open]) > td {
+	border-block-end: 0;
+}
+
+.log-more > td {
+	padding-block-start: 0;
+}
+
+.log-details {
+	margin: 0;
+	padding: 0.5rem 0.65rem;
+	background: var(--line);
+	border-radius: var(--radius-sm);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font-size: 0.75rem;
+	text-align: start;
+}
+
+/* A member's data rights, at the foot of their page, kept apart. */
+.data-rights {
+	margin-block-start: 2rem;
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.data-rights .erase {
+	margin-block-start: 1rem;
+}
+
+.data-rights .erase summary {
+	cursor: pointer;
+	color: var(--danger);
+	font-weight: 500;
+}
+
+.settings-form {
+	max-inline-size: 32rem;
+}
+
+.settings-form input[type="number"] {
+	inline-size: 8rem;
+}
+
+/* The library's words, one block per language it offers. */
+.settings-words,
+.settings-words fieldset {
+	border: 0;
+	margin: 1.5rem 0 0;
+	padding: 0;
+	min-inline-size: 0;
+}
+
+.settings-words > legend {
+	font-weight: 600;
+	padding: 0;
+}
+
+.settings-words fieldset {
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.settings-words fieldset legend {
+	font-weight: 500;
+	color: var(--muted);
+	padding: 0;
+	float: inline-start;
+	inline-size: 100%;
+	margin-block-end: 0.5rem;
+}
+
+.settings-words textarea {
+	inline-size: 100%;
+}
+
+/* The library's colour: named swatches and "your own", as radios. The
+   chips show each colour as Flat UI gives it; what the site wears is made
+   readable from it (contracts/accent.ts). */
+.accent-picker {
+	border: 0;
+	margin: 1.5rem 0 0;
+	padding: 0;
+	min-inline-size: 0;
+}
+
+.accent-picker > legend {
+	font-weight: 600;
+	padding: 0;
+}
+
+.accent-swatches {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+	gap: 0.5rem;
+	margin-block-start: 0.75rem;
+}
+
+.accent-swatch {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	/* A row of the grid, not a field's label: no label spacing. */
+	margin: 0;
+	padding: 0.4rem 0.6rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	font-weight: 400;
+	cursor: pointer;
+}
+
+/* The chosen one: a heavier line, never a shadow (the flat rule). */
+.accent-swatch:has(input[type="radio"]:checked) {
+	outline: 2px solid var(--ink);
+	outline-offset: -1px;
+}
+
+.accent-chip,
+.accent-swatch input[type="color"] {
+	flex: none;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+}
+
+.accent-swatch input[type="color"] {
+	display: inline-block;
+	padding: 0.1rem;
+}
+
+/* A background save says how it went, inside its own form. */
+.form-status {
+	margin: 0.25rem 0 0;
+	font-size: 0.8125rem;
+	color: var(--muted);
+}
+
+.form-status-failed {
+	color: var(--danger);
+}
+
+/* Moderation's own count, on the menu button: kept off the Loans badge. */
+.menu > summary {
+	position: relative;
+}
+
+.menu-badge {
+	position: absolute;
+	inset-block-start: 0.2rem;
+	inset-inline-end: 0.1rem;
+	min-inline-size: 1.05rem;
+	padding-inline: 0.25rem;
+	border-radius: 999px;
+	background: var(--accent);
+	color: var(--accent-ink);
+	font-size: 0.6875rem;
+	line-height: 1.05rem;
+	text-align: center;
+}
+
+/* Moderation's count, in the accent everywhere it shows; Loans keeps amber. */
+.nav-badge.badge-moderation {
+	background: var(--accent);
+	color: var(--accent-ink);
+}
+
+/* After asking for a sign-in link: look in junk, said so it cannot be missed. */
+.junk-warning {
+	border-inline-start: 4px solid var(--warn);
+	font-size: 1.0625rem;
+}
+
+.junk-warning strong {
+	color: var(--warn);
+	font-weight: 700;
+}
+
+/* Notifications on this device: state, actions, then why. */
+.push-toggle .push-state {
+	font-weight: 600;
+	margin-block-end: 0.5rem;
+}
+
+.push-toggle .actions {
+	margin-block: 0 0.75rem;
+}
+
+/* The start page: how it works in three lines, then the setup's steps. */
+.start-how {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 2rem;
+	display: grid;
+	gap: 0.35rem;
+}
+
+.start-shot {
+	display: block;
+	inline-size: 100%;
+	max-inline-size: 16rem;
+	block-size: auto;
+	margin-block-start: 0.75rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+/* A new member's setup: which step of how many, as words and a bar. */
+.setup-progress {
+	margin-block-end: 1.5rem;
+}
+
+.setup-progress p {
+	margin: 0 0 0.5rem;
+}
+
+.setup-progress ol {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.35rem;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.setup-progress li {
+	block-size: 0.35rem;
+	border-radius: 999px;
+	background: var(--line);
+}
+
+.setup-progress li.done {
+	background: var(--accent);
+}
+
+/* A field with its helper button on the same line, e.g. the neighbourhood
+   and "Use my location". The button keeps its width; the field takes the rest. */
+.field-with-button {
+	display: flex;
+	gap: 0.5rem;
+	align-items: stretch;
+}
+
+.field-with-button input {
+	flex: 1;
+	min-inline-size: 0;
+	margin: 0;
+}
+
+.field-with-button button {
+	flex: none;
+	white-space: nowrap;
+	margin: 0;
+}
+
+/* The map, folded away under the neighbourhood field: there to be exact. */
+.area-map-more {
+	margin-block: 0.75rem 1rem;
+}
+
+.area-map-more summary {
+	cursor: pointer;
+	color: var(--accent);
+}
+
+/* The closing word on the about page: no ratings, everyone welcome. */
+.about-welcome {
+	margin-block: 2.5rem 1rem;
+	padding-inline-start: 1.25rem;
+	border-inline-start: 3px solid var(--brand);
+}
+
+.about-welcome h2 {
+	margin-block-start: 0;
+}
+
+.about-welcome p {
+	font-size: 1.125rem;
+	line-height: 1.6;
+	max-inline-size: 38rem;
+}
+
+/* A member's readiness to meet, on their admin page: set is green, not yet
+   is a struck-through outline. */
+/* Two small badges that stack when the column is narrow. */
+.meeting-ready {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+
+.badge-missing {
+	background: transparent;
+	border: 1px dashed var(--line-strong);
+	color: var(--muted);
+	text-decoration: line-through;
+}
+
+/* On a loan whose other side was suspended: what that means and who to write to. */
+.suspended-note {
+	display: flex;
+	gap: 0.875rem;
+	align-items: flex-start;
+	margin-block: 1rem;
+	padding: 1rem;
+	background: var(--warn-soft);
+	border-radius: var(--radius-sm);
+	overflow-wrap: anywhere;
+}
+
+.suspended-note > svg {
+	flex: none;
+	color: var(--ink);
+}
+
+.suspended-note h2 {
+	font-size: 1.0625rem;
+	margin: 0 0 0.25rem;
+}
+
+.suspended-note p {
+	margin: 0 0 0.75rem;
+}
+
+/* A thing's details on its owner's row: a small list of label and value. */
+.thing-facts {
+	margin-block: 0.25rem;
+}
+
+.thing-facts .badge {
+	display: inline-block;
+	margin: 0 0 0.25rem;
+}
+
+.thing-facts dl {
+	margin: 0;
+	display: grid;
+	gap: 0.125rem;
+}
+
+.thing-facts dl > div {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 0.5rem;
+}
+
+.thing-facts dt {
+	font-size: 0.875rem;
+}
+
+.thing-facts dt::after {
+	content: ":";
+}
+
+.thing-facts dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+/* A link to somebody else's website: the icon says it leaves the library. */
+.thing-link {
+	margin: 0.25rem 0 0;
+	overflow-wrap: anywhere;
+}
+
+.thing-link a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+/* A thing's photos: square frames in a row of up to four. */
+.photos-slots {
+	list-style: none;
+	margin: 0 0 0.5rem;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+	gap: 0.75rem;
+}
+
+.photos-slots li {
+	display: grid;
+	gap: 0.25rem;
+	align-content: start;
+}
+
+.picker-square {
+	inline-size: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+	background: var(--line);
+}
+
+.photos-slot-foot {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	justify-content: space-between;
+}
+
+/* Moving a photo one place either way: two small buttons under it. */
+.photos-move {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.photos-move button {
+	flex: 1;
+	justify-content: center;
+	padding-block: 0.35rem;
+	min-block-size: 2.25rem;
+}
+
+.photos-move button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+/* A form's last, main button: thumb-wide on a phone. Finishing a sign-in,
+   adding to the shelf, the library settings. */
+@media (max-width: 44rem) {
+	.finish-sign-in button,
+	button.wide-on-phone {
+		inline-size: 100%;
+		justify-content: center;
+		padding-block: 0.85rem;
+	}
+}
+
+/* The profile's one Save, after all its fields: hard to miss. */
+.profile-save {
+	inline-size: 100%;
+	justify-content: center;
+	margin-block: 2rem 1rem;
+	padding-block: 0.85rem;
+	font-size: 1.0625rem;
+}
+
+.photos-zoom {
+	font-size: 0.8125rem;
+}
+
+.photos-zoom input {
+	inline-size: 100%;
+}
+
+.photos-kept {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	min-inline-size: 0;
+}
+
+/* A library of things: every picture is square, where a book's is tall. */
+html[data-library="things"] .card img,
+html[data-library="things"] .thumb,
+html[data-library="things"] .tile-cover,
+html[data-library="things"] .sheet-cover,
+html[data-library="things"] .book-cover .plain-cover,
+html[data-library="things"] .tagging-cover .plain-cover,
+html[data-library="things"] .tagging-cover img {
+	aspect-ratio: 1;
+}
+
+html[data-library="things"] .book-cover img {
+	aspect-ratio: 1;
+	object-fit: cover;
+}
+
+/* A thing's other photos, in a row under its name. */
+.thing-photos {
+	list-style: none;
+	margin: 0.5rem 0 1rem;
+	padding: 0;
+	display: flex;
+	gap: 0.5rem;
+	overflow-x: auto;
+}
+
+.thing-photos img {
+	display: block;
+	inline-size: 5.5rem;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+	background: var(--line);
+}
+
+@media (min-width: 40rem) {
+	.thing-photos img {
+		inline-size: 7rem;
+	}
+}
+
+/* "Add photos", the size of a photo, where the next one goes. */
+.photos-add {
+	position: relative;
+	display: grid;
+	place-content: center;
+	justify-items: center;
+	gap: 0.25rem;
+	border: 1px dashed var(--line-strong);
+	background: var(--surface);
+	color: var(--accent);
+	font-size: 0.875rem;
+	font-weight: 500;
+	text-align: center;
+	cursor: pointer;
+}
+
+.photos-add:hover,
+.photos-add:focus-within {
+	border-color: var(--accent);
+}
+
+.photos-add input {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	opacity: 0;
+}
+
+.photos-add:focus-within {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}

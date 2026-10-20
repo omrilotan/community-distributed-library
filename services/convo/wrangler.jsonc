@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cdl-convo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Internal: reached only by core over its service binding.
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cdl-convo",
+      // Local only; a library's own comes from its manifest.
+      "database_id": "00000000-0000-4000-8000-0000000c0420",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Nightly: drop threads 90 days after their loan closed.
+  "triggers": { "crons": ["15 4 * * *"] },
+}

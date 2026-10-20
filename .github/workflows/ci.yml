@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm i
+      # `cloudflare:workers` and the binding types are generated from each
+      # wrangler config; the files are not committed.
+      - run: npm run types
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run check:libraries
+      - run: npm test
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm i
+      - run: npm run types
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      # A fresh database, then the dev servers: playwright.config.ts starts
+      # them and waits.
+      - run: npm run db:migrate && npm run db:seed
+      - run: npm run test:e2e -w @cdl/web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

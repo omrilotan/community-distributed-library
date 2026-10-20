@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cdl-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Public: MCP clients connect here. It holds no data and no logic of its
+  // own — every tool is a call to core's public API with the member's token.
+  "workers_dev": false,
+  "preview_urls": false,
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "00000000000040008000000000000a07" },
+  ],
+  "services": [
+    { "binding": "CORE", "service": "cdl-core" },
+    {
+      "binding": "CORE_INTERNAL",
+      "service": "cdl-core",
+      "entrypoint": "Internal",
+    },
+  ],
+  "vars": {
+    "APP_URL": "http://localhost:3000",
+    "SELF_URL": "http://localhost:8788",
+  },
+}

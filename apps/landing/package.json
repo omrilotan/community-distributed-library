@@ -1,0 +1,13 @@
+{
+  "name": "@cdl/landing",
+  "private": true,
+  "type": "module",
+  "description": "The front door of community-distributed-library.com: one static page.",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "npm run build && wrangler dev --port 3001"
+  },
+  "devDependencies": {
+    "@phosphor-icons/core": "^2.1.1"
+  }
+}

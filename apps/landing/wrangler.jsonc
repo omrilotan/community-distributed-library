@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "cdl-landing",
+  "compatibility_date": "2026-08-22",
+  // Static files only: no Worker code runs. build.mjs writes dist/.
+  "assets": {
+    "directory": "dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+  },
+  "workers_dev": false,
+  "preview_urls": false,
+}

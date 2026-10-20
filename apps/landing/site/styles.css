@@ -1,0 +1,547 @@
+/*
+ * The front door of community-distributed-library.com. One page, no script.
+ * Colours are the @cdl/design tokens (packages/design/tokens.css), copied
+ * here so the page ships as a single stylesheet; the type is Outfit, which
+ * only this page uses.
+ */
+
+@font-face {
+	font-family: "Outfit";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url("/fonts/outfit-latin.woff2") format("woff2");
+}
+
+:root {
+	--bg: #f5f7f6;
+	--surface: #fcfdfc;
+	--ink: #1d2624;
+	--muted: #57635f;
+	--line: #dfe5e3;
+	--line-strong: #c2ccc8;
+	--brand: #16a085;
+	--accent: #0b7361;
+	--accent-ink: #ffffff;
+	--accent-soft: #dcefe9;
+	--radius: 0.75rem;
+	--radius-sm: 0.5rem;
+	--gutter: 1rem;
+	--measure: 36rem;
+	--wide: 72rem;
+	--font: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+	color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #131817;
+		--surface: #1b2120;
+		--ink: #e6ecea;
+		--muted: #9ea9a5;
+		--line: #2b3331;
+		--line-strong: #414b48;
+		--accent: #4cc3a8;
+		--accent-ink: #0c1f1a;
+		--accent-soft: #1d3530;
+	}
+}
+
+@media (min-width: 48rem) {
+	:root {
+		--gutter: 2rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition: none !important;
+		animation: none !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font);
+	font-size: 1.0625rem;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+	margin: 0;
+	font-weight: 600;
+	letter-spacing: -0.015em;
+	line-height: 1.1;
+	text-wrap: balance;
+}
+
+h2 {
+	font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+	margin-block-end: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+}
+
+p {
+	margin: 0;
+	text-wrap: pretty;
+}
+
+a {
+	color: var(--accent);
+	text-underline-offset: 0.15em;
+}
+
+img {
+	display: block;
+	max-inline-size: 100%;
+	block-size: auto;
+}
+
+.icon {
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
+	flex: none;
+	color: var(--accent);
+}
+
+.icon.big {
+	inline-size: 2.5rem;
+	block-size: 2.5rem;
+}
+
+/* Buttons: the accent for the one action, a hairline for the other. */
+.button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.25rem;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--accent);
+	background: var(--accent);
+	color: var(--accent-ink);
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+	transition:
+		transform 0.15s ease,
+		background-color 0.15s ease;
+}
+
+.button:hover {
+	background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+
+.button:active {
+	transform: translateY(1px);
+}
+
+.button .icon {
+	color: inherit;
+	inline-size: 1.25rem;
+	block-size: 1.25rem;
+}
+
+.button.quiet {
+	background: transparent;
+	color: var(--accent);
+	border-color: var(--line-strong);
+}
+
+.button.quiet:hover {
+	background: var(--accent-soft);
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+}
+
+/* Header: the mark, two anchors, the one button. 4rem tall, one line. */
+.top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	block-size: 4rem;
+	padding-inline: var(--gutter);
+	max-inline-size: var(--wide);
+	margin-inline: auto;
+}
+
+.mark {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	color: var(--ink);
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.mark svg {
+	inline-size: 1.75rem;
+	block-size: 1.5rem;
+	fill: var(--brand);
+}
+
+.top nav {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+}
+
+.top nav a:not(.button) {
+	color: var(--muted);
+	text-decoration: none;
+}
+
+.top nav a:not(.button):hover {
+	color: var(--ink);
+}
+
+@media (max-width: 48rem) {
+	.top nav a:not(.button) {
+		display: none;
+	}
+
+	.mark span {
+		font-size: 0.9375rem;
+	}
+}
+
+main > section,
+.breather {
+	padding-inline: var(--gutter);
+	max-inline-size: var(--wide);
+	margin-inline: auto;
+}
+
+main > section {
+	padding-block: 4rem;
+}
+
+@media (min-width: 64rem) {
+	main > section {
+		padding-block: 6rem;
+	}
+}
+
+/* Hero: words on one side, the park on the other. Stacks on a phone. */
+.hero {
+	display: grid;
+	gap: 2.5rem;
+	align-items: center;
+	padding-block-start: 2rem !important;
+}
+
+.hero h1 {
+	font-size: clamp(2.25rem, 1.4rem + 4vw, 3.75rem);
+	margin-block-end: 1.25rem;
+}
+
+.hero p:not(.actions) {
+	font-size: 1.1875rem;
+	color: var(--muted);
+	max-inline-size: 30rem;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-block-start: 2rem;
+}
+
+.hero-photo {
+	inline-size: 100%;
+	border-radius: var(--radius);
+	aspect-ratio: 4 / 3;
+	object-fit: cover;
+}
+
+@media (min-width: 64rem) {
+	.hero {
+		grid-template-columns: 7fr 6fr;
+		gap: 4rem;
+		padding-block-start: 3rem !important;
+	}
+}
+
+/* Four kinds of things: two with a photo, two on a tint, photos on
+   opposite corners so the eye moves. */
+.tiles {
+	display: grid;
+	gap: 1rem;
+}
+
+.tile {
+	border-radius: var(--radius);
+	overflow: hidden;
+	min-block-size: 16rem;
+}
+
+.tile.tint {
+	background: var(--accent-soft);
+	padding: 1.75rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
+.tile.tint .icon {
+	margin-block-end: auto;
+}
+
+.tile.photo {
+	position: relative;
+	display: grid;
+}
+
+.tile.photo img,
+.tile.photo .tile-text {
+	grid-area: 1 / 1;
+}
+
+.tile.photo img {
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+	min-block-size: 16rem;
+}
+
+/* The caption sits on a solid strip, not over the picture. */
+.tile.photo .tile-text {
+	align-self: end;
+	background: var(--surface);
+	padding: 1.25rem 1.5rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.tile-text h3 {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-block-end: 0.25rem;
+}
+
+.tile p {
+	color: var(--muted);
+}
+
+@media (max-width: 48rem) {
+	.tile.tint {
+		min-block-size: 11rem;
+	}
+}
+
+@media (min-width: 48rem) {
+	.tiles {
+		grid-template-columns: 7fr 5fr;
+		grid-template-areas:
+			"books tools"
+			"games camping";
+	}
+
+	.tile:nth-child(1) {
+		grid-area: books;
+	}
+
+	.tile:nth-child(2) {
+		grid-area: tools;
+	}
+
+	.tile:nth-child(3) {
+		grid-area: games;
+	}
+
+	.tile:nth-child(4) {
+		grid-area: camping;
+	}
+}
+
+/* Three steps, one under the other, each with its glyph. */
+.steps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 2rem;
+	max-inline-size: var(--measure);
+}
+
+.steps li {
+	display: flex;
+	gap: 1.25rem;
+	align-items: flex-start;
+}
+
+.steps .icon {
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	padding: 0.5rem;
+	border-radius: 50%;
+	background: var(--accent-soft);
+}
+
+.steps h3 {
+	margin-block-end: 0.35rem;
+}
+
+.steps p {
+	color: var(--muted);
+}
+
+/* A full-width breath of green between the mechanics and the reasons. */
+.breather {
+	inline-size: 100%;
+	aspect-ratio: 18 / 7;
+	object-fit: cover;
+	border-radius: var(--radius);
+}
+
+@media (max-width: 48rem) {
+	.breather {
+		aspect-ratio: 4 / 3;
+	}
+}
+
+/* The two reasons, side by side, with a headline that says both. */
+.why h2 {
+	max-inline-size: 24ch;
+}
+
+.why-columns {
+	display: grid;
+	gap: 2rem;
+	margin-block-start: 2rem;
+}
+
+.why-columns h3 {
+	color: var(--accent);
+	margin-block-end: 0.5rem;
+}
+
+.why-columns p {
+	max-inline-size: 32rem;
+}
+
+@media (min-width: 48rem) {
+	.why-columns {
+		grid-template-columns: 1fr 1fr;
+		gap: 3rem;
+	}
+}
+
+/* Six promises, glyph and two lines each, in two columns. */
+.features {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 1.75rem 3rem;
+}
+
+.features li {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+	padding-block-start: 1.25rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.features h3 {
+	font-size: 1.125rem;
+	margin-block-end: 0.2rem;
+}
+
+.features p {
+	color: var(--muted);
+}
+
+@media (min-width: 48rem) {
+	.features {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (min-width: 64rem) {
+	.features {
+		grid-template-columns: 1fr 1fr 1fr;
+	}
+}
+
+/* The closing note: no ratings, on purpose. One soft band, the glyph beside it. */
+main > section.welcome {
+	display: flex;
+	gap: 1.25rem;
+	align-items: flex-start;
+	margin-block-end: 4rem;
+	padding: 2rem var(--gutter);
+	background: var(--accent-soft);
+	border-radius: var(--radius);
+	max-inline-size: calc(var(--wide) - 2 * var(--gutter));
+}
+
+.welcome .icon {
+	color: var(--accent);
+	flex: none;
+}
+
+.welcome h2 {
+	margin-block-end: 0.75rem;
+}
+
+.welcome p {
+	max-inline-size: var(--measure);
+	font-size: 1.125rem;
+}
+
+@media (max-width: 48rem) {
+	main > section.welcome {
+		flex-direction: column;
+		margin-inline: var(--gutter);
+	}
+}
+
+@media (min-width: 64rem) {
+	main > section.welcome {
+		padding: 3rem;
+		margin-block-end: 6rem;
+	}
+}
+
+footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 2rem;
+	padding: 2rem var(--gutter) 3rem;
+	max-inline-size: var(--wide);
+	margin-inline: auto;
+	color: var(--muted);
+	font-size: 0.9375rem;
+	border-block-start: 1px solid var(--line);
+}
+
+footer a {
+	color: var(--muted);
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@cdl/design",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Design guidelines and tokens for the library's pages and emails",
+  "exports": {
+    "./tokens.css": "./tokens.css"
+  }
+}
