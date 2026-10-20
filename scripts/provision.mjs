@@ -37,7 +37,7 @@ const fail = (message) => {
 	console.error(`✗ ${message}`);
 	process.exit(1);
 };
-if (!slug || !/^[a-z][a-z0-9-]{1,40}$/.test(slug))
+if (!slug || !/^[a-z][a-z0-9-]{1,39}$/.test(slug))
 	fail("Give the library a slug: lowercase letters, digits and dashes.");
 for (const key of ["host", "name", "centre", "admin"])
 	if (!values[key]) fail(`--${key} is missing.`);
@@ -136,10 +136,12 @@ function kv(title) {
 	return dry ? `<${title} id>` : find()?.id;
 }
 
-/** The zone the host is in, asked of Cloudflare unless given. */
-async function zoneId(host) {
-	if (values["zone-id"]) return values["zone-id"];
-	if (dry) return "<zone id>";
+/** The zone the host is in: its id and its domain. */
+async function findZone(host) {
+	if (values["zone-id"])
+		return { id: values["zone-id"], name: host.split(".").slice(-2).join(".") };
+	if (dry)
+		return { id: "<zone id>", name: host.split(".").slice(-2).join(".") };
 	const labels = host.split(".");
 	for (let at = 0; at < labels.length - 1; at += 1) {
 		const name = labels.slice(at).join(".");
@@ -148,7 +150,7 @@ async function zoneId(host) {
 			{ headers: { authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}` } },
 		);
 		const body = await reply.json();
-		if (body.result?.[0]?.id) return body.result[0].id;
+		if (body.result?.[0]?.id) return body.result[0];
 	}
 	fail(`No zone in this account holds ${host}. Pass --zone-id.`);
 }
@@ -216,14 +218,15 @@ if (firstLibrary) {
 
 // 2. This library's storage.
 console.log(`\n━━ ${slug}: storage`);
+// Mail goes out from the domain itself, such as our-street@example.co.uk.
+const zone = await findZone(values.host);
 let lib = data.libraries.find((entry) => entry.slug === slug);
 if (!lib) {
 	const keys = await vapid();
 	lib = {
 		slug,
 		host: values.host,
-		address:
-			values.address ?? `${slug}@${values.host.split(".").slice(-2).join(".")}`,
+		address: values.address ?? `${slug}@${zone.name}`,
 		fromName: values["from-name"] ?? values.name,
 		vapidPublicKey: keys.publicKey,
 		databases: {},
@@ -247,7 +250,6 @@ bucket(`${slug}-backups`);
 save();
 
 // Photos are served from images.<host>.
-const zone = await zoneId(values.host);
 wrangler(
 	[
 		"r2",
@@ -258,7 +260,7 @@ wrangler(
 		"--domain",
 		`images.${values.host}`,
 		"--zone-id",
-		zone,
+		zone.id,
 		"--force",
 	],
 	{ quiet: true },
