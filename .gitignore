@@ -17,3 +17,5 @@ wrangler.*.json
 .keys/
 # Your libraries: what each one owns in Cloudflare (docs/self-hosting.md)
 libraries.json
+# TypeScript build caches
+*.tsbuildinfo
