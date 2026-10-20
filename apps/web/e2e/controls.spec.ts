@@ -298,6 +298,15 @@ test.describe("the listing controls", () => {
 		await expect(page.locator(".empty a.btn")).toHaveCount(0);
 	});
 
+	test("keeps the filters through a search", async ({ page }) => {
+		await page.goto("/?availableOnly=1&sort=title");
+		await page.locator("form.search input[name=q]").fill("zzqx-nothing");
+		await page.locator("form.search button").click();
+		await expect(page).toHaveURL(/q=zzqx-nothing/);
+		await expect(page).toHaveURL(/availableOnly=1/);
+		await expect(page).toHaveURL(/sort=title/);
+	});
+
 	test("shows every book, newest first, by default", async ({ page }) => {
 		await page.goto("/");
 		await openFilters(page);
