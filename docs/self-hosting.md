@@ -1,5 +1,8 @@
 # Run your own library
 
+> **Using Claude Code?** Open this folder in it and type `/open-a-library`. It walks you through
+> every step below, checks your keys without showing them, and opens the library for you.
+
 This guide opens a library on your own domain, in your own Cloudflare account. It takes about half
 an hour, most of it waiting for email settings to check out. You need two keys, one from Cloudflare
 and one from Resend; one command does the rest.
@@ -74,7 +77,16 @@ RESEND_API_KEY=paste-the-resend-key-here
 If your Cloudflare token reaches more than one account, add `CLOUDFLARE_ACCOUNT_ID=` with the one to
 use. The command in the next step tells you if it needs it.
 
-## 5. Open the library
+## 5. Check your setup
+
+```sh
+set -a; . ./.env; set +a
+npm run check:setup -- --host our-street.example.org
+```
+
+Every line should start with ✓. Each ✗ says what to fix. It never prints your keys.
+
+## 6. Open the library
 
 Pick:
 
@@ -91,7 +103,6 @@ Pick:
 Then run:
 
 ```sh
-set -a; . ./.env; set +a
 npm run provision -- our-street \
   --host our-street.example.org \
   --name "Our Street Library" \
@@ -123,6 +134,7 @@ neighbours.
 git pull
 npm install
 set -a; . ./.env; set +a
+npm run deploy -- shared metadata
 npm run deploy -- all
 ```
 

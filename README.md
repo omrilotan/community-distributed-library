@@ -9,8 +9,9 @@ One codebase runs any number of libraries. Each library is its own deployment on
 own members, data and address. A library lends either **books** or **things**
 (`packages/contracts/src/library-types.ts`). Libraries are invite-only and closed to search engines.
 
-**To run your own library, follow [docs/self-hosting.md](docs/self-hosting.md).** You need a domain on
-Cloudflare, a Cloudflare API token and a Resend API key; one command does the rest.
+**To run your own library, follow [docs/self-hosting.md](docs/self-hosting.md),** or open this folder
+in Claude Code and type `/open-a-library`. You need a domain on Cloudflare, a Cloudflare API token and
+a Resend API key; one command does the rest.
 
 Released into the public domain under [the Unlicense](LICENSE).
 
