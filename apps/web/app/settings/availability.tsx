@@ -29,6 +29,16 @@ export function AvailabilityFields({
 				defaultValue={value.meetingPlace ?? ""}
 				placeholder={t.meetingPlaceHint}
 			/>
+			<label htmlFor="meetingNote">{t.meetingNote}</label>
+			<textarea
+				id="meetingNote"
+				name="meetingNote"
+				dir="auto"
+				rows={2}
+				maxLength={200}
+				defaultValue={value.meetingNote ?? ""}
+				placeholder={t.meetingNoteHint}
+			/>
 			<p className="muted">{t.meetingPlacePrivacy}</p>
 		</>
 	);

@@ -322,6 +322,9 @@ const dictionary = {
 		meetingPlace: "Where you meet (private)",
 		meetingPlaceHint:
 			"e.g. 12 Church Road, ring the top bell — or the café on the corner",
+		meetingNote: "A note for whoever comes (private)",
+		meetingNoteHint:
+			"e.g. Please knock, don't ring — the baby sleeps. Or: it's in the box by the door.",
 		meetingPlacePrivacy:
 			"Shown only to the person you are handing a book to, and only after a time is agreed.",
 		handoffOut: "Handing it over",
@@ -1086,6 +1089,9 @@ const dictionary = {
 			"סמנו מתי בדרך כלל נוח לכם למסור ספר. זמנים משותפים עם הצד השני מוצעים קודם.",
 		meetingPlace: "איפה נפגשים (פרטי)",
 		meetingPlaceHint: "למשל: רחוב הכנסייה 12, פעמון עליון — או בית הקפה בפינה",
+		meetingNote: "הערה למי שמגיע/ה (פרטי)",
+		meetingNoteHint:
+			"למשל: נא לדפוק, לא לצלצל — התינוק ישן. או: זה בקופסה ליד הדלת.",
 		meetingPlacePrivacy: "מוצג רק למי שמקבל/ת מכם ספר, ורק אחרי שנקבע מועד.",
 		handoffOut: "מסירה",
 		addToCalendar: "הוספה ליומן:",

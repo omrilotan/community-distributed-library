@@ -103,6 +103,11 @@ export function HandoffPanel({
 					) : side === "borrower" && handoff.placeMissing ? (
 						<p>{t.placeMissingVisitor(host)}</p>
 					) : null}
+					{handoff.note ? (
+						<p style={{ whiteSpace: "pre-line" }}>
+							<bdi>{handoff.note}</bdi>
+						</p>
+					) : null}
 					{handoff.code ? (
 						<p>
 							{t.yourCode}{" "}
