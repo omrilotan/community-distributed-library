@@ -61,12 +61,14 @@ test("saves every field with the one button", async ({ page }) => {
 	).toHaveCount(1);
 	await page.locator("#lendLimit").fill("97");
 	await page.locator("#meetingPlace").fill("By the blue gate");
+	await page.locator("#meetingNote").fill("Knock, don't ring");
 	await page.locator(".profile-save").click();
 	await expect(page).toHaveURL(/\/settings\?saved=1/);
 	expect((await me()).body.lendLimit).toBe(97);
 	expect((await me()).body.displayName).toBe(before.displayName);
 	const met = await asMember(page.request, BORROWER.id, "/v1/me/availability");
 	expect(met.body.meetingPlace).toBe("By the blue gate");
+	expect(met.body.meetingNote).toBe("Knock, don't ring");
 
 	await page.request.fetch(`${CORE}/v1/me`, {
 		method: "PATCH",

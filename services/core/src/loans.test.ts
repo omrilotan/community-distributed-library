@@ -407,6 +407,42 @@ describe("relays and waitlist", () => {
 		expect(seen).toMatchObject({ status: "proposed", place: null });
 	});
 
+	it("shows the holder's meeting note to the visitor once agreed", async () => {
+		await as(SAM).put("/v1/me/availability", {
+			slots: [],
+			meetingPlace: "Sam’s porch",
+			meetingNote: "Knock, don’t ring",
+		});
+		// Left out, the note is kept.
+		await as(SAM).put("/v1/me/availability", {
+			slots: [],
+			meetingPlace: "Sam’s porch",
+		});
+		expect((await as(SAM).get("/v1/me/availability")).body).toMatchObject({
+			meetingNote: "Knock, don’t ring",
+		});
+		await activeLoan(SAM, DANA, COPY_A);
+		const relay = (await as(NOA).post("/v1/loans", { copyId: COPY_A })).body.id;
+		await as(DANA).post(`/v1/loans/${relay}/accept`);
+		await as(NOA).post(`/v1/loans/${relay}/handoff/propose`, {
+			day: "2099-01-01",
+			period: "evening",
+		});
+		const before = (await as(NOA).get(`/v1/loans/${relay}/handoff`)).body
+			.handoff;
+		expect(before).toMatchObject({ place: null, note: null });
+		await as(SAM).post(`/v1/loans/${relay}/handoff/confirm`);
+		const after = (await as(NOA).get(`/v1/loans/${relay}/handoff`)).body
+			.handoff;
+		expect(after).toMatchObject({
+			place: "Sam’s porch",
+			note: "Knock, don’t ring",
+		});
+		// The host has the code, not their own note.
+		const host = (await as(SAM).get(`/v1/loans/${relay}/handoff`)).body.handoff;
+		expect(host.note).toBeNull();
+	});
+
 	it("relays are refused on a copy that forbids them", async () => {
 		await activeLoan(SAM, DANA, COPY_B);
 		expect((await as(NOA).post("/v1/loans", { copyId: COPY_B })).status).toBe(

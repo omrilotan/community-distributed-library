@@ -32,13 +32,16 @@ handoffs.get("/v1/me/availability", async (c) => {
 		)
 			.bind(member.id)
 			.all<{ weekday: number; period: Period }>(),
-		c.env.DB.prepare("SELECT meeting_place FROM members WHERE id = ?")
+		c.env.DB.prepare(
+			"SELECT meeting_place, meeting_note FROM members WHERE id = ?",
+		)
 			.bind(member.id)
-			.first<{ meeting_place: string | null }>(),
+			.first<{ meeting_place: string | null; meeting_note: string | null }>(),
 	]);
 	return c.json({
 		slots: slots.results,
 		meetingPlace: place?.meeting_place ?? null,
+		meetingNote: place?.meeting_note ?? null,
 	});
 });
 
@@ -48,7 +51,7 @@ handoffs.put("/v1/me/availability", async (c) => {
 	if (!member.scopes.includes("loans:write")) return denied(c, true);
 	const parsed = Availability.safeParse(await c.req.json().catch(() => null));
 	if (!parsed.success) return json(c, problem(422, "Invalid availability"));
-	const { slots, meetingPlace } = parsed.data;
+	const { slots, meetingPlace, meetingNote } = parsed.data;
 
 	await c.env.DB.batch([
 		c.env.DB.prepare("DELETE FROM availability WHERE member_id = ?").bind(
@@ -63,6 +66,13 @@ handoffs.put("/v1/me/availability", async (c) => {
 			meetingPlace || null,
 			member.id,
 		),
+		...(meetingNote === undefined
+			? []
+			: [
+					c.env.DB.prepare(
+						"UPDATE members SET meeting_note = ? WHERE id = ?",
+					).bind(meetingNote || null, member.id),
+				]),
 	]);
 	return c.body(null, 204);
 });
@@ -126,7 +136,7 @@ handoffs.get("/v1/loans/:id/slots", async (c) => {
 		options,
 		myGridEmpty: mine.size === 0,
 		theirGridEmpty: theirs.size === 0,
-		placeMissing: (await meetingPlace(c.env, hostId)) === null,
+		placeMissing: (await meetingPlace(c.env, hostId)).place === null,
 	});
 });
 
@@ -240,7 +250,10 @@ handoffs.post("/v1/loans/:id/handoff/confirm", async (c) => {
 
 	// Borrower learns where; lender learns the code. The code travels only to the lender.
 	const giver = proposal.direction === "out" ? loan.giver : loan.lender;
-	const place = await meetingPlace(c.env, giver.id);
+	// The email carries the note with the place: both are for the visitor.
+	const meeting = await meetingPlace(c.env, giver.id);
+	const place =
+		[meeting.place, meeting.note].filter(Boolean).join(" · ") || null;
 	const sends = [
 		tell(c.env, {
 			kind: "handoff",
@@ -466,7 +479,8 @@ handoffs.get("/v1/loans/:id/handoff", async (c) => {
 	const giverId = row.direction === "out" ? loan.giver.id : loan.lenderId;
 	const iAmLender = member.id === giverId;
 	const iAmVisitor = member.id === loan.borrowerId;
-	const hostPlace = await meetingPlace(c.env, giverId);
+	const host = await meetingPlace(c.env, giverId);
+	const reveal = row.status === "agreed" && iAmVisitor;
 	const view: HandoffView = {
 		id: row.id,
 		direction: row.direction,
@@ -474,8 +488,9 @@ handoffs.get("/v1/loans/:id/handoff", async (c) => {
 		period: row.period,
 		status: row.status,
 		proposedByMe: row.proposed_by === member.id,
-		place: row.status === "agreed" && iAmVisitor ? hostPlace : null,
-		placeMissing: hostPlace === null,
+		place: reveal ? host.place : null,
+		note: reveal ? host.note : null,
+		placeMissing: host.place === null,
 		// A six-character, single-use secret scoped to one loan: kept plain so the lender can read it here.
 		code: row.status === "agreed" && iAmLender ? row.code : null,
 		agreedAt: row.agreed_at,
@@ -593,13 +608,13 @@ async function loanFor(env: Env, loanId: string, memberId: string) {
 async function meetingPlace(
 	env: Env,
 	memberId: string,
-): Promise<string | null> {
+): Promise<{ place: string | null; note: string | null }> {
 	const row = await env.DB.prepare(
-		"SELECT meeting_place FROM members WHERE id = ?",
+		"SELECT meeting_place, meeting_note FROM members WHERE id = ?",
 	)
 		.bind(memberId)
-		.first<{ meeting_place: string | null }>();
-	return row?.meeting_place ?? null;
+		.first<{ meeting_place: string | null; meeting_note: string | null }>();
+	return { place: row?.meeting_place ?? null, note: row?.meeting_note ?? null };
 }
 
 /** Six characters, no ambiguous glyphs, easy to read aloud. */

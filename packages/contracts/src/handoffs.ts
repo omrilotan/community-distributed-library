@@ -11,6 +11,8 @@ export const AvailabilitySlot = z.object({ weekday: Weekday, period: Period });
 export const Availability = z.object({
 	slots: z.array(AvailabilitySlot).max(21),
 	meetingPlace: z.string().trim().max(120).nullable(),
+	/** A word for whoever comes: "knock, don't ring". Left out, it is kept. */
+	meetingNote: z.string().trim().max(200).nullable().optional(),
 });
 
 /** A concrete option for a loan: a day and a period both parties have open. */
@@ -48,6 +50,8 @@ export const HandoffView = z.object({
 	proposedByMe: z.boolean(),
 	/** The lender's meeting place — borrower sees it only once agreed. */
 	place: z.string().nullable(),
+	/** The host's note for the visitor ("knock, don't ring"), revealed like the place. */
+	note: z.string().nullable().default(null),
 	/**
 	 * The host has not saved a meeting place, so there is nothing to reveal:
 	 * the host is asked to set one, the borrower to ask in the messages.

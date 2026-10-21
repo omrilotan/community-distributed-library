@@ -25,7 +25,7 @@ privacy.post("/v1/admin/members/:id/export", async (c) => {
 	const member = await db
 		.prepare(
 			`SELECT m.id, m.email, m.display_name, m.locale, m.area_label, m.area_lat, m.area_lng,
-			        m.meeting_place, m.lend_limit, m.away_until, m.browse_prefs, m.created_at,
+			        m.meeting_place, m.meeting_note, m.lend_limit, m.away_until, m.browse_prefs, m.created_at,
 			        m.invited_by, m.invited_via, m.last_seen_at,
 			        ms.role, ms.status, ms.joined_at
 			   FROM members m JOIN memberships ms ON ms.member_id = m.id AND ms.community_id = ?
@@ -267,7 +267,7 @@ privacy.post("/v1/admin/members/:id/erase", async (c) => {
 		db
 			.prepare(
 				`UPDATE members SET email = ?, display_name = ?, area_lat = NULL, area_lng = NULL,
-				        area_label = NULL, meeting_place = NULL, lend_limit = NULL, away_until = NULL,
+				        area_label = NULL, meeting_place = NULL, meeting_note = NULL, lend_limit = NULL, away_until = NULL,
 				        deactivated_at = ?
 				  WHERE id = ?`,
 			)

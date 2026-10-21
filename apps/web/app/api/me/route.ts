@@ -56,10 +56,11 @@ export async function POST(request: Request): Promise<Response> {
 			.filter(([weekday, period]) => weekday && period)
 			.map(([weekday, period]) => ({ weekday: Number(weekday), period }));
 		const meetingPlace = String(form.get("meetingPlace") ?? "").trim() || null;
+		const meetingNote = String(form.get("meetingNote") ?? "").trim() || null;
 		met = (
 			await core("/v1/me/availability", {
 				method: "PUT",
-				body: JSON.stringify({ slots, meetingPlace }),
+				body: JSON.stringify({ slots, meetingPlace, meetingNote }),
 			})
 		).status;
 	}
