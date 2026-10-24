@@ -20,9 +20,18 @@ test.describe("the shelves for a stranger", () => {
 	test("gives a shared link a card with a picture", async ({ request }) => {
 		const html = await (await request.get("/")).text();
 		expect(html).toMatch(/<meta property="og:title" content="[^"]+"/);
-		expect(html).toMatch(
-			/<meta property="og:image" content="https?:\/\/[^"]+\/icon-512\.png/,
-		);
+		const image = html.match(
+			/<meta property="og:image" content="(https?:\/\/[^"]+\/card\.png[^"]*)"/,
+		)?.[1];
+		expect(image).toBeTruthy();
+		const card = await request.get(image!.replaceAll("&amp;", "&"));
+		expect(card.status()).toBe(200);
+		expect(card.headers()["content-type"]).toBe("image/png");
+		// A PNG's width and height sit in its header, at bytes 16 to 23.
+		const bytes = await card.body();
+		expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)]).toEqual([
+			1200, 630,
+		]);
 	});
 
 	test("shows the front door, then the books, with nobody's details", async ({
