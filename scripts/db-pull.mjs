@@ -12,9 +12,14 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { configFor, library, manifest, sharedConfigFor } from "./libraries.mjs";
+import {
+	configFor,
+	library,
+	manifest,
+	root,
+	sharedConfigFor,
+} from "./libraries.mjs";
 
-const root = new URL("..", import.meta.url).pathname;
 const stateDir = process.env.CDL_STATE_DIR ?? ".wrangler/state";
 // Whichever library is pulled, it lands in the local databases, named as the
 // templates name them; metadata is shared by all.

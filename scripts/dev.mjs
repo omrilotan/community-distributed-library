@@ -2,8 +2,9 @@
 // One command for local development: migrate, then run the API workers and
 // the web app side by side with prefixed output. Ctrl-C stops both.
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function run(name, args, { prefix } = {}) {

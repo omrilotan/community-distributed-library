@@ -8,9 +8,10 @@
 // and the manifest, and deploys that file.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { experimental_readRawConfig } from "wrangler";
 
-export const root = new URL("..", import.meta.url).pathname;
+export const root = fileURLToPath(new URL("..", import.meta.url));
 
 // Deploy order: a Worker's service bindings must point at Workers that
 // already exist, so the ones bound to come first. `host` is the public
