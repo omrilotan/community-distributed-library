@@ -44,8 +44,8 @@ npm install
    | Zone    | Zone               | Read   |
    | Zone    | DNS                | Edit   |
 
-   If one is missing, select **+ Add more** and add it. The picture shows the first eight; Email
-   Sending is the one that lets the library send its mail.
+   If one is missing, select **+ Add more** and add it. Email Sending is the one that lets the
+   library send its mail.
 
    ![The Create Token page with the permissions filled in](images/cloudflare-token-permissions.png)
 

@@ -72,8 +72,8 @@ Send them to the pre-filled token page. The link is in `docs/self-hosting.md`, s
 there exactly. Tell them:
 
 1. Check the page lists the nine permissions in the table in `docs/self-hosting.md`, step 2,
-   including **Email Sending: Edit** (picture: `docs/images/cloudflare-token-permissions.png`,
-   which shows the first eight). If one is missing, **+ Add more** adds it.
+   including **Email Sending: Edit** (picture: `docs/images/cloudflare-token-permissions.png`). If
+   one is missing, **+ Add more** adds it.
 2. Select **Continue to summary**, then **Create Token**.
 3. Copy the token. Cloudflare shows it once.
 
