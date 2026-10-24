@@ -44,14 +44,15 @@ loans.post("/v1/loans", async (c) => {
 		        EXISTS (SELECT 1 FROM memberships om WHERE om.member_id = c.owner_id
 		                 AND om.community_id = cs.community_id AND om.status = 'active') AS owner_active,
 		        EXISTS (SELECT 1 FROM memberships hm WHERE hm.member_id = c.holder_id
-		                 AND hm.community_id = cs.community_id AND hm.status = 'active') AS holder_active
+		                 AND hm.community_id = cs.community_id AND hm.status = 'active') AS holder_active,
+		        (SELECT display_name FROM members WHERE id = ?) AS borrower_name
 		   FROM copies c
 		   JOIN copy_shares cs ON cs.copy_id = c.id AND cs.community_id = ?
 		   JOIN editions e ON e.id = c.edition_id
 		   JOIN members m ON m.id = c.owner_id
 		  WHERE c.id = ?`,
 	)
-		.bind(member.communityId, copyId)
+		.bind(member.id, member.communityId, copyId)
 		.first<{
 			owner_id: string;
 			state: string;
@@ -69,6 +70,7 @@ loans.post("/v1/loans", async (c) => {
 			claimed: number;
 			owner_active: number;
 			holder_active: number;
+			borrower_name: string | null;
 		}>();
 	if (!copy) return json(c, problem(404, "No such copy"));
 	// Suspended: nobody writes to them, so nothing is asked of them.
@@ -241,7 +243,6 @@ loans.post("/v1/loans", async (c) => {
 			throw error;
 		}
 
-	const borrower = await displayName(c.env, member.id);
 	c.executionCtx.waitUntil(
 		tell(c.env, {
 			kind: "loan_request",
@@ -249,7 +250,7 @@ loans.post("/v1/loans", async (c) => {
 			locale: copy.locale,
 			url: `${c.env.APP_URL}/loans`,
 			bookTitle: copy.title,
-			borrowerName: borrower,
+			borrowerName: copy.borrower_name ?? "",
 			note: message ?? null,
 			relay,
 		}).catch((error: unknown) => console.error("[loans] notify failed", error)),
@@ -271,11 +272,12 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 	const id = c.req.param("id") ?? "";
 
 	const loan = await c.env.DB.prepare(
-		`SELECT l.copy_id, l.borrower_id, e.title, m.email, m.locale
+		`SELECT l.copy_id, l.borrower_id, e.title, m.email, m.locale, o.display_name AS lender_name
 		   FROM loans l
 		   JOIN copies c ON c.id = l.copy_id
 		   JOIN editions e ON e.id = c.edition_id
 		   JOIN members m ON m.id = l.borrower_id
+		   JOIN members o ON o.id = l.lender_id
 		  WHERE l.id = ? AND l.lender_id = ? AND l.status = 'requested'`,
 	)
 		.bind(id, member.id)
@@ -285,6 +287,7 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 			title: string;
 			email: string;
 			locale: "en" | "he";
+			lender_name: string;
 		}>();
 	if (!loan) return json(c, problem(404, "No open request"));
 
@@ -327,7 +330,6 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 		);
 	}
 
-	const lender = await displayName(c.env, member.id);
 	c.executionCtx.waitUntil(
 		tell(c.env, {
 			kind: "loan_decision",
@@ -335,7 +337,7 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 			locale: loan.locale,
 			url: `${c.env.APP_URL}/loans`,
 			bookTitle: loan.title,
-			lenderName: lender,
+			lenderName: loan.lender_name,
 			accepted: accept,
 		}).catch((error: unknown) => console.error("[loans] notify failed", error)),
 	);
@@ -861,15 +863,6 @@ loans.get("/v1/me/loans", async (c) => {
 		relaying: views.filter((loan) => loan.relayFrom?.id === member.id),
 	});
 });
-
-async function displayName(env: Env, memberId: string): Promise<string> {
-	const row = await env.DB.prepare(
-		"SELECT display_name FROM members WHERE id = ?",
-	)
-		.bind(memberId)
-		.first<{ display_name: string }>();
-	return row?.display_name ?? "";
-}
 
 function view(row: LoanRow, viewerId: string): LoanView {
 	const mine =

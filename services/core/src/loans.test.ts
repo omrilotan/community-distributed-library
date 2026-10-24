@@ -157,6 +157,41 @@ describe("loan lifecycle", () => {
 			201,
 		);
 	});
+
+	it("the request and the answer each name who sent them", async () => {
+		const sent = () =>
+			(
+				env.NOTIFY as unknown as {
+					sentMessages(): Promise<
+						{
+							kind: string;
+							to: string;
+							borrowerName?: string;
+							lenderName?: string;
+						}[]
+					>;
+				}
+			).sentMessages();
+		const before = (await sent()).length;
+
+		const { body } = await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		expect((await as(DANA).post(`/v1/loans/${body.id}/accept`)).status).toBe(
+			204,
+		);
+		const told = (await sent())
+			.slice(before)
+			.filter((message) =>
+				["loan_request", "loan_decision"].includes(message.kind),
+			)
+			.map(
+				(message) =>
+					`${message.kind}:${message.to}:${message.borrowerName ?? message.lenderName}`,
+			);
+		expect(told).toEqual([
+			"loan_request:dana@example.com:Sam",
+			"loan_decision:sam@example.com:Dana",
+		]);
+	});
 });
 
 describe("extensions", () => {
