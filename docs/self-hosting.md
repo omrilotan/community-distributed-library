@@ -11,8 +11,9 @@ and one from Resend; one command does the rest.
 
 - A domain whose DNS is on Cloudflare, for example `example.org`. Your library will live at a name
   under it, such as `our-street.example.org`.
-- A Cloudflare account with the **Workers Paid** plan (US$5 a month). The library uses scheduled jobs
-  and several Workers per library.
+- A Cloudflare account with the **Workers Paid** plan (US$5 a month). The free plan gives each
+  request 10 ms of processing; drawing a page of the library often takes more, so on the free plan
+  many pages would fail. Paid also allows the library's scheduled jobs.
 - A [Resend](https://resend.com) account, free for up to 3,000 emails a month. Sign-in links and
   reminders are sent through it.
 - [Node.js](https://nodejs.org) (the version in `.nvmrc`) and git.
