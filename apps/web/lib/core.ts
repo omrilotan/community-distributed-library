@@ -28,7 +28,7 @@ const isDevelopment = process.env.NODE_ENV !== "production";
  */
 export const CLIENT_IP_HEADER = "x-cdl-client-ip";
 
-async function clientIp(): Promise<Record<string, string>> {
+export async function clientIp(): Promise<Record<string, string>> {
 	try {
 		const ip = (await requestHeaders()).get("cf-connecting-ip");
 		return ip ? { [CLIENT_IP_HEADER]: ip } : {};

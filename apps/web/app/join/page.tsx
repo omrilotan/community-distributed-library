@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { coreRaw } from "../../lib/core.ts";
+import { clientIp, coreRaw } from "../../lib/core.ts";
 import { strings, type Locale } from "../../lib/i18n.ts";
 import { Callout } from "../ui.tsx";
 import { titled } from "../../lib/page-title.ts";
@@ -17,7 +17,7 @@ async function stateOf(invite: string | undefined): Promise<InviteState> {
 	if (!invite) return "usable";
 	const response = await coreRaw("/v1/invites/state", {
 		method: "POST",
-		headers: { "content-type": "application/json" },
+		headers: { "content-type": "application/json", ...(await clientIp()) },
 		body: JSON.stringify({ token: invite }),
 	}).catch(() => null);
 	if (!response?.ok) return "usable";
