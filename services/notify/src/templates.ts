@@ -461,7 +461,7 @@ function wrap(
 		text: `${lead}\n\n${url}\n\n${tail}\n`,
 		html: `<!doctype html><html lang="${locale}" dir="${dir}"><body style="font-family:system-ui,sans-serif;line-height:1.5">
 <p>${escape(lead).replace(/\n/g, "<br>")}</p>
-<p><a href="${url}">${url}</a></p>
+<p><a href="${escape(url)}">${escape(url)}</a></p>
 <p style="color:#555">${escape(tail)}</p>
 </body></html>`,
 	};
