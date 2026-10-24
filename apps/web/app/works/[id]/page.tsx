@@ -89,8 +89,7 @@ export default async function WorkPageView({
 	const url = `${appBase()}/works/${encodeURIComponent(id)}`;
 
 	// Public card: link previews and visitors without a session see the book, nothing else.
-	const card = await publicCard(id);
-	if (card.status !== 200) return <Empty title={t.noSuchBook} />;
+	const cardAsked = publicCard(id);
 	const og = (
 		<>
 			{/* One address for the book, whoever shared it and however. */}
@@ -99,6 +98,8 @@ export default async function WorkPageView({
 	);
 
 	if (!(await sessionToken())) {
+		const card = await cardAsked;
+		if (card.status !== 200) return <Empty title={t.noSuchBook} />;
 		return (
 			<main className="book">
 				{og}
@@ -129,12 +130,20 @@ export default async function WorkPageView({
 		);
 	}
 
-	// The profile check, the book and the vocabulary in one round.
-	const [me, page, vocab] = await Promise.all([
+	// The profile check, the book and the vocabulary in one round, started
+	// before the card is read so the two rounds overlap rather than queue.
+	const rest = Promise.all([
 		requireProfile(),
 		core<WorkPage>(`/v1/works/${encodeURIComponent(id)}`),
 		vocabulary(),
 	]);
+	// A missing book answers before these are read; a redirect thrown in them
+	// then has nowhere to go, so it is marked handled here and still thrown by
+	// the await below.
+	rest.catch(() => {});
+	const card = await cardAsked;
+	if (card.status !== 200) return <Empty title={t.noSuchBook} />;
+	const [me, page, vocab] = await rest;
 	if (page.status === 401) signedOut(page.status);
 	if (page.status !== 200) {
 		return <Empty title={t.noSuchBook} />;
