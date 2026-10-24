@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 const vars = env as unknown as {
 	APP_URL?: string;
 	MCP_URL?: string;
+	IMAGES_URL?: string;
 };
 const development = process.env.NODE_ENV !== "production";
 
@@ -17,4 +18,16 @@ export function mcpBase(): string {
 		/\/$/,
 		"",
 	);
+}
+
+/** The origin the covers come from, when it is not this site's own. */
+export function imagesOrigin(): string | null {
+	if (!vars.IMAGES_URL) return null;
+	try {
+		const origin = new URL(vars.IMAGES_URL).origin;
+		const own = appBase() ? new URL(appBase()).origin : null;
+		return origin === own ? null : origin;
+	} catch {
+		return null;
+	}
 }

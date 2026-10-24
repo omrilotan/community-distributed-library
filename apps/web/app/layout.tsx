@@ -9,7 +9,7 @@ import { direction, locales, strings, type Locale } from "../lib/i18n.ts";
 import { library, libraryWords } from "../lib/library.ts";
 import { accentCss, brandColours, iconHref } from "../lib/accent.ts";
 import { libraryType } from "../lib/library-type.ts";
-import { appBase } from "../lib/site.ts";
+import { appBase, imagesOrigin } from "../lib/site.ts";
 import { cardHref } from "../lib/card-href.ts";
 import { sessionToken } from "../lib/session.ts";
 import { moderates, viewingAsMember } from "../lib/view-as.ts";
@@ -71,6 +71,7 @@ export default async function RootLayout({
 	const bilingual = info.languages.length > 1;
 	// The library's own colour, over the house green.
 	const accent = accentCss(info.accent);
+	const images = imagesOrigin();
 	const hasSession = Boolean(await sessionToken());
 	const me = hasSession ? await getMe().catch(() => null) : null;
 	// A cookie whose session was ended (signed out elsewhere, suspended,
@@ -92,6 +93,10 @@ export default async function RootLayout({
 			data-library={libraryType()}
 		>
 			<head>
+				{/* The covers come off their own host: open the way there while the
+				    stylesheet is still on its way, so the first cover does not wait
+				    for a handshake. */}
+				{images ? <link rel="preconnect" href={images} /> : null}
 				<meta name="robots" content={robots} />
 				{/* Written here, not in the metadata: vinext streams that into the
 				    body, and Chrome sees no manifest outside the head, so it never
