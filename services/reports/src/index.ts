@@ -125,7 +125,10 @@ export default {
 
 /** Reporting API v1 sends an array; the old CSP format sends one object. */
 function reportsIn(payload: unknown): Report[] {
-	if (Array.isArray(payload)) return payload as Report[];
+	if (Array.isArray(payload))
+		return payload.filter(
+			(entry): entry is Report => !!entry && typeof entry === "object",
+		);
 	if (payload && typeof payload === "object") {
 		const legacy = (payload as Record<string, unknown>)["csp-report"];
 		if (legacy && typeof legacy === "object") {
@@ -157,7 +160,8 @@ function number(value: unknown): number {
 function write(env: Env, url: URL, report: Report, userAgent: string): void {
 	if (!env.ANALYTICS) return;
 
-	const type = report.type ?? (report.legacy ? "csp-violation" : "unknown");
+	const type =
+		text(report.type, 100) || (report.legacy ? "csp-violation" : "unknown");
 	const body: Record<string, unknown> = report.body ?? {
 		...(report as Record<string, unknown>),
 	};
@@ -200,7 +204,7 @@ function write(env: Env, url: URL, report: Report, userAgent: string): void {
 				failed,
 				text(body.type),
 				text(body.phase),
-				String(body.status_code ?? ""),
+				String(body.status_code ?? "").slice(0, 16),
 				text(body.method),
 				userAgent.slice(0, 200),
 			],
