@@ -146,6 +146,30 @@ describe("the reports endpoint", () => {
 		expect(points).toHaveLength(0);
 	});
 
+	it("bounds a report whose type and status are not what a browser sends", async () => {
+		const { env, points } = sink();
+		await worker.fetch(
+			post([
+				null,
+				1,
+				{ type: "x".repeat(20_000), body: {} },
+				{ type: { nested: true }, body: {} },
+				{
+					type: "network-error",
+					body: {
+						url: "https://library.test/",
+						status_code: "y".repeat(20_000),
+					},
+				},
+			]),
+			env,
+		);
+		expect(points).toHaveLength(3);
+		expect(points[0]!.blobs?.[0]).toBe("x".repeat(100));
+		expect(points[1]!.blobs?.[0]).toBe("unknown");
+		expect(points[2]!.blobs?.[4]).toBe("y".repeat(16));
+	});
+
 	it("refuses a body too big to be a report", async () => {
 		const { env } = sink();
 		const request = new Request("https://reports.test/csp", {
