@@ -142,10 +142,14 @@ export function configFor(data, slug, name) {
 		database_name: `${slug}-${name}`,
 		database_id: lib.databases[name],
 	}));
-	config.r2_buckets = config.r2_buckets?.map((bucket) => ({
-		...bucket,
-		bucket_name: ours(bucket.bucket_name),
-	}));
+	config.r2_buckets = config.r2_buckets
+		// No nightly snapshot for a library that opted out: core skips it
+		// without the bucket (services/core/src/backup.ts).
+		?.filter((bucket) => bucket.binding !== "BACKUPS" || lib.backups !== false)
+		.map((bucket) => ({
+			...bucket,
+			bucket_name: ours(bucket.bucket_name),
+		}));
 	config.services = config.services?.map((binding) =>
 		SHARED.has(binding.service)
 			? binding

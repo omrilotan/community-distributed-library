@@ -147,6 +147,10 @@ books and data, and none of them can see another's.
 
 ## Optional
 
+- **No nightly backup.** Each library saves a snapshot of its database to a private R2 bucket every
+  night. To skip that, add `--no-backups` to `npm run provision`, or set `"backups": false` on the
+  library in `libraries.json` and run `npm run deploy -- <slug> core`.
+
 - **Book covers from Google Books.** Lookups use Open Library, then Google Books. With a
   [Google Books API key](https://developers.google.com/books/docs/v1/using#APIKey) there are more
   covers:
