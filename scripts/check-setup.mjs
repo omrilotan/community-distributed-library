@@ -107,8 +107,9 @@ else {
 	}
 
 	// Libraries already open send through Cloudflare Email Sending, which has
-	// to be on for each sender's domain.
-	const path = `${root}libraries.json`;
+	// to be on for each sender's domain. The manifest is libraries.json or the
+	// file CDL_LIBRARIES names, never the example.
+	const path = process.env.CDL_LIBRARIES || `${root}libraries.json`;
 	const libraries = existsSync(path)
 		? (JSON.parse(readFileSync(path, "utf8")).libraries ?? [])
 		: [];
