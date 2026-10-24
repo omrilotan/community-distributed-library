@@ -130,6 +130,10 @@ else {
 			bad(
 				"The token cannot reach Email Sending: it needs Email Sending: Edit (step 2)",
 			);
+		else if (!zone)
+			bad(
+				`No domain in this account holds ${domain}: add the domain to Cloudflare first, or check the token has Zone: Read`,
+			);
 		else
 			bad(
 				`Email Sending is off for ${domain}: run npx wrangler email sending enable ${domain}`,
