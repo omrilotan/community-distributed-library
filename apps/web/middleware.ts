@@ -267,7 +267,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 	const pathname = new URL(request.url).pathname;
 	const robots = ROBOTS;
 	headers.set(ROBOTS_HEADER, robots);
-	// A change of filters: the page hears, to keep it on the member.
+	// A change of filters: the page hears, to keep it on the member. Only
+	// middleware may say so, as with the secret shown once below.
+	headers.delete(BROWSE_CHANGED_HEADER);
 	if (remembered.changed !== undefined)
 		headers.set(BROWSE_CHANGED_HEADER, remembered.changed);
 	// A secret shown once (lib/shown-once.ts): handed to this page view in a
