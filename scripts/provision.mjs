@@ -49,6 +49,11 @@ if (!["books", "things"].includes(values.type))
 const centre = values.centre.split(",").map(Number);
 if (centre.length !== 2 || centre.some((n) => !Number.isFinite(n)))
 	fail("--centre is latitude,longitude, for example 51.6012,-0.1924.");
+const radius = Number(values.radius);
+if (!Number.isInteger(radius) || radius <= 0)
+	fail("--radius is a whole number of metres, for example 3000.");
+if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(values.host))
+	fail("--host is a domain name, for example our-street.example.org.");
 const admin = values.admin.trim().toLowerCase();
 const dry = values["dry-run"];
 if (!process.env.CLOUDFLARE_API_TOKEN && !dry)
@@ -330,7 +335,7 @@ const core = dry ? "<core config>" : configFor(data, slug, "core");
 const memberId = ulid();
 const statements = [
 	`INSERT OR IGNORE INTO communities (id, slug, name, centre_lat, centre_lng, radius_m, join_policy, loan_days, type, created_at)
-	 SELECT ${sql(ulid())}, ${sql(slug)}, ${sql(values.name)}, ${centre[0]}, ${centre[1]}, ${Number(values.radius)}, 'invite', 21, ${sql(values.type)}, unixepoch()
+	 SELECT ${sql(ulid())}, ${sql(slug)}, ${sql(values.name)}, ${centre[0]}, ${centre[1]}, ${radius}, 'invite', 21, ${sql(values.type)}, unixepoch()
 	 WHERE NOT EXISTS (SELECT 1 FROM communities)`,
 	`INSERT OR IGNORE INTO members (id, email, display_name, locale, created_at)
 	 VALUES (${sql(memberId)}, ${sql(admin)}, ${sql(admin.split("@")[0])}, 'en', unixepoch())`,
