@@ -242,11 +242,15 @@ handoffs.post("/v1/loans/:id/handoff/confirm", async (c) => {
 	if (!meets(loan, proposal.direction, member.id)) return json(c, notYours());
 
 	const code = handoffCode();
-	await c.env.DB.prepare(
-		"UPDATE handoffs SET status = 'agreed', agreed_at = ?, code = ? WHERE id = ?",
+	// Still proposed when written, not only when read: a cancel or re-propose
+	// racing the confirm must not leave a cancelled row agreed.
+	const agreed = await c.env.DB.prepare(
+		"UPDATE handoffs SET status = 'agreed', agreed_at = ?, code = ? WHERE id = ? AND status = 'proposed'",
 	)
 		.bind(now(), code, proposal.id)
 		.run();
+	if (!agreed.meta.changes)
+		return json(c, problem(404, "No proposal to confirm"));
 
 	// Borrower learns where; lender learns the code. The code travels only to the lender.
 	const giver = proposal.direction === "out" ? loan.giver : loan.lender;
