@@ -160,11 +160,25 @@ async function sendingOn(domain) {
 }
 
 /** The zone the host is in: its id and its domain. */
+let byId;
 async function findZone(host) {
-	if (values["zone-id"])
-		return { id: values["zone-id"], name: host.split(".").slice(-2).join(".") };
-	if (dry)
-		return { id: "<zone id>", name: host.split(".").slice(-2).join(".") };
+	// Guessing the domain as the last two labels is wrong for example.co.uk,
+	// so a given zone id is asked for its name, with the guess as a fallback.
+	const guess = { name: host.split(".").slice(-2).join(".") };
+	if (values["zone-id"]) {
+		if (dry) return { id: values["zone-id"], ...guess };
+		byId ??= fetch(
+			`https://api.cloudflare.com/client/v4/zones/${values["zone-id"]}`,
+			{ headers: { authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}` } },
+		)
+			.then((reply) => reply.json())
+			.catch(() => ({}));
+		const body = await byId;
+		return body.result?.name
+			? { id: values["zone-id"], name: body.result.name }
+			: { id: values["zone-id"], ...guess };
+	}
+	if (dry) return { id: "<zone id>", ...guess };
 	const labels = host.split(".");
 	for (let at = 0; at < labels.length - 1; at += 1) {
 		const name = labels.slice(at).join(".");
