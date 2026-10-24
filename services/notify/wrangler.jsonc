@@ -8,6 +8,9 @@
   // Internal: reached only by core over its service binding.
   "workers_dev": false,
   "preview_urls": false,
+  // Cloudflare Email Sending: the domain of FROM_ADDRESS must be enabled
+  // for sending (`wrangler email sending enable <domain>`).
+  "send_email": [{ "name": "EMAIL" }],
   "vars": {
     "FROM_ADDRESS": "library@example.org",
     // Web push. The private half is a secret on this Worker.

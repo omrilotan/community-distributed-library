@@ -6,9 +6,11 @@ import { sendPush, type Subscription } from "./push.ts";
 export interface Env {
 	FROM_ADDRESS: string;
 	FROM_NAME: string;
+	/** Cloudflare Email Sending, for the domain FROM_ADDRESS is on. */
+	EMAIL?: SendEmail;
 	/**
-	 * Secret: `wrangler secret put RESEND_API_KEY -c services/notify/wrangler.jsonc`.
-	 * Absent locally, so development logs the message instead of sending it.
+	 * Secret, while email moves to Cloudflare: Resend takes a message that
+	 * Cloudflare could not. Without either, development logs the message.
 	 */
 	RESEND_API_KEY?: string;
 	/** VAPID public key, base64url. Handed to browsers when they subscribe. */
@@ -21,7 +23,8 @@ export interface Env {
  * Delivery only. `core` decides what to say; this service decides how it
  * travels. Swap the channel and nothing upstream changes (decision 0013).
  *
- * Resend for now: Cloudflare Email Sending needs the Workers Paid plan.
+ * Email goes through Cloudflare Email Sending, with Resend behind it for
+ * as long as a library still has a Resend key.
  */
 export default class Notify extends WorkerEntrypoint<Env> {
 	/**
@@ -90,10 +93,37 @@ export default class Notify extends WorkerEntrypoint<Env> {
 		const message = Message.parse(input);
 		const rendered = render(message);
 
+		const email = {
+			from: { name: this.env.FROM_NAME, email: this.env.FROM_ADDRESS },
+			to: message.to,
+			subject: rendered.subject,
+			text: rendered.text,
+			html: rendered.html,
+		};
+
+		if (this.env.EMAIL) {
+			const failure = await this.env.EMAIL.send(email).then(
+				() => null,
+				(error: unknown) => error as { code?: string; message?: string },
+			);
+			if (!failure) return { delivered: true, channel: "email" };
+			console.error(
+				"[notify:cloudflare] send failed",
+				failure.code,
+				failure.message,
+			);
+			// The address bounced before, or the message itself is wrong: no
+			// other service would do better, and later would fail the same.
+			if (REFUSED.has(failure.code ?? ""))
+				return { delivered: false, channel: "email", retry: false };
+			if (!this.env.RESEND_API_KEY)
+				return { delivered: false, channel: "email", retry: true };
+		}
+
 		if (!this.env.RESEND_API_KEY) {
-			// No secret means local development, or a production secret gone
-			// missing: say what would have gone, never a sign-in link, which core
-			// already hands a developer as debugUrl.
+			// Neither service means local development, or production gone
+			// missing its binding: say what would have gone, never a sign-in
+			// link, which core already hands a developer as debugUrl.
 			console.log(
 				`[notify:console] to=${message.to} subject=${rendered.subject}${
 					// Either one carries a link that signs somebody in.
@@ -112,11 +142,11 @@ export default class Notify extends WorkerEntrypoint<Env> {
 				"content-type": "application/json",
 			},
 			body: JSON.stringify({
-				from: `${this.env.FROM_NAME} <${this.env.FROM_ADDRESS}>`,
-				to: [message.to],
-				subject: rendered.subject,
-				text: rendered.text,
-				html: rendered.html,
+				from: `${email.from.name} <${email.from.email}>`,
+				to: [email.to],
+				subject: email.subject,
+				text: email.text,
+				html: email.html,
 			}),
 		}).catch((error: unknown) => {
 			console.error("[notify:resend] request failed", error);
@@ -142,3 +172,17 @@ export default class Notify extends WorkerEntrypoint<Env> {
 		return new Response("notify", { status: 200 });
 	}
 }
+
+/**
+ * Cloudflare's refusals that are about this message, not the moment: a
+ * suppressed or disallowed address, or a message it cannot take. Anything
+ * else (limits, delivery, its own trouble) is worth another go.
+ */
+const REFUSED = new Set([
+	"E_RECIPIENT_SUPPRESSED",
+	"E_RECIPIENT_NOT_ALLOWED",
+	"E_VALIDATION_ERROR",
+	"E_FIELD_MISSING",
+	"E_TOO_MANY_RECIPIENTS",
+	"E_CONTENT_TOO_LARGE",
+]);
