@@ -196,8 +196,12 @@ export async function GuestShelves({
 			) : null}
 
 			<div className="grid" id="listing">
-				{results.map((listing) => (
-					<GuestCard key={listing.work.id} listing={listing} />
+				{results.map((listing, index) => (
+					<GuestCard
+						key={listing.work.id}
+						listing={listing}
+						eager={at === 0 && index < 8}
+					/>
 				))}
 			</div>
 
@@ -230,7 +234,15 @@ export async function GuestShelves({
  * it opens the note that borrowing is for members, which works without
  * script too (a popover).
  */
-function GuestCard({ listing }: { listing: PublicListing }) {
+function GuestCard({
+	listing,
+	eager = false,
+}: {
+	listing: PublicListing;
+	/** The first screen's covers load at once; past them the browser knows
+	 *  where the fold is better than we do, and fetches as they near it. */
+	eager?: boolean;
+}) {
 	const { work, edition } = listing;
 	return (
 		<button
@@ -243,7 +255,11 @@ function GuestCard({ listing }: { listing: PublicListing }) {
 		>
 			<span className="tile-cover" style={coverTransition(work.id)}>
 				{edition.coverUrl ? (
-					<img alt="" src={edition.coverUrl} loading="lazy" />
+					<img
+						alt=""
+						src={edition.coverUrl}
+						loading={eager ? undefined : "lazy"}
+					/>
 				) : (
 					<PlainCover title={edition.title} authors={work.authors} />
 				)}

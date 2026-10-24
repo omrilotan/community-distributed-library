@@ -12,10 +12,14 @@ export function WorkCard({
 	listing,
 	locale,
 	t,
+	eager = false,
 }: {
 	listing: WorkListing;
 	locale: Locale;
 	t: Strings;
+	/** The first screen's covers load at once; past them the browser knows
+	 *  where the fold is better than we do, and fetches as they near it. */
+	eager?: boolean;
 }) {
 	const { work, edition, copies, available } = listing;
 	// Nothing to borrow because everyone who has it is away: say that, rather
@@ -37,7 +41,11 @@ export function WorkCard({
 		>
 			<span className="tile-cover" style={coverTransition(work.id)}>
 				{edition.coverUrl ? (
-					<img alt="" src={edition.coverUrl} loading="lazy" />
+					<img
+						alt=""
+						src={edition.coverUrl}
+						loading={eager ? undefined : "lazy"}
+					/>
 				) : (
 					<PlainCover title={edition.title} authors={work.authors} />
 				)}
