@@ -121,10 +121,13 @@ function database(name) {
 
 function bucket(name) {
 	const out = wrangler(["r2", "bucket", "create", name], { quiet: true });
-	if (out === null && !dry) {
-		const list = wrangler(["r2", "bucket", "list"], { quiet: true }) ?? "";
-		if (!list.includes(name)) fail(`Could not create bucket ${name}.`);
-	}
+	// Creating one that exists fails; anything else failing is real.
+	if (
+		out === null &&
+		!dry &&
+		wrangler(["r2", "bucket", "info", name], { quiet: true }) === null
+	)
+		fail(`Could not create bucket ${name}.`);
 }
 
 function kv(title) {
