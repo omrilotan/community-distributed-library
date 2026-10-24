@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { activeLoan, as, COPY_A, COPY_B, DANA, NOA, SAM } from "../test/api.ts";
-import { post, sign } from "./events.ts";
+import { deliverPending, post, sign } from "./events.ts";
 
 const kindsFor = async (member: string) =>
 	(await as(member).get("/v1/events")).body.events.map((e: any) => e.kind);
@@ -146,6 +146,24 @@ describe("webhooks", () => {
 		const ping = await as(SAM).post(`/v1/me/webhooks/${hook.body.id}/test`);
 		expect(ping.status).toBe(202);
 		expect(ping.body).toEqual({ ok: false, status: 503 });
+	});
+
+	it("counts every failed delivery of one pass towards switching the hook off", async () => {
+		const hook = await as(SAM).post("/v1/me/webhooks", {
+			url: "https://hooks.down/in",
+		});
+		await activeLoan(SAM, DANA, COPY_B);
+		const failures = async () =>
+			(await as(SAM).get("/v1/me/webhooks")).body.webhooks[0].failures;
+		const before = await failures();
+		// Four deliveries, all due again, drained by a single pass.
+		await env.DB.prepare(
+			"UPDATE webhook_deliveries SET next_at = 0 WHERE webhook_id = ?",
+		)
+			.bind(hook.body.id)
+			.run();
+		expect(await deliverPending(env)).toBe(0);
+		expect(await failures()).toBe(before + 4);
 	});
 
 	it("does not deliver another member's loan to a bystander's hook", async () => {

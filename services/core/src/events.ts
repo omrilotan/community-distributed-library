@@ -151,7 +151,6 @@ interface Due {
 	attempts: number;
 	url: string;
 	secret: string;
-	failures: number;
 	kind: string;
 	data: string;
 	created_at: number;
@@ -160,7 +159,7 @@ interface Due {
 /** Push every due delivery once. Called after emit and every 15 minutes by cron. */
 export async function deliverPending(env: Env, limit = 25): Promise<number> {
 	const { results } = await env.DB.prepare(
-		`SELECT d.id, d.webhook_id, d.event_id, d.attempts, w.url, w.secret, w.failures,
+		`SELECT d.id, d.webhook_id, d.event_id, d.attempts, w.url, w.secret,
 		        e.kind, e.data, e.created_at
 		   FROM webhook_deliveries d
 		   JOIN webhooks w ON w.id = d.webhook_id
@@ -201,13 +200,21 @@ export async function deliverPending(env: Env, limit = 25): Promise<number> {
 				outcome.error,
 				due.id,
 			),
+			// Counted against the live row: one hook may have several deliveries
+			// in a pass, and passes overlap.
 			env.DB.prepare(
-				`UPDATE webhooks SET failures = ?, last_status = ?, last_at = ?, disabled_at = ? WHERE id = ?`,
+				`UPDATE webhooks
+				    SET failures = CASE WHEN ?1 THEN 0 ELSE failures + 1 END,
+				        last_status = ?2, last_at = ?3,
+				        disabled_at = CASE WHEN ?1 THEN NULL
+				                          WHEN failures + 1 >= ?4 THEN coalesce(disabled_at, ?3)
+				                          ELSE disabled_at END
+				  WHERE id = ?5`,
 			).bind(
-				outcome.ok ? 0 : due.failures + 1,
+				outcome.ok ? 1 : 0,
 				outcome.status,
 				now(),
-				!outcome.ok && due.failures + 1 >= DISABLE_AFTER ? now() : null,
+				DISABLE_AFTER,
 				due.webhook_id,
 			),
 		];
