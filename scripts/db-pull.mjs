@@ -76,44 +76,54 @@ if (!process.env.CDL_STATE_DIR && devServerRunning()) {
 }
 
 const work = mkdtempSync(join(tmpdir(), "cdl-pull-"));
-for (const key of targets) {
-	const { name, remote, remoteConfig, config } = databases[key];
-	const local = [
-		"d1",
-		"execute",
-		name,
-		"--local",
-		"--persist-to",
-		stateDir,
-		"-c",
-		config,
-	];
-	const dump = join(work, `${name}.sql`);
+// Until it is imported and scrubbed, the dump holds production sessions and
+// tokens: it never stays behind, however the run ends (a failed step or Ctrl-C).
+const clean = () => rmSync(work, { recursive: true, force: true });
+process.on("SIGINT", () => {
+	clean();
+	process.exit(130);
+});
+try {
+	for (const key of targets) {
+		const { name, remote, remoteConfig, config } = databases[key];
+		const local = [
+			"d1",
+			"execute",
+			name,
+			"--local",
+			"--persist-to",
+			stateDir,
+			"-c",
+			config,
+		];
+		const dump = join(work, `${name}.sql`);
 
-	console.log(`[${key}] exporting ${remote} from production…`);
-	wrangler([
-		"d1",
-		"export",
-		remote,
-		"--remote",
-		"--output",
-		dump,
-		"-c",
-		remoteConfig(),
-	]);
-	// The dump goes table by table (create, then rows). A row can reference a table the
-	// dump has not created yet, and D1 checks that on insert. So: every CREATE first,
-	// then the rows, with foreign keys deferred to the end of the batch.
-	writeFileSync(dump, reorder(readFileSync(dump, "utf8")));
+		console.log(`[${key}] exporting ${remote} from production…`);
+		wrangler([
+			"d1",
+			"export",
+			remote,
+			"--remote",
+			"--output",
+			dump,
+			"-c",
+			remoteConfig(),
+		]);
+		// The dump goes table by table (create, then rows). A row can reference a table the
+		// dump has not created yet, and D1 checks that on insert. So: every CREATE first,
+		// then the rows, with foreign keys deferred to the end of the batch.
+		writeFileSync(dump, reorder(readFileSync(dump, "utf8")));
 
-	console.log(`[${key}] replacing local ${name}…`);
-	dropAllTables(local);
-	wrangler([...local, "--file", dump]);
-	for (const statement of SCRUB[key] ?? [])
-		wrangler([...local, "--command", statement]);
-	console.log(`[${key}] done${SCRUB[key] ? " (credentials scrubbed)" : ""}`);
+		console.log(`[${key}] replacing local ${name}…`);
+		dropAllTables(local);
+		wrangler([...local, "--file", dump]);
+		for (const statement of SCRUB[key] ?? [])
+			wrangler([...local, "--command", statement]);
+		console.log(`[${key}] done${SCRUB[key] ? " (credentials scrubbed)" : ""}`);
+	}
+} finally {
+	clean();
 }
-rmSync(work, { recursive: true, force: true });
 console.log(
 	"Local databases now mirror production. Sign in locally with your own email (DEV_AUTH prints the link).",
 );
