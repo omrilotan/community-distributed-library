@@ -165,27 +165,32 @@ handoffs.post("/v1/loans/:id/handoff/propose", async (c) => {
 	const { day, period } = parsed.data;
 
 	const existing = await c.env.DB.prepare(
-		"SELECT id, status FROM handoffs WHERE loan_id = ? AND direction = ? AND status IN ('proposed', 'agreed')",
+		"SELECT status FROM handoffs WHERE loan_id = ? AND direction = ? AND status IN ('proposed', 'agreed')",
 	)
 		.bind(loanId, direction)
-		.first<{ id: string; status: string }>();
+		.first<{ status: string }>();
 	if (existing?.status === "agreed")
 		return json(c, problem(409, "Already agreed", "Cancel it first"));
 
 	const id = ulid();
-	await c.env.DB.batch([
-		...(existing
-			? [
-					c.env.DB.prepare(
-						"UPDATE handoffs SET status = 'cancelled' WHERE id = ?",
-					).bind(existing.id),
-				]
-			: []),
-		c.env.DB.prepare(
-			`INSERT INTO handoffs (id, loan_id, direction, day, period, proposed_by, status, created_at)
-			 VALUES (?, ?, ?, ?, ?, ?, 'proposed', ?)`,
-		).bind(id, loanId, direction, day, period, member.id, now()),
-	]);
+	try {
+		await c.env.DB.batch([
+			// Keyed on the loan, not the row read above: a proposal that landed in
+			// between is replaced too, and an agreed one is left for the INSERT to
+			// trip over.
+			c.env.DB.prepare(
+				"UPDATE handoffs SET status = 'cancelled' WHERE loan_id = ? AND direction = ? AND status = 'proposed'",
+			).bind(loanId, direction),
+			c.env.DB.prepare(
+				`INSERT INTO handoffs (id, loan_id, direction, day, period, proposed_by, status, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, 'proposed', ?)`,
+			).bind(id, loanId, direction, day, period, member.id, now()),
+		]);
+	} catch (error) {
+		if (String(error).includes("UNIQUE"))
+			return json(c, problem(409, "Already agreed", "Cancel it first"));
+		throw error;
+	}
 
 	const counterpart = direction === "out" ? loan.giver : loan.lender;
 	const other = member.id === loan.borrowerId ? counterpart : loan.borrower;
