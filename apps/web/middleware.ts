@@ -147,6 +147,8 @@ function languageAsked(url: URL): "he" | "en" | null {
 function rememberLanguage(response: NextResponse, lang: "he" | "en") {
 	response.cookies.set("locale", lang, {
 		path: "/",
+		httpOnly: true,
+		secure: true,
 		sameSite: "lax",
 		maxAge: 60 * 60 * 24 * 365,
 	});

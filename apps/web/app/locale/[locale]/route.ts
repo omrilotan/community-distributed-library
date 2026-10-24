@@ -22,7 +22,7 @@ export async function GET(
 		status: 303,
 		headers: {
 			location: whereTheyWere(request),
-			"set-cookie": `locale=${chosen}; Path=/; Max-Age=31536000; SameSite=Lax`,
+			"set-cookie": `locale=${chosen}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`,
 		},
 	});
 }
