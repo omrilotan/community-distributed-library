@@ -19,6 +19,7 @@
     "library:things": "wrangler d1 execute cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc --command \"UPDATE communities SET type = 'things'\"",
     "types": "npm run types --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
     "test": "node scripts/check-hosts.mjs && npm run test --workspaces --if-present",
     "format": "prettier --write .",
     "lint": "prettier --check .",

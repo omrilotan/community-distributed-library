@@ -72,7 +72,7 @@ npm run format         # Prettier; CI fails on any diff
 npm run check:libraries
 ```
 
-CI (`.github/workflows/ci.yml`) runs types, Prettier, typecheck, the library check and every test on
+CI (`.github/workflows/ci.yml`) runs types, Prettier, typecheck, the builds, the library check and every test on
 each push, then the browser tests against a local stack. CI does not deploy. After the browser tests,
 `npm run library:things` puts the local library back if you were working on things.
 
