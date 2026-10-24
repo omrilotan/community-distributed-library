@@ -16,6 +16,7 @@ import {
 	configFor,
 	library,
 	manifest,
+	npx,
 	root,
 	sharedConfigFor,
 } from "./libraries.mjs";
@@ -133,8 +134,9 @@ function reorder(sql) {
 /** Empty the local database in place (the file may be open elsewhere; dropping tables is safe). */
 function dropAllTables(local) {
 	const listing = spawnSync(
-		"npx",
+		npx[0],
 		[
+			...npx.slice(1),
 			"wrangler",
 			...local,
 			"--json",
@@ -161,7 +163,7 @@ function dropAllTables(local) {
 }
 
 function wrangler(args) {
-	execFileSync("npx", ["wrangler", ...args], {
+	execFileSync(npx[0], [...npx.slice(1), "wrangler", ...args], {
 		cwd: root,
 		stdio: ["ignore", "ignore", "inherit"],
 	});

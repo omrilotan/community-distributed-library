@@ -2,13 +2,23 @@
 // One command for local development: migrate, then run the API workers and
 // the web app side by side with prefixed output. Ctrl-C stops both.
 import { spawn } from "node:child_process";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+// Node will not spawn a .cmd without a shell (EINVAL since 20.12), so on
+// Windows run npm's own script under this same node. `npm run dev` always
+// tells us where that is.
+const npmBin = process.env.npm_execpath
+	? dirname(process.env.npm_execpath)
+	: join(dirname(process.execPath), "node_modules", "npm", "bin");
+const npm =
+	process.platform === "win32"
+		? [process.execPath, join(npmBin, "npm-cli.js")]
+		: ["npm"];
 
 function run(name, args, { prefix } = {}) {
-	const child = spawn(npm, args, {
+	const child = spawn(npm[0], [...npm.slice(1), ...args], {
 		cwd: root,
 		env: process.env,
 		stdio: prefix ? ["inherit", "pipe", "pipe"] : "inherit",

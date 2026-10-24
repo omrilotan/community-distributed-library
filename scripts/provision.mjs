@@ -16,7 +16,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { webcrypto } from "node:crypto";
-import { configFor, manifestPath, root } from "./libraries.mjs";
+import { configFor, manifestPath, npx, root } from "./libraries.mjs";
 
 const { values, positionals } = parseArgs({
 	allowPositionals: true,
@@ -81,13 +81,11 @@ async function onlyAccount() {
 			: "The token reaches no account. Check it has Account Settings: Read.",
 	);
 }
-const npx = process.platform === "win32" ? "npx.cmd" : "npx";
-
 /** Runs wrangler; returns its output, or null when it failed. */
 function wrangler(args, { input, quiet } = {}) {
 	console.log(`$ wrangler ${args.join(" ")}`);
 	if (dry) return "";
-	const result = spawnSync(npx, ["wrangler", ...args], {
+	const result = spawnSync(npx[0], [...npx.slice(1), "wrangler", ...args], {
 		cwd: root,
 		env,
 		input,

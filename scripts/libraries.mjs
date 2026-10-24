@@ -7,11 +7,22 @@
 // full config per library and Worker next to the template, from the template
 // and the manifest, and deploys that file.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { experimental_readRawConfig } from "wrangler";
 
 export const root = fileURLToPath(new URL("..", import.meta.url));
+
+// Node will not spawn a .cmd without a shell (EINVAL since 20.12), so on
+// Windows run npx's own script under this same node: the command and its
+// leading arguments, to spread into spawn.
+const npmBin = process.env.npm_execpath
+	? dirname(process.env.npm_execpath)
+	: join(dirname(process.execPath), "node_modules", "npm", "bin");
+export const npx =
+	process.platform === "win32"
+		? [process.execPath, join(npmBin, "npx-cli.js")]
+		: ["npx"];
 
 // Deploy order: a Worker's service bindings must point at Workers that
 // already exist, so the ones bound to come first. `host` is the public

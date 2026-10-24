@@ -21,6 +21,7 @@ import {
 	configFor,
 	library,
 	manifest,
+	npx,
 	root,
 	sharedConfigFor,
 } from "./libraries.mjs";
@@ -56,10 +57,10 @@ function run(command, args, { cwd = root, env = {} } = {}) {
 		stdio: "inherit",
 		env: { ...process.env, ...env },
 	});
+	// A command that never started has no exit code to explain itself with.
+	if (result.error) console.error(`✗ ${result.error.message}`);
 	return result.status === 0;
 }
-
-const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 
 /** Migrations, then the Worker, from one written config. */
 function steps(service, config) {
@@ -68,7 +69,8 @@ function steps(service, config) {
 		const resolved = unstable_readConfig({ config }, { hideWarnings: true });
 		for (const database of resolved.d1_databases ?? [])
 			list.push(() =>
-				run(npx, [
+				run(npx[0], [
+					...npx.slice(1),
 					"wrangler",
 					"d1",
 					"migrations",
@@ -86,13 +88,14 @@ function steps(service, config) {
 		// dist/server/wrangler.json, which is what deploys.
 		list.push(
 			() =>
-				run(npx, ["vinext", "build"], {
+				run(npx[0], [...npx.slice(1), "vinext", "build"], {
 					cwd,
 					env: { CDL_WRANGLER_CONFIG: config, CLOUDFLARE_ENV: undefined },
 				}) &&
 				run(
-					npx,
+					npx[0],
 					[
+						...npx.slice(1),
 						"vinext-cloudflare",
 						"deploy",
 						"--skip-build",
@@ -106,9 +109,14 @@ function steps(service, config) {
 		list.push(
 			() =>
 				run("node", ["build.mjs"], { cwd }) &&
-				run(npx, ["wrangler", "deploy", "-c", config], { cwd }),
+				run(npx[0], [...npx.slice(1), "wrangler", "deploy", "-c", config], {
+					cwd,
+				}),
 		);
-	else list.push(() => run(npx, ["wrangler", "deploy", "-c", config]));
+	else
+		list.push(() =>
+			run(npx[0], [...npx.slice(1), "wrangler", "deploy", "-c", config]),
+		);
 	return list;
 }
 
