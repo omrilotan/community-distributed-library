@@ -344,12 +344,18 @@ export async function listWorks(
 }> {
 	// 1. Every match, lightly: what orders the books, and how many there are.
 	const { where, binds } = matching(viewer, query);
+	// Whether a copy can be asked for today orders the `distance` sort alone
+	// (sortedIds); the loan counts behind it are not worth reading otherwise.
+	const available =
+		query.sort === "distance"
+			? `(c.state = 'shelved' AND c.lending = 'lendable'
+			    AND (m.away_until IS NULL OR m.away_until <= unixepoch())
+			    AND (m.lend_limit IS NULL OR m.lend_limit > ${OWNER_OUT})
+			    AND (c.quantity = 1 OR c.quantity > ${CLAIMED}))`
+			: "0";
 	const { results: matches } = await env.DB.prepare(
 		`SELECT e.work_id, w.title AS work_title, m.area_lat, m.area_lng,
-		        (c.state = 'shelved' AND c.lending = 'lendable'
-		         AND (m.away_until IS NULL OR m.away_until <= unixepoch())
-		         AND (m.lend_limit IS NULL OR m.lend_limit > ${OWNER_OUT})
-		         AND (c.quantity = 1 OR c.quantity > ${CLAIMED})) AS available
+		        ${available} AS available
 		   ${FROM}
 		  WHERE ${where}
 		  ${ORDER}`,
