@@ -4,7 +4,8 @@
 //
 //   node scripts/provision.mjs <slug> --host <host> --name "<name>" \
 //     --centre <lat,lng> --admin <email> [--type books|things] \
-//     [--from-name "<sender>"] [--address <email>] [--zone-id <id>] [--dry-run]
+//     [--from-name "<sender>"] [--address <email>] [--zone-id <id>]
+//     [--no-backups] [--dry-run]
 //
 // Run it again after a failure: what exists already is found and kept.
 //
@@ -29,6 +30,8 @@ const { values, positionals } = parseArgs({
 		"from-name": { type: "string" },
 		address: { type: "string" },
 		"zone-id": { type: "string" },
+		// No nightly database snapshot, and no bucket to keep it in.
+		"no-backups": { type: "boolean", default: false },
 		"dry-run": { type: "boolean", default: false },
 	},
 });
@@ -229,6 +232,7 @@ if (!lib) {
 		address: values.address ?? `${slug}@${zone.name}`,
 		fromName: values["from-name"] ?? values.name,
 		vapidPublicKey: keys.publicKey,
+		...(values["no-backups"] ? { backups: false } : {}),
 		databases: {},
 		oauthKv: "",
 	};
@@ -246,7 +250,7 @@ lib.databases.core ||= database(`${slug}-core`);
 lib.databases.convo ||= database(`${slug}-convo`);
 lib.oauthKv ||= kv(`${slug}-oauth`);
 bucket(`${slug}-images`);
-bucket(`${slug}-backups`);
+if (lib.backups !== false) bucket(`${slug}-backups`);
 save();
 
 // Photos are served from images.<host>.
