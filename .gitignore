@@ -2,9 +2,14 @@ node_modules
 dist
 .next
 .wrangler
-.dev.vars
+.dev.vars*
+!.dev.vars.example
 *.log
-.env
+.env*
+!.env.example
+.DS_Store
+# Personal scratch file; never shared
+.notes
 # Your own agent settings and skills; only this project's skills are shared
 .claude/*
 !.claude/skills/
