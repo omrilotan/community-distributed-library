@@ -39,7 +39,8 @@ function whereTheyWere(request: Request): string {
 		try {
 			const from = new URL(referer);
 			if (from.origin === url.origin && !from.pathname.startsWith("/locale/")) {
-				return `${from.pathname}${from.search}`;
+				// Same origin, yet "//elsewhere.example" is a pathname a URL can hold.
+				return safePath(`${from.pathname}${from.search}`);
 			}
 		} catch {
 			// Unparseable referrer: fall through to `back`.
