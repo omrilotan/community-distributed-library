@@ -1,11 +1,11 @@
 # Run your own library
 
 > **Using Claude Code?** Open this folder in it and type `/open-a-library`. It walks you through
-> every step below, checks your keys without showing them, and opens the library for you.
+> every step below, checks your key without showing it, and opens the library for you.
 
-This guide opens a library on your own domain, in your own Cloudflare account. It takes about half
-an hour, most of it waiting for email settings to check out. You need two keys, one from Cloudflare
-and one from Resend; one command does the rest.
+This guide opens a library on your own domain, in your own Cloudflare account. It takes about
+twenty minutes. Everything runs on Cloudflare, email included: you need one key, a Cloudflare API
+token, and one command does the rest.
 
 ## What you need
 
@@ -13,9 +13,9 @@ and one from Resend; one command does the rest.
   under it, such as `our-street.example.org`.
 - A Cloudflare account with the **Workers Paid** plan (US$5 a month). The free plan gives each
   request 10 ms of processing; drawing a page of the library often takes more, so on the free plan
-  many pages would fail. Paid also allows the library's scheduled jobs.
-- A [Resend](https://resend.com) account, free for up to 3,000 emails a month. Sign-in links and
-  reminders are sent through it.
+  many pages would fail. Paid also allows the library's scheduled jobs, and includes 3,000 emails a
+  month through Cloudflare Email Sending (then US$0.35 per 1,000). Sign-in links and reminders go
+  out that way.
 - [Node.js](https://nodejs.org) (the version in `.nvmrc`) and git.
 
 ## 1. Get the code
@@ -29,10 +29,25 @@ npm install
 ## 2. Make a Cloudflare API token
 
 1. Sign in to Cloudflare, then open
-   [this link](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_kv_storage%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_r2%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22d1%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22zone%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22dns%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=*&zoneId=all&name=Community%20Distributed%20Library).
-   It opens a new token with every permission already filled in. Check that it lists these eight:
+   [this link](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_kv_storage%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_r2%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22d1%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22zone%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22dns%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22email_sending%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=*&zoneId=all&name=Community%20Distributed%20Library).
+   It opens a new token with its permissions already filled in. Check that it lists these nine:
 
-   ![The Create Token page with eight permissions filled in](images/cloudflare-token-permissions.png)
+   | Scope   | Permission         | Access |
+   | ------- | ------------------ | ------ |
+   | Account | Workers Scripts    | Edit   |
+   | Account | Workers KV Storage | Edit   |
+   | Account | Workers R2 Storage | Edit   |
+   | Account | D1                 | Edit   |
+   | Account | Account Settings   | Read   |
+   | Account | Email Sending      | Edit   |
+   | Zone    | Workers Routes     | Edit   |
+   | Zone    | Zone               | Read   |
+   | Zone    | DNS                | Edit   |
+
+   If one is missing, select **+ Add more** and add it. Email Sending is the one that lets the
+   library send its mail.
+
+   ![The Create Token page with the permissions filled in](images/cloudflare-token-permissions.png)
 
 2. Scroll down. Leave **All accounts** and **All zones** as they are, or pick your account and your
    domain to narrow the token. Select **Continue to summary**.
@@ -45,40 +60,19 @@ npm install
 
 4. Cloudflare shows the token once. Copy it now.
 
-## 3. Make a Resend API key
-
-1. In Resend, open **Domains** and select **Add domain**. Enter your domain, for example
-   `example.org`, and select **Add domain** under it.
-
-   ![Adding example.org as a domain in Resend](images/resend-add-domain.png)
-
-2. Resend lists a few DNS records. Select **Auto configure** to have Resend add them to Cloudflare
-   for you, or add each one by hand under your domain's **DNS** > **Records** in Cloudflare. It can
-   take a few minutes for every record to say **Verified**.
-
-   ![The domain's DNS records, all verified, and the Auto configure button](images/resend-dns-records.png)
-
-3. Open **API keys** and select **Create API key**. Name it after your library, set **Permission** to
-   **Sending access** and **Domain** to your domain, then select **Add**.
-
-   ![Add API Key: a name, Sending access, and the domain](images/resend-api-key.png)
-
-4. Resend shows the key once. Copy it now.
-
-## 4. Keep both keys in `.env`
+## 3. Keep the token in `.env`
 
 Make a file called `.env` in the repository's folder. Git ignores it, so it never leaves your
 computer.
 
 ```sh
 CLOUDFLARE_API_TOKEN=paste-the-cloudflare-token-here
-RESEND_API_KEY=paste-the-resend-key-here
 ```
 
 If your Cloudflare token reaches more than one account, add `CLOUDFLARE_ACCOUNT_ID=` with the one to
 use. The command in the next step tells you if it needs it.
 
-## 5. Check your setup
+## 4. Check your setup
 
 ```sh
 set -a; . ./.env; set +a
@@ -87,7 +81,7 @@ npm run check:setup -- --host our-street.example.org
 
 Every line should start with ✓. Each ✗ says what to fix. It never prints your keys.
 
-## 6. Open the library
+## 5. Open the library
 
 Pick:
 
@@ -113,7 +107,8 @@ npm run provision -- our-street \
 ```
 
 It makes the library's databases, storage and Workers, gives it its own push key and addresses,
-and makes you its admin. If it stops halfway, fix what it says and run the same command again: it
+turns on Cloudflare Email Sending for your domain (which adds its mail records to your DNS), and
+makes you its admin. If it stops halfway, fix what it says and run the same command again: it
 keeps what it already made.
 
 When it finishes, open your library's address and sign in with your email. In **Moderation** >
@@ -127,7 +122,7 @@ neighbours.
 - `.keys/<slug>.vapid.json`: the library's private push key. Cloudflare keeps a copy it will not show
   you again; without this file you cannot move the library elsewhere without asking every member's
   phone to subscribe again.
-- `.env`: your two keys.
+- `.env`: your Cloudflare token.
 
 ## Update
 
@@ -140,6 +135,18 @@ npm run deploy -- all
 ```
 
 Database changes are applied before the new code goes live.
+
+Libraries opened before email moved to Cloudflare sent it through Resend. To move one over, add
+**Email Sending: Edit** to your token, turn sending on for the domain your library mails from, and
+deploy:
+
+```sh
+npx wrangler email sending enable example.org
+npm run check:setup
+npm run deploy -- all notify
+```
+
+Then remove `RESEND_API_KEY` from `.env`; the libraries no longer use it.
 
 ## Another library
 

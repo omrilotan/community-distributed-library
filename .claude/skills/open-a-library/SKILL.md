@@ -10,7 +10,7 @@ this are not developers. Speak plainly, one step at a time, and do the technical
 written guide is `docs/self-hosting.md`; follow it, and show its pictures (`docs/images/`) when you
 send the person to a website.
 
-The whole job: two keys go into `.env`, `npm run check:setup` passes, `npm run provision` runs once,
+The whole job: one Cloudflare token goes into `.env`, `npm run check:setup` passes, `npm run provision` runs once,
 and the person signs in.
 
 ## Rules
@@ -36,17 +36,16 @@ Run `node --version` and compare it with `.nvmrc`. If it differs, help them inst
 Ask, in one message:
 
 1. Do you have a domain on Cloudflare? Which one?
-2. Is the Cloudflare account on the **Workers Paid** plan (US$5 a month)?
-3. Do you have a Resend account?
+2. Is the Cloudflare account on the **Workers Paid** plan (US$5 a month)? It also covers the
+   library's email: Cloudflare sends it, with no other service to sign up for.
 
 Help with whatever is missing before going on:
 
 - **No domain on Cloudflare:** they can buy one through Cloudflare Registrar, or add one they own
   under **Add a domain** and change its nameservers where they bought it. Nameserver changes can take
-  a few hours; they can do the Resend step meanwhile.
+  a few hours; they can make the token meanwhile.
 - **Workers Paid:** ask them to look under **Workers & Pages** > **Plans** and confirm it says Paid;
   nothing else checks this. The library needs it.
-- **No Resend account:** sign up at resend.com; the free plan is enough to start.
 
 ## 3. Choose the library's details
 
@@ -72,32 +71,24 @@ Then work out the rest and confirm it in one short summary:
 Send them to the pre-filled token page. The link is in `docs/self-hosting.md`, step 2; copy it from
 there exactly. Tell them:
 
-1. Check the page lists eight permissions (picture: `docs/images/cloudflare-token-permissions.png`).
+1. Check the page lists the nine permissions in the table in `docs/self-hosting.md`, step 2,
+   including **Email Sending: Edit** (picture: `docs/images/cloudflare-token-permissions.png`). If
+   one is missing, **+ Add more** adds it.
 2. Select **Continue to summary**, then **Create Token**.
 3. Copy the token. Cloudflare shows it once.
 
-## 5. The Resend key
+## 5. The token into `.env`
 
-1. In Resend, **Domains** > **Add domain**, enter their domain, **Add domain**.
-2. **Auto configure** adds the DNS records to Cloudflare. Wait until each record says **Verified**.
-3. **API keys** > **Create API key**: name it after the library, **Sending access**, their domain,
-   **Add**. Copy the key. Resend shows it once.
-
-The pictures are `docs/images/resend-*.png`.
-
-## 6. Both keys into `.env`
-
-If `.env` does not exist, create it with empty values, so they only paste:
+If `.env` does not exist, create it with an empty value, so they only paste:
 
 ```sh
 CLOUDFLARE_API_TOKEN=
-RESEND_API_KEY=
 ```
 
-Ask them to open `.env` in the repository's folder, paste each key after its `=`, and save. Wait
+Ask them to open `.env` in the repository's folder, paste the token after the `=`, and save. Wait
 until they say it is done. Do not open the file to check.
 
-## 7. Check before making anything
+## 6. Check before making anything
 
 ```sh
 set -a; . ./.env; set +a; npm run check:setup -- --host <address>
@@ -109,13 +100,16 @@ the check again. Common ones:
 - **The token reaches several accounts:** add `CLOUDFLARE_ACCOUNT_ID=<the one they choose>` to `.env`.
 - **R2 storage is not on:** in Cloudflare, **R2 Object Storage**, turn it on (it asks them to agree to
   its terms; that is theirs to do).
-- **No verified Resend domain:** Resend is still checking DNS; wait a few minutes and check again.
+- **The token cannot reach Email Sending:** the token is missing **Email Sending: Edit**. In
+  Cloudflare, **My Profile** > **API Tokens**, edit the token and add it; the token itself stays the
+  same.
 
-## 8. Open it
+## 7. Open it
 
 Tell them what is about to happen: their Cloudflare account gets the library's 5 Workers, 2
 databases, 2 storage buckets, a sign-in store and 3 addresses (`<address>`, `mcp.<address>`,
-`images.<address>`), and they become its admin. Their first library also makes the book lookup
+`images.<address>`); Cloudflare Email Sending is turned on for their domain, which adds its mail
+records to their DNS; and they become its admin. Their first library also makes the book lookup
 Worker and its database, which every later library shares. The library sends mail from
 `<slug>@<their domain>`. Get a yes, then:
 
@@ -126,7 +120,7 @@ set -a; . ./.env; set +a; npm run provision -- <slug> --host <address> --name "<
 It takes a few minutes. If it stops, read the last error, fix the cause, and run the same command
 again: it keeps what it already made.
 
-## 9. Check it works
+## 8. Check it works
 
 - `curl -s -o /dev/null -w "%{http_code}" https://<address>/about` gives `200`.
 - `curl -s -o /dev/null -w "%{http_code}" https://mcp.<address>/.well-known/oauth-authorization-server`
@@ -138,7 +132,7 @@ Then tell them:
 2. In **Moderation** > **Settings**: a description, the languages and a colour.
 3. Invite the first neighbours from the menu.
 
-## 10. What to keep safe
+## 9. What to keep safe
 
 Make sure they understand, in plain words:
 
@@ -146,7 +140,7 @@ Make sure they understand, in plain words:
   it. Keep a copy somewhere safe, such as a private repository or a password manager.
 - `.keys/<slug>.vapid.json` is the library's private notification key. Cloudflare will not show it
   again. Keep a copy.
-- `.env` holds their two keys.
+- `.env` holds their Cloudflare token.
 
 All three stay out of git on their own.
 

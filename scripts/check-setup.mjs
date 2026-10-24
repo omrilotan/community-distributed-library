@@ -3,9 +3,9 @@
 //
 //   node scripts/check-setup.mjs [--host our-street.example.org]
 //
-// Reads CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID (optional) and
-// RESEND_API_KEY from the environment and never prints them. Exits non-zero
-// when something is missing, each problem on its own line with what to do.
+// Reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (optional) from the
+// environment and never prints them. Exits non-zero when something is
+// missing, each problem on its own line with what to do.
 import { existsSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { root } from "./libraries.mjs";
@@ -32,7 +32,7 @@ else bad("Dependencies missing: run npm install");
 if (existsSync(`${root}.env`)) ok(".env found");
 else
 	bad(
-		".env missing: make it in the repository's folder (docs/self-hosting.md, step 4)",
+		".env missing: make it in the repository's folder (docs/self-hosting.md, step 3)",
 	);
 
 const token = process.env.CLOUDFLARE_API_TOKEN;
@@ -86,16 +86,17 @@ else {
 	}
 
 	if (values.host && account) {
-		const labels = values.host.split(".");
-		let zone = null;
-		for (let at = 0; at < labels.length - 1 && !zone; at += 1) {
-			const name = labels.slice(at).join(".");
-			zone =
-				(await cf(`/zones?name=${name}&account.id=${account}`)).result?.[0] ??
-				null;
-		}
-		if (zone?.status === "active") ok(`${zone.name} is on Cloudflare`);
-		else if (zone)
+		const zone = await zoneOf(values.host);
+		if (zone?.status === "active") {
+			ok(`${zone.name} is on Cloudflare`);
+			// Opening the library turns sending on; the token has to be allowed.
+			const sending = await cf(`/zones/${zone.id}/email/sending/subdomains`);
+			if (sending.success) ok("The token can manage Email Sending");
+			else
+				bad(
+					"The token cannot reach Email Sending: it needs Email Sending: Edit (step 2)",
+				);
+		} else if (zone)
 			bad(
 				`${zone.name} is on Cloudflare but ${zone.status}: finish moving its nameservers`,
 			);
@@ -104,36 +105,50 @@ else {
 				`No domain in this account holds ${values.host}: add the domain to Cloudflare first, or check the token has Zone: Read`,
 			);
 	}
-}
 
-const resend = process.env.RESEND_API_KEY;
-if (!resend) bad("RESEND_API_KEY is not set: add it to .env (step 3)");
-else {
-	// A sending-only key may not list domains; Resend says so rather than
-	// refusing the key, which is how a good key is told from a bad one.
-	const reply = await fetch("https://api.resend.com/domains", {
-		headers: { authorization: `Bearer ${resend}` },
-	});
-	const body = await reply.json().catch(() => ({}));
-	if (reply.ok) {
-		const domains = body.data ?? [];
-		const verified = domains.filter((domain) => domain.status === "verified");
-		if (!values.host) ok("Resend key works");
-		else if (
-			verified.some(
-				(domain) =>
-					values.host === domain.name ||
-					values.host.endsWith(`.${domain.name}`),
+	// Libraries already open send through Cloudflare Email Sending, which has
+	// to be on for each sender's domain.
+	const path = `${root}libraries.json`;
+	const libraries = existsSync(path)
+		? (JSON.parse(readFileSync(path, "utf8")).libraries ?? [])
+		: [];
+	const domains = new Set(
+		libraries.map((lib) => lib.address?.split("@")[1]).filter(Boolean),
+	);
+	for (const domain of account ? domains : []) {
+		const zone = await zoneOf(domain);
+		const sending = zone
+			? await cf(`/zones/${zone.id}/email/sending/subdomains`)
+			: {};
+		if (
+			(sending.result ?? []).some(
+				(entry) => entry.name === domain && entry.enabled,
 			)
 		)
-			ok("Resend key works, and its domain is verified");
+			ok(`Cloudflare sends the libraries' mail from ${domain}`);
+		else if (sending.success === false)
+			bad(
+				"The token cannot reach Email Sending: it needs Email Sending: Edit (step 2)",
+			);
 		else
 			bad(
-				`Resend has no verified domain for ${values.host}: add and verify it (step 3)`,
+				`Email Sending is off for ${domain}: run npx wrangler email sending enable ${domain}`,
 			);
-	} else if (body.name === "restricted_api_key")
-		ok("Resend key works (sending access)");
-	else bad("The Resend key is refused: make a new one (step 3)");
+	}
+}
+
+/** The Cloudflare zone a name is in, from its longest match down. */
+async function zoneOf(name) {
+	const labels = name.split(".");
+	for (let at = 0; at < labels.length - 1; at += 1) {
+		const zone = (
+			await cf(
+				`/zones?name=${labels.slice(at).join(".")}&account.id=${account}`,
+			)
+		).result?.[0];
+		if (zone) return zone;
+	}
+	return null;
 }
 
 if (problems.length) {
