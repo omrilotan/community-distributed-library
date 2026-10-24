@@ -11,7 +11,7 @@
   "dependencies": {
     "@cdl/contracts": "*",
     "@cloudflare/workers-oauth-provider": "^0.10.3",
-    "@modelcontextprotocol/server": "2.0.0",
+    "@modelcontextprotocol/server": "2.3.0",
     "agents": "^0.24.0",
     "zod": "^4.1.5"
   },
