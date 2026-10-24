@@ -9,6 +9,7 @@ import { direction, locales, strings, type Locale } from "../lib/i18n.ts";
 import { library, libraryWords } from "../lib/library.ts";
 import { accentCss, brandColours, iconHref } from "../lib/accent.ts";
 import { libraryType } from "../lib/library-type.ts";
+import { appBase } from "../lib/site.ts";
 import { sessionToken } from "../lib/session.ts";
 import { moderates, viewingAsMember } from "../lib/view-as.ts";
 import { NavLink } from "./nav-link.tsx";
@@ -24,9 +25,23 @@ export async function generateMetadata(): Promise<Metadata> {
 		? (requested as Locale)
 		: "en";
 	const words = await libraryWords(locale);
+	const title = words.name || strings(locale).appShort;
+	const description = words.tagline || strings(locale).ogTagline;
+	// A shared link shows a card: the library's name, its line, its icon in
+	// its colour. A page with its own card (a book) replaces this one.
+	const image = `${appBase()}${iconHref("/icon-512.png", (await library()).accent)}`;
 	return {
-		title: words.name || strings(locale).appShort,
-		...(words.tagline ? { description: words.tagline } : {}),
+		title,
+		description,
+		openGraph: {
+			type: "website",
+			siteName: title,
+			title,
+			description,
+			url: `${appBase()}/`,
+			images: [{ url: image, width: 512, height: 512, alt: title }],
+		},
+		twitter: { card: "summary" },
 	};
 }
 

@@ -6,7 +6,8 @@ import { libraryType } from "../../../lib/library-type.ts";
 import { core } from "../../../lib/core.ts";
 import { formatDistance, strings, type Locale } from "../../../lib/i18n.ts";
 import { sessionToken, signedOut } from "../../../lib/session.ts";
-import { libraryWords } from "../../../lib/library.ts";
+import { library, libraryWords } from "../../../lib/library.ts";
+import { iconHref } from "../../../lib/accent.ts";
 import { appBase } from "../../../lib/site.ts";
 import { SuggestTag, TagChips, TagPicker } from "../../tags.tsx";
 import { vocabulary } from "../../../lib/vocabulary.ts";
@@ -38,11 +39,32 @@ export async function generateMetadata({
 	const card = await publicCard(id);
 	const name = (await libraryWords(locale)).name || t.appShort;
 	if (card.status !== 200) return { title: name };
+	const description = [card.body.authors.join(", "), t.ogTagline]
+		.filter(Boolean)
+		.join(" · ");
+	const cover = card.body.coverUrl;
 	return {
 		title: `${card.body.title} · ${name}`,
-		description: [card.body.authors.join(", "), t.ogTagline]
-			.filter(Boolean)
-			.join(" · "),
+		description,
+		// The book's own card, in place of the library's.
+		openGraph: {
+			type: "book",
+			siteName: name,
+			title: card.body.title,
+			description,
+			url: `${appBase()}/works/${encodeURIComponent(id)}`,
+			// No cover: the library's icon, so the card still has a picture.
+			images: [
+				cover
+					? { url: cover }
+					: {
+							url: `${appBase()}${iconHref("/icon-512.png", (await library()).accent)}`,
+							width: 512,
+							height: 512,
+						},
+			],
+		},
+		twitter: { card: cover ? "summary_large_image" : "summary" },
 	};
 }
 
@@ -77,22 +99,6 @@ export default async function WorkPageView({
 		<>
 			{/* One address for the book, whoever shared it and however. */}
 			<link rel="canonical" href={url} />
-			<meta property="og:type" content="book" />
-			<meta property="og:title" content={card.body.title} />
-			<meta
-				property="og:description"
-				content={[card.body.authors.join(", "), t.ogTagline]
-					.filter(Boolean)
-					.join(" · ")}
-			/>
-			<meta property="og:url" content={url} />
-			{card.body.coverUrl ? (
-				<meta property="og:image" content={card.body.coverUrl} />
-			) : null}
-			<meta
-				name="twitter:card"
-				content={card.body.coverUrl ? "summary_large_image" : "summary"}
-			/>
 		</>
 	);
 
