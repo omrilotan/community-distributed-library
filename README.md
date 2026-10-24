@@ -10,8 +10,8 @@ own members, data and address. A library lends either **books** or **things**
 (`packages/contracts/src/library-types.ts`). Libraries are invite-only and closed to search engines.
 
 **To run your own library, follow [docs/self-hosting.md](docs/self-hosting.md),** or open this folder
-in Claude Code and type `/open-a-library`. You need a domain on Cloudflare, a Cloudflare API token and
-a Resend API key; one command does the rest.
+in Claude Code and type `/open-a-library`. You need a domain on Cloudflare and a Cloudflare API token;
+one command does the rest. Everything runs on Cloudflare, email included.
 
 Released into the public domain under [the Unlicense](LICENSE).
 
@@ -25,7 +25,7 @@ apps/web/             the library web app: Next.js App Router on vinext, a PWA, 
 apps/landing/         the front page at the bare domain (static)
 services/core/        system of record and the public /v1 API (Hono, D1)
 services/mcp/         OAuth 2.1 server and MCP tools for AI assistants, calling core's /v1
-services/notify/      email through Resend, Web Push (RFC 8291/8292); no storage
+services/notify/      email through Cloudflare Email Sending, Web Push (RFC 8291/8292); no storage
 services/convo/       loan message threads, own D1, deleted 90 days after a loan closes
 services/metadata/    ISBN lookup (Open Library, then Google Books) and its cache; shared
 services/reports/     where browsers report CSP violations and network errors; shared
@@ -107,9 +107,11 @@ To run wrangler by hand against a library, write its config first:
 bucket, KV namespace or push key, and any library config still carrying a local development value.
 `scripts/check-hosts.mjs` makes sure no Worker serves on `workers.dev`.
 
-Secrets per library, on `<slug>-notify`: `RESEND_API_KEY` and `VAPID_PRIVATE_JWK`
-(`npx wrangler secret put RESEND_API_KEY -c "$(node scripts/config.mjs <slug> notify)"`). Optional on
-`cdl-metadata`: `GOOGLE_BOOKS_KEY`.
+Secret per library, on `<slug>-notify`: `VAPID_PRIVATE_JWK`
+(`npx wrangler secret put VAPID_PRIVATE_JWK -c "$(node scripts/config.mjs <slug> notify)"`). Email
+goes out through the `EMAIL` binding (Cloudflare Email Sending), which needs sending turned on for the
+sender's domain: `npx wrangler email sending enable <domain>`. Optional on `cdl-metadata`:
+`GOOGLE_BOOKS_KEY`.
 
 ## API, MCP and webhooks
 

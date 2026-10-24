@@ -4,7 +4,7 @@
 
 - Every library is its own deployment, with its own members, data and rules. There is no central service.
 - Every library comes with its own MCP server, so an AI assistant such as Claude or ChatGPT can search, list, ask, lend and arrange handoffs for a member, with the permissions the member grants.
-- The code is in the public domain (the Unlicense). Anyone can run a library for their own street on a Cloudflare account (Workers Paid plan) with Resend for email.
+- The code is in the public domain (the Unlicense). Anyone can run a library for their own street on a Cloudflare account (Workers Paid plan), which also sends its email.
 - In Claude Code, the repository's `/open-a-library` skill sets up a new library step by step, with no programming needed.
 
 ## Links

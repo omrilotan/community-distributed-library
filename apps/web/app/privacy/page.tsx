@@ -56,8 +56,7 @@ export default async function PrivacyPage() {
 					[
 						"חברים אחרים בקהילה: שם התצוגה, האזור המקורב, הספרים שרשמתם, וההודעות שאתם כותבים בהשאלה.",
 						"מודרטור/ית, אם השאלה דווחה: הדיווח פותח בפניהם את השיחה שבה מדובר, כדי שיוכלו להכריע. שום דבר אחר לא פותח שיחה, והם אינם יכולים לכתוב בה.",
-						"Cloudflare מאחסנת את האתר, את בסיס הנתונים ואת הכריכות, בשמנו.",
-						"Resend שולחת את האימיילים, ולכן רואה את הכתובת ואת תוכן ההודעה.",
+						"Cloudflare מאחסנת את האתר, את בסיס הנתונים ואת הכריכות, ושולחת את האימיילים, בשמנו. לכן היא רואה גם את כתובת המייל ואת תוכן ההודעה.",
 						"אם אישרתם התראות — שירות הדחיפה של הדפדפן (Google, Apple או Mozilla) מעביר אותן. התוכן מוצפן עד המכשיר שלכם.",
 						"בעמודים עם מפה, אריחי המפה נטענים מ־OpenStreetMap, ולכן השרת שלהם רואה את כתובת ה־IP שלכם ואיזה אזור הצגתם.",
 						"בחיפוש לפי מסת״ב אנחנו שואלים את Google Books ואת Open Library. נשלח המספר בלבד, לא אתם. את תמונת הכריכה מביא השרת שלנו ושומר עותק, כך שהדפדפן שלכם לא פונה אליהם.",
@@ -135,8 +134,7 @@ export default async function PrivacyPage() {
 					[
 						"Other members of your community: your display name, your rough area, the books you list, and the messages you write on a loan.",
 						"A moderator, if a loan is reported: the report opens that conversation to them, so they can settle what happened. Nothing else opens a thread, and they cannot write in it.",
-						"Cloudflare hosts the site, the database and the covers on our behalf.",
-						"Resend sends the email, so it sees the address and what the message says.",
+						"Cloudflare hosts the site, the database and the covers, and sends the email, on our behalf. So it also sees your email address and what each message says.",
 						"If you turn notifications on, your browser's push service (Google, Apple or Mozilla) carries them. The contents are encrypted as far as your device.",
 						"On pages with a map, the tiles come from OpenStreetMap, so their server sees your IP address and roughly which area you looked at.",
 						"When you look up an ISBN we ask Google Books and Open Library. The number goes, you do not. Our own server fetches the cover image and keeps a copy, so your browser never talks to them.",
