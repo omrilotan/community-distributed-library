@@ -163,18 +163,26 @@ loans.post("/v1/loans", async (c) => {
 	}
 
 	const id = ulid();
+	// Asked for at last: whatever the asker was waiting in the queue for this
+	// work for, a hold or a place, is spent. Written in the same batch as the
+	// request, and only once the request is in, so neither lands without the
+	// other.
+	const spent = c.env.DB.prepare(
+		`DELETE FROM waitlist WHERE member_id = ? AND work_id = ? AND community_id = ?
+		   AND EXISTS (SELECT 1 FROM loans WHERE id = ?)`,
+	).bind(member.id, copy.work_id, member.communityId, id);
 	if (ofSet) {
 		// Asked and counted in one statement, so two neighbours asking at once
 		// cannot take more of the set than there is; and one open loan of it
 		// per member, kept by the database when a form is sent twice.
-		const result = await c.env.DB.prepare(
-			`INSERT INTO loans (id, copy_id, borrower_id, lender_id, community_id, status, message, requested_at, quantity, of_set)
+		const written = await c.env.DB.batch([
+			c.env.DB.prepare(
+				`INSERT INTO loans (id, copy_id, borrower_id, lender_id, community_id, status, message, requested_at, quantity, of_set)
 			 SELECT ?1, ?2, ?3, ?4, ?5, 'requested', ?6, ?7, ?8, 1
 			  WHERE (SELECT quantity FROM copies WHERE id = ?2)
 			        - (SELECT coalesce(sum(quantity), 0) FROM loans
 			            WHERE copy_id = ?2 AND status IN ('requested', 'accepted', 'active')) >= ?8`,
-		)
-			.bind(
+			).bind(
 				id,
 				copyId,
 				member.id,
@@ -183,29 +191,30 @@ loans.post("/v1/loans", async (c) => {
 				message ?? null,
 				now(),
 				quantity,
-			)
-			.run()
-			.catch((error: unknown) => {
-				if (String(error).includes("UNIQUE")) return null;
-				throw error;
-			});
-		if (!result)
+			),
+			spent,
+		]).catch((error: unknown) => {
+			if (String(error).includes("UNIQUE")) return null;
+			throw error;
+		});
+		if (!written)
 			return json(
 				c,
 				problem(409, "Already asked", "You already have some of this set"),
 			);
-		if (!result.meta.changes)
+		const [result] = written;
+		if (!result?.meta.changes)
 			return json(
 				c,
 				problem(409, "Not that many free", "Someone asked just before you"),
 			);
 	} else
 		try {
-			await c.env.DB.prepare(
-				`INSERT INTO loans (id, copy_id, borrower_id, lender_id, community_id, status, message, requested_at, relay_from, previous_loan_id)
+			await c.env.DB.batch([
+				c.env.DB.prepare(
+					`INSERT INTO loans (id, copy_id, borrower_id, lender_id, community_id, status, message, requested_at, relay_from, previous_loan_id)
 			 VALUES (?, ?, ?, ?, ?, 'requested', ?, ?, ?, (SELECT id FROM loans WHERE copy_id = ? AND status = 'active' AND of_set = 0))`,
-			)
-				.bind(
+				).bind(
 					id,
 					copyId,
 					member.id,
@@ -215,8 +224,9 @@ loans.post("/v1/loans", async (c) => {
 					now(),
 					relay ? copy.holder_id : null,
 					copyId,
-				)
-				.run();
+				),
+				spent,
+			]);
 		} catch (error) {
 			if (String(error).includes("UNIQUE")) {
 				return json(
@@ -230,14 +240,6 @@ loans.post("/v1/loans", async (c) => {
 			}
 			throw error;
 		}
-
-	// Asked for at last: whatever the asker was waiting in the queue for this
-	// work for, a hold or a place, is spent.
-	await c.env.DB.prepare(
-		"DELETE FROM waitlist WHERE member_id = ? AND work_id = ? AND community_id = ?",
-	)
-		.bind(member.id, copy.work_id, member.communityId)
-		.run();
 
 	const borrower = await displayName(c.env, member.id);
 	c.executionCtx.waitUntil(
