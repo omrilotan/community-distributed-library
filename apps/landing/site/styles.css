@@ -110,6 +110,15 @@ a {
 	text-underline-offset: 0.15em;
 }
 
+/* A <picture> only offers WebP; the <img> inside it keeps the layout. */
+picture {
+	display: contents;
+}
+
+picture source {
+	display: none;
+}
+
 img {
 	display: block;
 	max-inline-size: 100%;

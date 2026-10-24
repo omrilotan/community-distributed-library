@@ -3,10 +3,16 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Community Distributed Library</title>
+		<title>
+			Community Distributed Library · Lend and borrow with neighbours
+		</title>
 		<meta
 			name="description"
-			content="A shared shelf for a neighbourhood: books, tools, board games or camping gear, lent between people who live nearby."
+			content="A free, open-source lending library for your street: neighbours share books, tools, games and camping gear, and can do it all through an AI assistant."
+		/>
+		<meta
+			name="robots"
+			content="index, follow, max-image-preview:large, max-snippet:-1"
 		/>
 		<meta name="color-scheme" content="light dark" />
 		<meta
@@ -22,16 +28,79 @@
 		<link rel="canonical" href="https://community-distributed-library.com/" />
 		<link rel="icon" href="/favicon.ico" sizes="any" />
 		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
-		<meta property="og:title" content="Community Distributed Library" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Community Distributed Library" />
+		<meta property="og:locale" content="en_GB" />
+		<meta
+			property="og:url"
+			content="https://community-distributed-library.com/"
+		/>
+		<meta
+			property="og:title"
+			content="Your street already owns everything you need"
+		/>
 		<meta
 			property="og:description"
-			content="Your street already owns everything you need. A shared shelf for books, tools, board games or camping gear."
+			content="A free, open-source lending library for neighbours: books, tools, board games and camping gear, lent between people who live nearby."
 		/>
 		<meta
 			property="og:image"
-			content="https://community-distributed-library.com/images/hero.jpg"
+			content="https://community-distributed-library.com/images/share.jpg"
 		/>
-		<meta property="og:type" content="website" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta
+			property="og:image:alt"
+			content="Picnic tables between tall pines in a neighbourhood park"
+		/>
+		<meta name="twitter:card" content="summary_large_image" />
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@graph": [
+					{
+						"@type": "WebSite",
+						"@id": "https://community-distributed-library.com/#website",
+						"url": "https://community-distributed-library.com/",
+						"name": "Community Distributed Library",
+						"inLanguage": "en"
+					},
+					{
+						"@type": "SoftwareApplication",
+						"name": "Community Distributed Library",
+						"url": "https://community-distributed-library.com/",
+						"description": "Open-source software for a neighbourhood lending library of books or things, with handoffs arranged between neighbours and an MCP server for AI assistants.",
+						"applicationCategory": "SocialNetworkingApplication",
+						"operatingSystem": "Web",
+						"isAccessibleForFree": true,
+						"license": "https://unlicense.org/",
+						"offers": {
+							"@type": "Offer",
+							"price": "0",
+							"priceCurrency": "USD"
+						},
+						"sameAs": [
+							"https://github.com/omrilotan/community-distributed-library"
+						]
+					},
+					{
+						"@type": "SoftwareSourceCode",
+						"name": "community-distributed-library",
+						"codeRepository": "https://github.com/omrilotan/community-distributed-library",
+						"license": "https://unlicense.org/",
+						"programmingLanguage": "TypeScript",
+						"runtimePlatform": "Cloudflare Workers"
+					}
+				]
+			}
+		</script>
+		<link
+			rel="preload"
+			as="image"
+			href="/images/hero.webp"
+			type="image/webp"
+			fetchpriority="high"
+		/>
 		<link
 			rel="preload"
 			href="/fonts/outfit-latin.woff2"
@@ -70,27 +139,33 @@
 						<a class="button" href="#how">How it works</a>
 					</p>
 				</div>
-				<img
-					class="hero-photo"
-					src="/images/hero.jpg"
-					width="1200"
-					height="900"
-					alt="Picnic tables between tall pines in a neighbourhood park"
-					fetchpriority="high"
-				/>
+				<picture>
+					<source srcset="/images/hero.webp" type="image/webp" />
+					<img
+						class="hero-photo"
+						src="/images/hero.jpg"
+						width="1200"
+						height="900"
+						alt="Picnic tables between tall pines in a neighbourhood park"
+						fetchpriority="high"
+					/>
+				</picture>
 			</section>
 
 			<section class="shared" id="shared">
 				<h2>Things worth owning together</h2>
 				<div class="tiles">
 					<article class="tile photo">
-						<img
-							src="/images/books.jpg"
-							width="1000"
-							height="750"
-							alt="An open book and a cup of tea on a bed in morning light"
-							loading="lazy"
-						/>
+						<picture>
+							<source srcset="/images/books.webp" type="image/webp" />
+							<img
+								src="/images/books.jpg"
+								width="1000"
+								height="750"
+								alt="An open book and a cup of tea on a bed in morning light"
+								loading="lazy"
+							/>
+						</picture>
 						<div class="tile-text">
 							<h3><svg data-icon="books" class="icon"></svg> Books</h3>
 							<p>The novel you finished last month is somebody's next read.</p>
@@ -107,13 +182,16 @@
 						<p>Game night without buying another box that fits nowhere.</p>
 					</article>
 					<article class="tile photo">
-						<img
-							src="/images/camping.jpg"
-							width="1000"
-							height="750"
-							alt="Mist over a lake at dawn, pines along the shore"
-							loading="lazy"
-						/>
+						<picture>
+							<source srcset="/images/camping.webp" type="image/webp" />
+							<img
+								src="/images/camping.jpg"
+								width="1000"
+								height="750"
+								alt="Mist over a lake at dawn, pines along the shore"
+								loading="lazy"
+							/>
+						</picture>
 						<div class="tile-text">
 							<h3><svg data-icon="tent" class="icon"></svg> Camping gear</h3>
 							<p>A tent for the one weekend a year you actually use it.</p>
@@ -158,14 +236,17 @@
 				</ol>
 			</section>
 
-			<img
-				class="breather"
-				src="/images/green.jpg"
-				width="1800"
-				height="700"
-				alt="A dense bed of green succulents"
-				loading="lazy"
-			/>
+			<picture>
+				<source srcset="/images/green.webp" type="image/webp" />
+				<img
+					class="breather"
+					src="/images/green.jpg"
+					width="1800"
+					height="700"
+					alt="A dense bed of green succulents"
+					loading="lazy"
+				/>
+			</picture>
 
 			<section class="why">
 				<h2>Fewer things bought. More neighbours known.</h2>
