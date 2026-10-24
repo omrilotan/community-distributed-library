@@ -1155,6 +1155,40 @@ describe("two answers at once", () => {
 		expect(n).toBe(0);
 	});
 
+	it("a confirm and a new proposal: an agreed handoff is never replaced", async () => {
+		const id = (await as(SAM).post("/v1/loans", { copyId: COPY_B })).body.id;
+		await as(DANA).post(`/v1/loans/${id}/accept`);
+		await as(SAM).post(`/v1/loans/${id}/handoff/propose`, {
+			day: "2099-01-01",
+			period: "evening",
+		});
+		const [confirmed, proposed] = await Promise.all([
+			as(DANA).post(`/v1/loans/${id}/handoff/confirm`),
+			as(SAM).post(`/v1/loans/${id}/handoff/propose`, {
+				day: "2099-01-02",
+				period: "morning",
+			}),
+		]);
+		// Agreed and the new slot refused, or re-proposed before the confirm could land.
+		const open = await env.DB.prepare(
+			"SELECT status, day FROM handoffs WHERE loan_id = ? AND status IN ('proposed', 'agreed')",
+		)
+			.bind(id)
+			.all<{ status: string; day: string }>();
+		expect(open.results).toHaveLength(1);
+		if (confirmed.status === 204) {
+			expect(proposed.status).toBe(409);
+			expect(open.results[0]).toEqual({ status: "agreed", day: "2099-01-01" });
+		} else {
+			expect(confirmed.status).toBe(404);
+			expect(proposed.status).toBe(201);
+			expect(open.results[0]).toEqual({
+				status: "proposed",
+				day: "2099-01-02",
+			});
+		}
+	});
+
 	it("every extension counted moved the due date", async () => {
 		const id = await activeLoan(SAM, DANA, COPY_B);
 		const due = async () =>
