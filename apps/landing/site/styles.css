@@ -490,6 +490,33 @@ main > section {
 	}
 }
 
+/* Open source: the invitation to run one, then the three ways the skills help. */
+.open-intro {
+	max-inline-size: var(--measure);
+	margin-block-end: 2.5rem;
+}
+
+.open-intro .actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-block-start: 1.5rem;
+}
+
+.open-intro p:not(.actions) {
+	font-size: 1.125rem;
+}
+
+code {
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 0.9em;
+	padding: 0.05em 0.35em;
+	border-radius: 0.3rem;
+	background: var(--accent-soft);
+	color: var(--ink);
+	white-space: nowrap;
+}
+
 /* The closing note: no ratings, on purpose. One soft band, the glyph beside it. */
 main > section.welcome {
 	display: flex;

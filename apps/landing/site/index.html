@@ -54,6 +54,7 @@
 			<nav aria-label="Sections">
 				<a href="#shared">What gets shared</a>
 				<a href="#how">How it works</a>
+				<a href="#open">Start one</a>
 			</nav>
 		</header>
 
@@ -242,6 +243,66 @@
 				</ul>
 			</section>
 
+			<section class="open" id="open">
+				<div class="open-intro">
+					<h2>Start one for your street</h2>
+					<p>
+						The software is open source and in the public domain. Anyone can run
+						a library for their own neighbourhood, on their own address, with
+						nobody in between. It runs on a Cloudflare account on the Workers
+						Paid plan (US$5 a month) and sends its email through Resend.
+					</p>
+					<p class="actions">
+						<a
+							class="button"
+							href="https://github.com/omrilotan/community-distributed-library"
+							><svg data-icon="github-logo" class="icon"></svg> See the code</a
+						>
+						<a
+							class="button quiet"
+							href="https://github.com/omrilotan/community-distributed-library/blob/main/docs/self-hosting.md"
+							>Read the guide</a
+						>
+					</p>
+				</div>
+				<ul class="features open-ways">
+					<li>
+						<svg data-icon="sparkle" class="icon"></svg>
+						<div>
+							<h3>Let an AI assistant set it up</h3>
+							<p>
+								Open the code in Claude Code and type
+								<code>/open-a-library</code>. The assistant checks your
+								computer, walks you through the two keys it needs, creates the
+								library and makes you its first admin. No programming needed.
+							</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="lock-open" class="icon"></svg>
+						<div>
+							<h3>You stay in charge</h3>
+							<p>
+								Your keys go straight into a file on your computer, never into
+								the chat, and the assistant asks before it creates anything in
+								your account.
+							</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="git-branch" class="icon"></svg>
+						<div>
+							<h3>Keep it up to date</h3>
+							<p>
+								Type <code>/update-libraries</code> to bring your library the
+								latest version, or <code>/make-admin</code> to hand someone a
+								role.
+							</p>
+						</div>
+					</li>
+				</ul>
+			</section>
+
 			<section class="welcome" id="welcome">
 				<svg data-icon="heart" class="icon big"></svg>
 				<div>
@@ -257,6 +318,9 @@
 
 		<footer>
 			<span>Community Distributed Library</span>
+			<a href="https://github.com/omrilotan/community-distributed-library"
+				>Open source, public domain</a
+			>
 		</footer>
 	</body>
 </html>
