@@ -8,7 +8,12 @@ import { core } from "../../lib/core.ts";
 import { sessionToken } from "../../lib/session.ts";
 import { TokenForm } from "./token-form.tsx";
 import { WebhookForm } from "./webhook-form.tsx";
-import { EVENT_KINDS, type WebhookView } from "@cdl/contracts";
+import {
+	EVENT_KINDS,
+	SCOPES,
+	SCOPE_DESCRIPTIONS,
+	type WebhookView,
+} from "@cdl/contracts";
 import { moderates } from "../../lib/view-as.ts";
 import { titled } from "../../lib/page-title.ts";
 import { shownOnce } from "../../lib/shown-once.ts";
@@ -169,7 +174,10 @@ export default async function ConnectPage({
 			<p className="muted">{t.tokenIntro}</p>
 			{me ? (
 				<TokenForm
-					locale={locale}
+					scopes={SCOPES.map((scope) => ({
+						name: scope,
+						description: SCOPE_DESCRIPTIONS[scope][locale],
+					}))}
 					moderator={moderates(me.role)}
 					made={await shownOnce("token")}
 					failure={token === "failed"}
@@ -257,6 +265,7 @@ x-cdl-signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, t + "." + body)>
 			) : null}
 			{me ? (
 				<WebhookForm
+					kinds={EVENT_KINDS}
 					made={await shownOnce("webhook-secret")}
 					failure={webhookFlash === "refused"}
 					labels={{

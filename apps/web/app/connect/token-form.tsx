@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SCOPES, SCOPE_DESCRIPTIONS, type TokenCreated } from "@cdl/contracts";
+import type { TokenCreated } from "@cdl/contracts";
 import { useFocusWhenShown } from "../../lib/focus-shown.ts";
 
 interface Labels {
@@ -21,13 +21,17 @@ interface Labels {
  */
 export function TokenForm({
 	labels,
-	locale,
+	scopes,
 	moderator,
 	made = null,
 	failure = false,
 }: {
 	labels: Labels;
-	locale: "en" | "he";
+	/**
+	 * Every scope with its line in the reader's language, made on the server:
+	 * the contracts package carries Zod, which the browser has no use for.
+	 */
+	scopes: { name: string; description: string }[];
 	moderator: boolean;
 	/** A token made by the form posted without a script, shown here once. */
 	made?: { secret: string } | null;
@@ -43,7 +47,7 @@ export function TokenForm({
 	async function submit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const form = new FormData(event.currentTarget);
-		const scopes = form.getAll("scopes").map(String);
+		const chosen = form.getAll("scopes").map(String);
 		setBusy(true);
 		setFailed(false);
 		try {
@@ -52,7 +56,7 @@ export function TokenForm({
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({
 					clientName: String(form.get("name") ?? ""),
-					scopes,
+					scopes: chosen,
 				}),
 			});
 			if (!response.ok) throw new Error(String(response.status));
@@ -98,24 +102,23 @@ export function TokenForm({
 				maxLength={80}
 			/>
 			<fieldset className="scopes">
-				{SCOPES.filter((scope) => moderator || scope !== "admin").map(
-					(scope) => (
-						<label className="check" key={scope}>
+				{scopes
+					.filter(({ name }) => moderator || name !== "admin")
+					.map(({ name, description }) => (
+						<label className="check" key={name}>
 							<input
 								name="scopes"
 								type="checkbox"
-								value={scope}
+								value={name}
 								defaultChecked={
-									scope === "catalogue:read" || scope === "shelf:read"
+									name === "catalogue:read" || name === "shelf:read"
 								}
 							/>
 							<span>
-								<code dir="ltr">{scope}</code> ·{" "}
-								{SCOPE_DESCRIPTIONS[scope][locale]}
+								<code dir="ltr">{name}</code> · {description}
 							</span>
 						</label>
-					),
-				)}
+					))}
 			</fieldset>
 			<div role="status">
 				{failed ? <p className="muted">{labels.failed}</p> : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EVENT_KINDS, type WebhookCreated } from "@cdl/contracts";
+import type { WebhookCreated } from "@cdl/contracts";
 import { useFocusWhenShown } from "../../lib/focus-shown.ts";
 
 interface Labels {
@@ -23,10 +23,13 @@ interface Labels {
  */
 export function WebhookForm({
 	labels,
+	kinds,
 	made = null,
 	failure = false,
 }: {
 	labels: Labels;
+	/** What core publishes, handed down from the server (see TokenForm). */
+	kinds: readonly string[];
 	/** A secret made by the form posted without a script, shown here once. */
 	made?: { secret: string } | null;
 	/** The form, posted without a script, subscribed nothing. */
@@ -100,7 +103,7 @@ export function WebhookForm({
 			/>
 			<p className="muted">{labels.kinds}</p>
 			<fieldset className="scopes">
-				{EVENT_KINDS.map((kind) => (
+				{kinds.map((kind) => (
 					<label className="check" key={kind}>
 						<input name="kinds" type="checkbox" value={kind} />
 						<code dir="ltr">{kind}</code>
