@@ -236,9 +236,15 @@ if (firstLibrary) {
 
 // 2. This library's storage.
 console.log(`\n━━ ${slug}: storage`);
+let lib = data.libraries.find((entry) => entry.slug === slug);
+// A run after a failure keeps the entry's facts: a different --host would
+// deploy on one host and hang the photos' domain on another.
+if (lib && lib.host !== values.host)
+	fail(
+		`${slug} is in ${path} with host ${lib.host}. Run with --host ${lib.host}, or take the entry out first.`,
+	);
 // Mail goes out from the domain itself, such as our-street@example.co.uk.
 const zone = await findZone(values.host);
-let lib = data.libraries.find((entry) => entry.slug === slug);
 if (!lib) {
 	const keys = await vapid();
 	lib = {
