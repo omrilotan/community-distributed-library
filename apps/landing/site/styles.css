@@ -490,6 +490,20 @@ main > section {
 	}
 }
 
+/* A hairline between the library and the project behind it. */
+.divider {
+	border: 0;
+	border-block-start: 1px solid var(--line-strong);
+	max-inline-size: calc(var(--wide) - 2 * var(--gutter));
+	margin: 0 auto;
+}
+
+@media (max-width: 48rem) {
+	.divider {
+		margin-inline: var(--gutter);
+	}
+}
+
 /* Open source: the invitation to run one, then the three ways the skills help. */
 .open-intro {
 	max-inline-size: var(--measure);
@@ -505,6 +519,10 @@ main > section {
 
 .open-intro p:not(.actions) {
 	font-size: 1.125rem;
+}
+
+.open-intro p + p:not(.actions) {
+	margin-block-start: 1rem;
 }
 
 code {
@@ -571,4 +589,11 @@ footer {
 
 footer a {
 	color: var(--muted);
+}
+
+/* Four things an assistant does: two by two, never three and one. */
+@media (min-width: 64rem) {
+	.agents .features {
+		grid-template-columns: 1fr 1fr;
+	}
 }
