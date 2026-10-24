@@ -52,8 +52,8 @@ const PASSAGES: [string, string][] = [
 		"the things you list, and the messages you write on a loan",
 	],
 	[
-		"the database and the covers on our behalf",
-		"the database and the photos on our behalf",
+		"the database and the covers, and sends the email",
+		"the database and the photos, and sends the email",
 	],
 	[
 		"When you look up an ISBN we ask Google Books and Open Library. The number goes, you do not. Our own server fetches the cover image and keeps a copy, so your browser never talks to them.",
@@ -69,7 +69,7 @@ const PASSAGES: [string, string][] = [
 		"הספרים שרשמתם, וההודעות שאתם כותבים בהשאלה",
 		"הפריטים שרשמתם, וההודעות שאתם כותבים בהשאלה",
 	],
-	["ואת הכריכות, בשמנו", "ואת התמונות, בשמנו"],
+	["ואת הכריכות, ושולחת", "ואת התמונות, ושולחת"],
 	[
 		"בחיפוש לפי מסת״ב אנחנו שואלים את Google Books ואת Open Library. נשלח המספר בלבד, לא אתם. את תמונת הכריכה מביא השרת שלנו ושומר עותק, כך שהדפדפן שלכם לא פונה אליהם.",
 		"",
