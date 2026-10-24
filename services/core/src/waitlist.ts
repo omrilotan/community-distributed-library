@@ -139,7 +139,11 @@ export async function offerWaitedFor(env: Env): Promise<number> {
 	)
 		.bind(now())
 		.all<{ id: string }>();
-	for (const row of results) await onCopyAvailable(env, row.id);
+	// One copy's failure, a D1 error say, must not keep the rest from being offered.
+	for (const row of results)
+		await onCopyAvailable(env, row.id).catch((error: unknown) =>
+			console.error("[waitlist] offer failed", row.id, error),
+		);
 	return results.length;
 }
 
@@ -202,7 +206,12 @@ export async function expireHolds(env: Env): Promise<number> {
 			.run();
 		if (!lapsed.meta.changes) continue;
 		passed += 1;
-		await onCopyAvailable(env, row.offered_copy_id, row.member_id);
+		// The hold is already lapsed; a copy that cannot be passed on must not
+		// hold up the other lapsed holds.
+		await onCopyAvailable(env, row.offered_copy_id, row.member_id).catch(
+			(error: unknown) =>
+				console.error("[waitlist] pass-on failed", row.offered_copy_id, error),
+		);
 	}
 	return passed;
 }
