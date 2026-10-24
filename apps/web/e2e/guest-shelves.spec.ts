@@ -17,6 +17,14 @@ async function stranger(browser: Browser) {
 }
 
 test.describe("the shelves for a stranger", () => {
+	test("gives a shared link a card with a picture", async ({ request }) => {
+		const html = await (await request.get("/")).text();
+		expect(html).toMatch(/<meta property="og:title" content="[^"]+"/);
+		expect(html).toMatch(
+			/<meta property="og:image" content="https?:\/\/[^"]+\/icon-512\.png/,
+		);
+	});
+
 	test("shows the front door, then the books, with nobody's details", async ({
 		browser,
 	}) => {
