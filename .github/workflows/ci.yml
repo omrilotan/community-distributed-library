@@ -18,6 +18,9 @@ jobs:
       - run: npm run types
       - run: npm run lint
       - run: npm run typecheck
+      # The production builds of the web app and the landing page, the same
+      # commands scripts/deploy.mjs runs; the dev servers never run them.
+      - run: npm run build
       - run: npm run check:libraries
       - run: npm test
 
