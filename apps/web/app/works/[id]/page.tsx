@@ -6,8 +6,8 @@ import { libraryType } from "../../../lib/library-type.ts";
 import { core } from "../../../lib/core.ts";
 import { formatDistance, strings, type Locale } from "../../../lib/i18n.ts";
 import { sessionToken, signedOut } from "../../../lib/session.ts";
-import { library, libraryWords } from "../../../lib/library.ts";
-import { iconHref } from "../../../lib/accent.ts";
+import { libraryWords } from "../../../lib/library.ts";
+import { cardHref } from "../../../lib/card-href.ts";
 import { appBase } from "../../../lib/site.ts";
 import { SuggestTag, TagChips, TagPicker } from "../../tags.tsx";
 import { vocabulary } from "../../../lib/vocabulary.ts";
@@ -53,18 +53,14 @@ export async function generateMetadata({
 			title: card.body.title,
 			description,
 			url: `${appBase()}/works/${encodeURIComponent(id)}`,
-			// No cover: the library's icon, so the card still has a picture.
+			// No cover: the library's card, so the link still has a picture.
 			images: [
 				cover
 					? { url: cover }
-					: {
-							url: `${appBase()}${iconHref("/icon-512.png", (await library()).accent)}`,
-							width: 512,
-							height: 512,
-						},
+					: { url: await cardHref(locale), width: 1200, height: 630 },
 			],
 		},
-		twitter: { card: cover ? "summary_large_image" : "summary" },
+		twitter: { card: "summary_large_image" },
 	};
 }
 

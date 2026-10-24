@@ -7,7 +7,7 @@
  */
 
 /** The mark, as in packages/design/logo.svg, in a 1024 box. */
-const MARK =
+export const MARK =
 	"M289.6 102.4c135.3 135.2 182.8 323.8 140.6 490.9 167.1-42.2 355.7 5.4 490.9 140.6L820.9 834.1C676.5 689.7 450.1 681.4 314 815.5L208 709.6c134.1-136.2 125.8-362.5-18.6-507Z";
 
 /** The app icon's ground, as in public/icon.svg before it was drawn here. */
@@ -103,23 +103,42 @@ export async function faviconIco(
 
 type Point = [number, number];
 
-/**
- * How much of each pixel of a size × size square the mark covers, 0 to 1.
- * Sixteen lines through every row of pixels; along each line the covered
- * stretches are added to the pixels exactly, so edges come out smooth.
- */
+/** How much of each pixel of a size × size square the mark covers, 0 to 1. */
 function coverage(size: number, place: (x: number, y: number) => Point) {
 	const edges = flatten(MARK).map(
 		([a, b]) => [place(...a), place(...b)] as [Point, Point],
 	);
-	const cover = new Float32Array(size * size);
+	return raster(size, size, edges);
+}
+
+/**
+ * How much of each pixel of a width × height image a shape covers, 0 to 1.
+ * Sixteen lines through every row of pixels; along each line the covered
+ * stretches are added to the pixels exactly, so edges come out smooth.
+ */
+export function raster(
+	width: number,
+	height: number,
+	edges: [Point, Point][],
+): Float32Array {
+	const cover = new Float32Array(width * height);
 	const LINES = 16;
+	// Each edge filed under the rows it crosses, so a row looks at its own.
+	const rows: [Point, Point][][] = Array.from({ length: height }, () => []);
+	for (const edge of edges) {
+		const top = Math.max(0, Math.floor(Math.min(edge[0][1], edge[1][1])));
+		const bottom = Math.min(
+			height - 1,
+			Math.floor(Math.max(edge[0][1], edge[1][1])),
+		);
+		for (let row = top; row <= bottom; row++) rows[row]!.push(edge);
+	}
 	const crossings: { x: number; winding: number }[] = [];
-	for (let row = 0; row < size; row++)
+	for (let row = 0; row < height; row++)
 		for (let line = 0; line < LINES; line++) {
 			const y = row + (line + 0.5) / LINES;
 			crossings.length = 0;
-			for (const [[x0, y0], [x1, y1]] of edges) {
+			for (const [[x0, y0], [x1, y1]] of rows[row]!) {
 				if (y0 === y1 || y < Math.min(y0, y1) || y >= Math.max(y0, y1))
 					continue;
 				crossings.push({
@@ -136,7 +155,7 @@ function coverage(size: number, place: (x: number, y: number) => Point) {
 				winding += crossing.winding;
 				if (was === 0 && winding !== 0) from = crossing.x;
 				else if (was !== 0 && winding === 0)
-					fill(cover, row * size, size, from, crossing.x, 1 / LINES);
+					fill(cover, row * width, width, from, crossing.x, 1 / LINES);
 			}
 		}
 	return cover;
@@ -161,7 +180,7 @@ function fill(
  * The path as straight edges: moves, lines and cubic curves, absolute or
  * relative, which is all the mark uses. A curve becomes 64 short lines.
  */
-function flatten(d: string): [Point, Point][] {
+export function flatten(d: string): [Point, Point][] {
 	const tokens = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/g) ?? [];
 	const edges: [Point, Point][] = [];
 	let at: Point = [0, 0];
@@ -218,20 +237,21 @@ function flatten(d: string): [Point, Point][] {
 	return edges;
 }
 
-function rgb(hex: string): [number, number, number] {
+export function rgb(hex: string): [number, number, number] {
 	const n = Number.parseInt(hex.slice(1), 16);
 	return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
 /** A PNG of 8-bit RGB (3 channels) or RGBA (4), every row unfiltered. */
-async function png(
-	size: number,
+export async function png(
+	width: number,
 	channels: 3 | 4,
 	pixels: Uint8Array,
+	height = width,
 ): Promise<Uint8Array<ArrayBuffer>> {
-	const stride = size * channels;
-	const raw = new Uint8Array((stride + 1) * size);
-	for (let row = 0; row < size; row++)
+	const stride = width * channels;
+	const raw = new Uint8Array((stride + 1) * height);
+	for (let row = 0; row < height; row++)
 		raw.set(
 			pixels.subarray(row * stride, (row + 1) * stride),
 			row * (stride + 1) + 1,
@@ -244,8 +264,8 @@ async function png(
 	);
 	const header = new Uint8Array(13);
 	const view = new DataView(header.buffer);
-	view.setUint32(0, size);
-	view.setUint32(4, size);
+	view.setUint32(0, width);
+	view.setUint32(4, height);
 	header.set([8, channels === 4 ? 6 : 2, 0, 0, 0], 8);
 	const parts = [
 		new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
