@@ -25,42 +25,52 @@ export default {
 	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
 		if (event.cron === "0 8 * * *") {
 			ctx.waitUntil(
-				runReminders(env).then((result) =>
-					console.log("[reminders]", JSON.stringify(result)),
-				),
+				runReminders(env)
+					.then((result) => console.log("[reminders]", JSON.stringify(result)))
+					.catch((error: unknown) =>
+						console.error("[reminders] failed", error),
+					),
 			);
 		}
 		if (event.cron === "20 3 * * *") {
 			ctx.waitUntil(
-				backup(env).then((result) =>
-					console.log("[backup]", JSON.stringify(result)),
-				),
+				backup(env)
+					.then((result) => console.log("[backup]", JSON.stringify(result)))
+					.catch((error: unknown) => console.error("[backup] failed", error)),
 			);
 			// Connections nobody ever collected.
 			ctx.waitUntil(
-				revokeAbandonedConsents(env).then((n) => {
-					if (n) console.log("[tokens] revoked abandoned consents", n);
-				}),
+				revokeAbandonedConsents(env)
+					.then((n) => {
+						if (n) console.log("[tokens] revoked abandoned consents", n);
+					})
+					.catch((error: unknown) => console.error("[tokens] failed", error)),
 			);
 			// Covers that still live on somebody else's server.
 			ctx.waitUntil(
-				rehostCovers(env).then((result) => {
-					if (result.taken || result.failed)
-						console.log("[covers]", JSON.stringify(result));
-				}),
+				rehostCovers(env)
+					.then((result) => {
+						if (result.taken || result.failed)
+							console.log("[covers]", JSON.stringify(result));
+					})
+					.catch((error: unknown) => console.error("[covers] failed", error)),
 			);
 		}
 		ctx.waitUntil(
-			deliverPending(env).then((sent) => {
-				if (sent) console.log("[webhooks] delivered", sent);
-			}),
+			deliverPending(env)
+				.then((sent) => {
+					if (sent) console.log("[webhooks] delivered", sent);
+				})
+				.catch((error: unknown) => console.error("[webhooks] failed", error)),
 		);
 		// The email that follows a push nobody picked up.
 		ctx.waitUntil(
-			sendPendingEmails(env).then((result) => {
-				if (result.sent || result.dropped)
-					console.log("[notify]", JSON.stringify(result));
-			}),
+			sendPendingEmails(env)
+				.then((result) => {
+					if (result.sent || result.dropped)
+						console.log("[notify]", JSON.stringify(result));
+				})
+				.catch((error: unknown) => console.error("[notify] failed", error)),
 		);
 	},
 };
