@@ -3206,6 +3206,22 @@ input.tag-quick-add[type="text"] {
 	max-inline-size: 38rem;
 }
 
+/* Last on the about page: the software is open, and anyone can start one. */
+.about-open {
+	margin-block: 3rem 1rem;
+	padding-block-start: 1.5rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.about-open h2 {
+	margin-block-start: 0;
+}
+
+.about-open p {
+	color: var(--muted);
+	max-inline-size: 58ch;
+}
+
 /* A member's readiness to meet, on their admin page: set is green, not yet
    is a struck-through outline. */
 /* Two small badges that stack when the column is narrow. */
