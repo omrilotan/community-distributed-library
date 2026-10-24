@@ -78,7 +78,7 @@ export async function POST(request: Request): Promise<Response> {
 		status: 303,
 		headers: {
 			location,
-			"set-cookie": `locale=${locale === "he" ? "he" : "en"}; Path=/; Max-Age=31536000; SameSite=Lax`,
+			"set-cookie": `locale=${locale === "he" ? "he" : "en"}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`,
 		},
 	});
 }
