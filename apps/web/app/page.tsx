@@ -397,12 +397,13 @@ export default async function StorefrontPage({
 			) : null}
 
 			<div className="grid" id="listing">
-				{results.map((listing) => (
+				{results.map((listing, index) => (
 					<WorkCard
 						key={listing.work.id}
 						listing={listing}
 						locale={locale}
 						t={t}
+						eager={at === 0 && index < 8}
 					/>
 				))}
 			</div>
