@@ -4,6 +4,7 @@
 // buckets, bindings and addresses, and carry no value meant for local
 // development. A manifest that gives two libraries one database, or a
 // template binding the generator does not know, is caught before a deploy.
+import { pathToFileURL } from "node:url";
 import { unstable_readConfig } from "wrangler";
 import { SERVICES, SHARED, configFor, manifest, root } from "./libraries.mjs";
 
@@ -117,7 +118,7 @@ export function check(data = manifest()) {
 	return problems;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 	const problems = check();
 	if (problems.length) {
 		console.error(problems.map((line) => `✗ ${line}`).join("\n"));
