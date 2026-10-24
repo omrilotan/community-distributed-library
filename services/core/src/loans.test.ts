@@ -1172,6 +1172,27 @@ describe("two answers at once", () => {
 		expect((await due()) - before).toBe(extensions * 7 * 86_400);
 	});
 
+	it("two nudges at once reach the other side once", async () => {
+		const id = await activeLoan(SAM, DANA, COPY_B);
+		const sent = () =>
+			(
+				env.NOTIFY as unknown as {
+					sentMessages(): Promise<{ kind: string }[]>;
+				}
+			).sentMessages();
+		const before = (await sent()).length;
+		const nudges = await Promise.all([
+			as(SAM).post(`/v1/loans/${id}/nudge`),
+			as(SAM).post(`/v1/loans/${id}/nudge`),
+		]);
+		expect(nudges.map((nudge) => nudge.status).sort()).toEqual([204, 429]);
+		expect(
+			(await sent())
+				.slice(before)
+				.filter((message) => message.kind === "loan_nudge"),
+		).toHaveLength(1);
+	});
+
 	it("part of a set asked for twice at once is one loan", async () => {
 		await env.DB.prepare("UPDATE copies SET quantity = 10 WHERE id = ?")
 			.bind(COPY_B)

@@ -581,9 +581,18 @@ loans.post("/v1/loans/:id/nudge", async (c) => {
 					: "due";
 	const days = row.due_at ? Math.ceil(Math.abs(row.due_at - at) / 86_400) : 0;
 
-	await c.env.DB.prepare(`UPDATE loans SET ${column} = ? WHERE id = ?`)
-		.bind(at, id)
+	// Counted as written: two taps in the same second nudge once.
+	const nudged = await c.env.DB.prepare(
+		`UPDATE loans SET ${column} = ?1
+		  WHERE id = ?2 AND (${column} IS NULL OR ${column} <= ?3)`,
+	)
+		.bind(at, id, at - NUDGE_COOLDOWN)
 		.run();
+	if (!nudged.meta.changes)
+		return json(
+			c,
+			problem(429, "Already nudged today", "One nudge a day is plenty"),
+		);
 	const other = counterpart(party, member.id);
 	const me = iAmBorrower
 		? party.borrower
