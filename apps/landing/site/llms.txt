@@ -1,0 +1,13 @@
+# Community Distributed Library
+
+> Free, open-source software for a neighbourhood lending library. Neighbours list the books or things they are happy to lend (tools, board games, camping gear), ask each other for them, agree a time, and meet to hand them over. No money changes hands. Libraries are invite-only.
+
+- Every library is its own deployment, with its own members, data and rules. There is no central service.
+- Every library comes with its own MCP server, so an AI assistant such as Claude or ChatGPT can search, list, ask, lend and arrange handoffs for a member, with the permissions the member grants.
+- The code is in the public domain (the Unlicense). Anyone can run a library for their own street on a Cloudflare account (Workers Paid plan) with Resend for email.
+- In Claude Code, the repository's `/open-a-library` skill sets up a new library step by step, with no programming needed.
+
+## Links
+
+- [Source code](https://github.com/omrilotan/community-distributed-library): the repository
+- [Self-hosting guide](https://github.com/omrilotan/community-distributed-library/blob/main/docs/self-hosting.md): how to open a library
