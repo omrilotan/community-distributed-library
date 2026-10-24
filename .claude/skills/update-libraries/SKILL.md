@@ -25,6 +25,12 @@ deploys it to each of them, applying database changes first.
    set -a; . ./.env; set +a; npm run check:setup
    ```
 
+   Email now goes through Cloudflare Email Sending. If the check says **Email Sending is off** for a
+   domain, run the command it gives (`npx wrangler email sending enable <domain>`) with the keys
+   loaded. If it says the token **cannot reach Email Sending**, ask them to add **Email Sending:
+   Edit** to the token in Cloudflare (**My Profile** > **API Tokens**, edit), then check again.
+   Once it passes, `RESEND_API_KEY` in `.env` is no longer used; they can remove it.
+
 5. Deploy the shared book lookup first, then every library in the order `libraries.json` lists
    them:
 
