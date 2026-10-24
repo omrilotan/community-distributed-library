@@ -95,6 +95,20 @@ export default async function AboutPage() {
 						"There are no ratings here, no reviews and no stars, for books or for people. That is on purpose. A thumbed paperback is as welcome as a first edition, a slow reader as welcome as a quick one, and nobody's taste is up for marks. A library like this runs on trust between neighbours, and every book lent is already a kindness.",
 				};
 
+	const open = he
+		? {
+				title: "קוד פתוח, של כולם",
+				body: "התוכנה שמפעילה את הספרייה הזו היא קוד פתוח ונמסרה לנחלת הכלל. אין חברה מאחוריה, אין פרסומות ואין מעקב, ואין כאן שום דבר למכור. כל אחד יכול לקרוא את הקוד ולבדוק מה הוא עושה, לשפר אותו, או לפתוח ספרייה לרחוב שלו, ועוזר בינה מלאכותית יכול להקים אותה בשבילו.",
+				code: "הקוד ב־GitHub",
+				start: "לפתוח ספרייה משלכם",
+			}
+		: {
+				title: "Open source, and everyone's",
+				body: "The software behind this library is open source and in the public domain. There is no company behind it, no advertising and no tracking, and nothing here is for sale. Anyone can read the code and check what it does, make it better, or open a library for their own street, and an AI assistant can set it up for them.",
+				code: "The code on GitHub",
+				start: "Start your own library",
+			};
+
 	const base = appBase();
 	const here = "/about";
 	return (
@@ -141,9 +155,23 @@ export default async function AboutPage() {
 				<h2>{copy.welcomeTitle}</h2>
 				<p>{copy.welcome}</p>
 			</section>
+
+			{/* Whose software this is: nobody's, and so everybody's. */}
+			<section className="about-open">
+				<h2>{open.title}</h2>
+				<p>{open.body}</p>
+				<p>
+					<a href={REPOSITORY}>{open.code}</a>
+					{" · "}
+					<a href={`${FRONT_DOOR}/#open`}>{open.start}</a>
+				</p>
+			</section>
 		</main>
 	);
 }
+
+const REPOSITORY = "https://github.com/omrilotan/community-distributed-library";
+const FRONT_DOOR = "https://community-distributed-library.com";
 
 /** The same page for a library of things. */
 function thingsCopy(
