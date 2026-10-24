@@ -44,6 +44,8 @@ export async function sendPush(
 			Authorization: `vapid t=${token}, k=${vapid.publicKey}`,
 		},
 		body,
+		// A push service that never answers is one failed push, not a hung batch.
+		signal: AbortSignal.timeout(10_000),
 	});
 }
 
