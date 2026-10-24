@@ -224,8 +224,9 @@ export async function attention(
 	viewerId?: string,
 ) {
 	const at = now();
-	const { results } = await env.DB.prepare(
-		`SELECT l.id, l.status, l.requested_at, l.due_at, e.title,
+	const [{ results }, open, cutOff, suggestions] = await Promise.all([
+		env.DB.prepare(
+			`SELECT l.id, l.status, l.requested_at, l.due_at, e.title,
 		        l.borrower_id, l.lender_id,
 		        b.display_name AS borrower_name, o.display_name AS lender_name
 		   FROM loans l
@@ -240,25 +241,25 @@ export async function attention(
 		              WHERE sm.community_id = l.community_id AND sm.status = 'suspended'
 		                AND sm.member_id IN (l.borrower_id, l.lender_id, l.relay_from))
 		  ORDER BY l.due_at ASC, l.requested_at ASC LIMIT 100`,
-	)
-		.bind(
-			communityId,
-			at - ESCALATE_AFTER_DAYS * DAY,
-			at - UNANSWERED_AFTER_DAYS * DAY,
 		)
-		.all<{
-			id: string;
-			status: string;
-			requested_at: number;
-			due_at: number | null;
-			title: string;
-			borrower_id: string;
-			lender_id: string;
-			borrower_name: string;
-			lender_name: string;
-		}>();
-	const open = await env.DB.prepare(
-		`SELECT r.id, r.kind, r.body, r.created_at, r.loan_id, e.title,
+			.bind(
+				communityId,
+				at - ESCALATE_AFTER_DAYS * DAY,
+				at - UNANSWERED_AFTER_DAYS * DAY,
+			)
+			.all<{
+				id: string;
+				status: string;
+				requested_at: number;
+				due_at: number | null;
+				title: string;
+				borrower_id: string;
+				lender_id: string;
+				borrower_name: string;
+				lender_name: string;
+			}>(),
+		env.DB.prepare(
+			`SELECT r.id, r.kind, r.body, r.created_at, r.loan_id, e.title,
 		        p.display_name AS reporter_name, s.display_name AS subject_name
 		   FROM reports r
 		   JOIN members p ON p.id = r.reporter_id
@@ -267,23 +268,22 @@ export async function attention(
 		   LEFT JOIN copies c ON c.id = l.copy_id
 		   LEFT JOIN editions e ON e.id = c.edition_id
 		  WHERE r.community_id = ? AND r.status = 'open' ORDER BY r.created_at ASC LIMIT 50`,
-	)
-		.bind(communityId)
-		.all<{
-			id: string;
-			kind: string;
-			body: string | null;
-			created_at: number;
-			loan_id: string | null;
-			title: string | null;
-			reporter_name: string;
-			subject_name: string | null;
-		}>();
-
-	// Every open loan with a suspended member is the moderators' to settle:
-	// nobody can message or nudge that member any more.
-	const cutOff = await env.DB.prepare(
-		`SELECT l.id, l.status, l.requested_at, l.started_at, e.title,
+		)
+			.bind(communityId)
+			.all<{
+				id: string;
+				kind: string;
+				body: string | null;
+				created_at: number;
+				loan_id: string | null;
+				title: string | null;
+				reporter_name: string;
+				subject_name: string | null;
+			}>(),
+		// Every open loan with a suspended member is the moderators' to settle:
+		// nobody can message or nudge that member any more.
+		env.DB.prepare(
+			`SELECT l.id, l.status, l.requested_at, l.started_at, e.title,
 		        l.borrower_id, l.lender_id,
 		        b.display_name AS borrower_name, o.display_name AS lender_name,
 		        (SELECT group_concat(m.display_name, ', ') FROM memberships sm
@@ -300,36 +300,36 @@ export async function attention(
 		              WHERE sm.community_id = l.community_id AND sm.status = 'suspended'
 		                AND sm.member_id IN (l.borrower_id, l.lender_id, l.relay_from))
 		  ORDER BY l.requested_at ASC LIMIT 100`,
-	)
-		.bind(communityId)
-		.all<{
-			id: string;
-			status: string;
-			requested_at: number;
-			started_at: number | null;
-			title: string;
-			borrower_id: string;
-			lender_id: string;
-			borrower_name: string;
-			lender_name: string;
-			suspended_name: string;
-		}>();
-
-	const suggestions = await env.DB.prepare(
-		`SELECT p.id, p.label, p.namespace, p.namespace_label, p.created_at, m.display_name
+		)
+			.bind(communityId)
+			.all<{
+				id: string;
+				status: string;
+				requested_at: number;
+				started_at: number | null;
+				title: string;
+				borrower_id: string;
+				lender_id: string;
+				borrower_name: string;
+				lender_name: string;
+				suspended_name: string;
+			}>(),
+		env.DB.prepare(
+			`SELECT p.id, p.label, p.namespace, p.namespace_label, p.created_at, m.display_name
 		   FROM tag_proposals p JOIN members m ON m.id = p.proposed_by
 		  WHERE p.community_id = ? AND p.status = 'pending'
 		  ORDER BY p.created_at ASC LIMIT 20`,
-	)
-		.bind(communityId)
-		.all<{
-			id: string;
-			label: string;
-			namespace: string | null;
-			namespace_label: string | null;
-			created_at: number;
-			display_name: string;
-		}>();
+		)
+			.bind(communityId)
+			.all<{
+				id: string;
+				label: string;
+				namespace: string | null;
+				namespace_label: string | null;
+				created_at: number;
+				display_name: string;
+			}>(),
+	]);
 
 	return [
 		...cutOff.results.map((row) => ({
