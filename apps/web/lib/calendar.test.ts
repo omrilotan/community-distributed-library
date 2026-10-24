@@ -38,4 +38,16 @@ describe("a handoff in a calendar", () => {
 			"LOCATION:Church End\\, by the library\\; side door",
 		);
 	});
+
+	it("folds lines longer than 75 octets, as RFC 5545 asks", () => {
+		const title = "א".repeat(60);
+		const file = icsFile({ ...event, title });
+		const lines = file.split("\r\n");
+		expect(lines.some((line) => line.startsWith(" "))).toBe(true);
+		for (const line of lines) {
+			expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
+		}
+		// Unfolded, the line is whole again.
+		expect(file.replace(/\r\n /g, "")).toContain(`SUMMARY:${title}\r\n`);
+	});
 });

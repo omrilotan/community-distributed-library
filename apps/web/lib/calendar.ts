@@ -91,6 +91,30 @@ function text(value: string): string {
 		.replace(/\r?\n/g, "\\n");
 }
 
+/**
+ * RFC 5545 §3.1: a content line is at most 75 octets; the rest continues on
+ * the next line after one space. Calendars unfold before parsing, so nothing
+ * shown changes. Folding is by code point, so no character is cut in two.
+ */
+function fold(line: string): string {
+	const lines: string[] = [];
+	let current = "";
+	let octets = 0;
+	for (const char of line) {
+		const point = char.codePointAt(0)!;
+		const size = point < 0x80 ? 1 : point < 0x800 ? 2 : point < 0x10000 ? 3 : 4;
+		if (octets + size > 75) {
+			lines.push(current);
+			current = " ";
+			octets = 1;
+		}
+		current += char;
+		octets += size;
+	}
+	lines.push(current);
+	return lines.join("\r\n");
+}
+
 export function icsFile(event: CalendarEvent): string {
 	return [
 		"BEGIN:VCALENDAR",
@@ -109,5 +133,7 @@ export function icsFile(event: CalendarEvent): string {
 		"END:VEVENT",
 		"END:VCALENDAR",
 		"",
-	].join("\r\n");
+	]
+		.map(fold)
+		.join("\r\n");
 }
