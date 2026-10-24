@@ -304,9 +304,14 @@ console.log(`\n━━ ${slug}: secrets`);
 const notify = dry ? "<notify config>" : configFor(data, slug, "notify");
 const keyFile = `${root}.keys/${slug}.vapid.json`;
 if (dry || existsSync(keyFile)) {
-	wrangler(["secret", "put", "VAPID_PRIVATE_JWK", "-c", notify], {
-		input: dry ? "" : readFileSync(keyFile, "utf8"),
-	});
+	if (
+		wrangler(["secret", "put", "VAPID_PRIVATE_JWK", "-c", notify], {
+			input: dry ? "" : readFileSync(keyFile, "utf8"),
+		}) === null
+	)
+		fail(
+			`Could not set VAPID_PRIVATE_JWK on ${slug}-notify. Run again to retry.`,
+		);
 	console.log(
 		`The private push key is in ${keyFile}. Keep a copy somewhere safe: Cloudflare will not show it again.`,
 	);
