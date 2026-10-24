@@ -1134,6 +1134,27 @@ describe("two answers at once", () => {
 		);
 	});
 
+	it("a confirm and a cancel of a handoff: it never ends agreed", async () => {
+		const id = (await as(SAM).post("/v1/loans", { copyId: COPY_B })).body.id;
+		await as(DANA).post(`/v1/loans/${id}/accept`);
+		await as(SAM).post(`/v1/loans/${id}/handoff/propose`, {
+			day: "2099-01-01",
+			period: "evening",
+		});
+		const [confirmed] = await Promise.all([
+			as(DANA).post(`/v1/loans/${id}/handoff/confirm`),
+			as(SAM).post(`/v1/loans/${id}/handoff/cancel`),
+		]);
+		// Agreed then cancelled, or cancelled before the confirm could land.
+		expect([204, 404]).toContain(confirmed.status);
+		const { n } = (await env.DB.prepare(
+			"SELECT count(*) AS n FROM handoffs WHERE loan_id = ? AND status IN ('proposed', 'agreed')",
+		)
+			.bind(id)
+			.first<{ n: number }>())!;
+		expect(n).toBe(0);
+	});
+
 	it("every extension counted moved the due date", async () => {
 		const id = await activeLoan(SAM, DANA, COPY_B);
 		const due = async () =>
