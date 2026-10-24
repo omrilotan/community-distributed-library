@@ -51,10 +51,10 @@ export const consentHandler: ExportedHandler<Env> = {
 			const id = crypto.randomUUID();
 			const pending: Pending = {
 				auth,
-				// As core will keep it (trimmed, at most 80): the name the consent
-				// is given under must match the one it is checked against.
+				// As core will keep it (trimmed, at most 80, trimmed again): the name the
+				// consent is given under must match the one it is checked against.
 				clientName:
-					(client?.clientName ?? auth.clientId).trim().slice(0, 80) ||
+					(client?.clientName ?? auth.clientId).trim().slice(0, 80).trim() ||
 					"An assistant",
 				redirectHost: new URL(auth.redirectUri).host,
 			};
