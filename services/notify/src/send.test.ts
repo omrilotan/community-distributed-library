@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Notify, { type Env } from "./index.ts";
 
 const message = {
@@ -26,8 +26,6 @@ const refusing = (code: string) => ({
 	send: vi.fn().mockRejectedValue(Object.assign(new Error(code), { code })),
 });
 
-afterEach(() => vi.unstubAllGlobals());
-
 describe("sending an email", () => {
 	it("goes through Cloudflare, from the library's name and address", async () => {
 		const EMAIL = { send: vi.fn().mockResolvedValue({ messageId: "m" }) };
@@ -41,36 +39,18 @@ describe("sending an email", () => {
 		);
 	});
 
-	it("gives up on an address Cloudflare has suppressed, without Resend", async () => {
-		const fetch = vi.fn();
-		vi.stubGlobal("fetch", fetch);
+	it("gives up on an address Cloudflare has suppressed", async () => {
 		const delivery = await notify({
 			EMAIL: refusing("E_RECIPIENT_SUPPRESSED"),
-			RESEND_API_KEY: "key",
 		} as never).send(message);
 		expect(delivery).toEqual({
 			delivered: false,
 			channel: "email",
 			retry: false,
 		});
-		expect(fetch).not.toHaveBeenCalled();
 	});
 
-	it("hands a message Cloudflare could not send to Resend", async () => {
-		const fetch = vi.fn().mockResolvedValue(new Response("{}"));
-		vi.stubGlobal("fetch", fetch);
-		const delivery = await notify({
-			EMAIL: refusing("E_DAILY_LIMIT_EXCEEDED"),
-			RESEND_API_KEY: "key",
-		} as never).send(message);
-		expect(delivery).toEqual({ delivered: true, channel: "email" });
-		expect(fetch).toHaveBeenCalledWith(
-			"https://api.resend.com/emails",
-			expect.anything(),
-		);
-	});
-
-	it("tries again later when Cloudflare is busy and there is no Resend", async () => {
+	it("tries again later when Cloudflare is busy", async () => {
 		const delivery = await notify({
 			EMAIL: refusing("E_RATE_LIMIT_EXCEEDED"),
 		} as never).send(message);
@@ -79,5 +59,10 @@ describe("sending an email", () => {
 			channel: "email",
 			retry: true,
 		});
+	});
+
+	it("logs the message when there is no way to send it", async () => {
+		const delivery = await notify({}).send(message);
+		expect(delivery).toEqual({ delivered: false, channel: "console" });
 	});
 });

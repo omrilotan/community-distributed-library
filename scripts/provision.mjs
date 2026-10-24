@@ -9,9 +9,9 @@
 //
 // Run it again after a failure: what exists already is found and kept.
 //
-// Needs in the environment (see docs/self-hosting.md): CLOUDFLARE_API_TOKEN
-// and RESEND_API_KEY. The account is the one the token reaches, or
-// CLOUDFLARE_ACCOUNT_ID when it reaches several.
+// Needs CLOUDFLARE_API_TOKEN in the environment (see docs/self-hosting.md).
+// The account is the one the token reaches, or CLOUDFLARE_ACCOUNT_ID when it
+// reaches several.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
@@ -51,8 +51,8 @@ if (centre.length !== 2 || centre.some((n) => !Number.isFinite(n)))
 	fail("--centre is latitude,longitude, for example 51.6012,-0.1924.");
 const admin = values.admin.trim().toLowerCase();
 const dry = values["dry-run"];
-for (const key of ["CLOUDFLARE_API_TOKEN", "RESEND_API_KEY"])
-	if (!process.env[key] && !dry) fail(`${key} is not set.`);
+if (!process.env.CLOUDFLARE_API_TOKEN && !dry)
+	fail("CLOUDFLARE_API_TOKEN is not set.");
 
 // The manifest: this operator's, or a new one for a first library.
 const path = manifestPath().endsWith("libraries.example.json")
@@ -137,6 +137,20 @@ function kv(title) {
 	if (wrangler(["kv", "namespace", "create", title]) === null)
 		fail(`Could not create KV namespace ${title}.`);
 	return dry ? `<${title} id>` : find()?.id;
+}
+
+/** Whether Cloudflare already sends mail from this domain. */
+async function sendingOn(domain) {
+	if (dry) return false;
+	const zone = await findZone(domain);
+	const reply = await fetch(
+		`https://api.cloudflare.com/client/v4/zones/${zone.id}/email/sending/subdomains`,
+		{ headers: { authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}` } },
+	);
+	const body = await reply.json().catch(() => ({}));
+	return (body.result ?? []).some(
+		(entry) => entry.name === domain && entry.enabled,
+	);
 }
 
 /** The zone the host is in: its id and its domain. */
@@ -270,6 +284,16 @@ wrangler(
 	{ quiet: true },
 );
 
+// Mail goes out through Cloudflare Email Sending, which has to be on for
+// the address's domain. Turning it on adds the domain's sending records.
+const mailDomain = lib.address.split("@")[1];
+if (!(await sendingOn(mailDomain))) {
+	if (wrangler(["email", "sending", "enable", mailDomain]) === null)
+		fail(
+			`Could not turn on Email Sending for ${mailDomain}: the token needs Email Sending: Edit.`,
+		);
+}
+
 // 3. Its Workers, after the shared one they bind to.
 console.log(`\n━━ ${slug}: Workers`);
 if (firstLibrary) deploy(["shared", "metadata"]);
@@ -287,9 +311,6 @@ if (dry || existsSync(keyFile)) {
 		`The private push key is in ${keyFile}. Keep a copy somewhere safe: Cloudflare will not show it again.`,
 	);
 } else console.log(`No ${keyFile}; VAPID_PRIVATE_JWK left as it is.`);
-wrangler(["secret", "put", "RESEND_API_KEY", "-c", notify], {
-	input: env.RESEND_API_KEY ?? "",
-});
 
 // 5. The library itself, and its first admin.
 console.log(`\n━━ ${slug}: the library and its first admin`);

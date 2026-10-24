@@ -6,13 +6,11 @@ import { sendPush, type Subscription } from "./push.ts";
 export interface Env {
 	FROM_ADDRESS: string;
 	FROM_NAME: string;
-	/** Cloudflare Email Sending, for the domain FROM_ADDRESS is on. */
-	EMAIL?: SendEmail;
 	/**
-	 * Secret, while email moves to Cloudflare: Resend takes a message that
-	 * Cloudflare could not. Without either, development logs the message.
+	 * Cloudflare Email Sending, for the domain FROM_ADDRESS is on. Without
+	 * it (tests, a broken deploy) the message is logged instead.
 	 */
-	RESEND_API_KEY?: string;
+	EMAIL?: SendEmail;
 	/** VAPID public key, base64url. Handed to browsers when they subscribe. */
 	VAPID_PUBLIC_KEY?: string;
 	/** Secret: the matching private key as a JWK. */
@@ -23,8 +21,7 @@ export interface Env {
  * Delivery only. `core` decides what to say; this service decides how it
  * travels. Swap the channel and nothing upstream changes (decision 0013).
  *
- * Email goes through Cloudflare Email Sending, with Resend behind it for
- * as long as a library still has a Resend key.
+ * Email goes through Cloudflare Email Sending.
  */
 export default class Notify extends WorkerEntrypoint<Env> {
 	/**
@@ -93,37 +90,10 @@ export default class Notify extends WorkerEntrypoint<Env> {
 		const message = Message.parse(input);
 		const rendered = render(message);
 
-		const email = {
-			from: { name: this.env.FROM_NAME, email: this.env.FROM_ADDRESS },
-			to: message.to,
-			subject: rendered.subject,
-			text: rendered.text,
-			html: rendered.html,
-		};
-
-		if (this.env.EMAIL) {
-			const failure = await this.env.EMAIL.send(email).then(
-				() => null,
-				(error: unknown) => error as { code?: string; message?: string },
-			);
-			if (!failure) return { delivered: true, channel: "email" };
-			console.error(
-				"[notify:cloudflare] send failed",
-				failure.code,
-				failure.message,
-			);
-			// The address bounced before, or the message itself is wrong: no
-			// other service would do better, and later would fail the same.
-			if (REFUSED.has(failure.code ?? ""))
-				return { delivered: false, channel: "email", retry: false };
-			if (!this.env.RESEND_API_KEY)
-				return { delivered: false, channel: "email", retry: true };
-		}
-
-		if (!this.env.RESEND_API_KEY) {
-			// Neither service means local development, or production gone
-			// missing its binding: say what would have gone, never a sign-in
-			// link, which core already hands a developer as debugUrl.
+		if (!this.env.EMAIL) {
+			// No binding means a test or a deploy gone wrong: say what would have
+			// gone, never a sign-in link, which core already hands a developer
+			// as debugUrl.
 			console.log(
 				`[notify:console] to=${message.to} subject=${rendered.subject}${
 					// Either one carries a link that signs somebody in.
@@ -135,37 +105,26 @@ export default class Notify extends WorkerEntrypoint<Env> {
 			return { delivered: false, channel: "console" };
 		}
 
-		const response = await fetch("https://api.resend.com/emails", {
-			method: "POST",
-			headers: {
-				authorization: `Bearer ${this.env.RESEND_API_KEY}`,
-				"content-type": "application/json",
-			},
-			body: JSON.stringify({
-				from: `${email.from.name} <${email.from.email}>`,
-				to: [email.to],
-				subject: email.subject,
-				text: email.text,
-				html: email.html,
-			}),
-		}).catch((error: unknown) => {
-			console.error("[notify:resend] request failed", error);
-			return null;
-		});
-
-		if (!response?.ok) {
-			console.error(
-				"[notify:resend] send failed",
-				response?.status,
-				await response?.text(),
-			);
-			// Unreachable, rate-limited or failing on their side: worth another
-			// go later. Anything else (a bad address) would fail again.
-			const retry =
-				!response || response.status === 429 || response.status >= 500;
-			return { delivered: false, channel: "email", retry };
-		}
-		return { delivered: true, channel: "email" };
+		const failure = await this.env.EMAIL.send({
+			from: { name: this.env.FROM_NAME, email: this.env.FROM_ADDRESS },
+			to: message.to,
+			subject: rendered.subject,
+			text: rendered.text,
+			html: rendered.html,
+		}).then(
+			() => null,
+			(error: unknown) => error as { code?: string; message?: string },
+		);
+		if (!failure) return { delivered: true, channel: "email" };
+		console.error("[notify:email] send failed", failure.code, failure.message);
+		// The address bounced before, or the message itself is wrong: later
+		// would fail the same. Anything else (limits, delivery, Cloudflare's
+		// own trouble) is worth another go.
+		return {
+			delivered: false,
+			channel: "email",
+			retry: !REFUSED.has(failure.code ?? ""),
+		};
 	}
 
 	override async fetch(): Promise<Response> {
@@ -175,8 +134,7 @@ export default class Notify extends WorkerEntrypoint<Env> {
 
 /**
  * Cloudflare's refusals that are about this message, not the moment: a
- * suppressed or disallowed address, or a message it cannot take. Anything
- * else (limits, delivery, its own trouble) is worth another go.
+ * suppressed or disallowed address, or a message it cannot take.
  */
 const REFUSED = new Set([
 	"E_RECIPIENT_SUPPRESSED",
