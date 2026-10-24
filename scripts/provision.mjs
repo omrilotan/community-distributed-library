@@ -279,22 +279,34 @@ bucket(`${slug}-images`);
 if (lib.backups !== false) bucket(`${slug}-backups`);
 save();
 
-// Photos are served from images.<host>.
-wrangler(
-	[
-		"r2",
-		"bucket",
-		"domain",
-		"add",
-		`${slug}-images`,
-		"--domain",
-		`images.${values.host}`,
-		"--zone-id",
-		zone.id,
-		"--force",
-	],
-	{ quiet: true },
-);
+// Photos are served from images.<host>. Adding a domain already attached
+// fails; anything else failing is real, so a failure is checked against the list.
+const imagesHost = `images.${values.host}`;
+if (
+	wrangler(
+		[
+			"r2",
+			"bucket",
+			"domain",
+			"add",
+			`${slug}-images`,
+			"--domain",
+			imagesHost,
+			"--zone-id",
+			zone.id,
+			"--force",
+		],
+		{ quiet: true },
+	) === null &&
+	!dry
+) {
+	const list =
+		wrangler(["r2", "bucket", "domain", "list", `${slug}-images`], {
+			quiet: true,
+		}) ?? "";
+	if (!list.toLowerCase().includes(imagesHost.toLowerCase()))
+		fail(`Could not connect ${imagesHost} to ${slug}-images.`);
+}
 
 // Mail goes out through Cloudflare Email Sending, which has to be on for
 // the address's domain. Turning it on adds the domain's sending records.
