@@ -155,11 +155,21 @@ function dropAllTables(local) {
 		],
 		{ cwd: root, encoding: "utf8" },
 	);
+	if (listing.status !== 0) {
+		// With --json, wrangler reports its own errors on stdout, as {"error": {"text"}}.
+		let reason;
+		try {
+			reason = JSON.parse(listing.stdout).error.text;
+		} catch {
+			reason = listing.stderr?.trim() || listing.error?.message;
+		}
+		throw new Error(reason || `wrangler exited with ${listing.status}`);
+	}
 	let tables = [];
 	try {
 		tables = JSON.parse(listing.stdout)[0].results.map((row) => row.name);
 	} catch {
-		return; // brand-new database, nothing to drop
+		return; // unexpected output shape, nothing we can safely drop
 	}
 	if (!tables.length) return;
 	wrangler([
