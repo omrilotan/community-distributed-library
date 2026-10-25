@@ -1,5 +1,4 @@
 import { Hono, type Context } from "hono";
-import type { ContentfulStatusCode } from "hono/utils/http-status";
 import {
 	AddCopyRequest,
 	LibraryType,
@@ -11,12 +10,11 @@ import {
 	parseTags,
 	problem,
 	traits,
-	type Problem,
 } from "@cdl/contracts";
 import { theLibrary } from "./library.ts";
 import type { Env } from "./env.ts";
 import { searchKey } from "./normalise.ts";
-import { viewer, viewerWith } from "./auth.ts";
+import { viewerWith } from "./auth.ts";
 import { createThingEntry, resolveEdition } from "./catalogue.ts";
 import { searchCopies } from "./search.ts";
 import {
