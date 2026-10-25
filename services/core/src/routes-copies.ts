@@ -38,7 +38,7 @@ copies.patch("/v1/copies/:id", async (c) => {
 	const { member, forbidden } = await viewerWith(c, "shelf:write");
 	if (!member) return denied(c, forbidden);
 	const id = c.req.param("id");
-	const detail = await load(c.env, id, member.id);
+	const detail = await load(c.env, id, member.id, false);
 	if (!detail) return json(c, problem(404, "Not your copy"));
 
 	const parsed = UpdateCopy.safeParse(await c.req.json().catch(() => null));
@@ -194,7 +194,7 @@ copies.delete("/v1/copies/:id", async (c) => {
 	const { member, forbidden } = await viewerWith(c, "shelf:write");
 	if (!member) return denied(c, forbidden);
 	const id = c.req.param("id");
-	const detail = await load(c.env, id, member.id);
+	const detail = await load(c.env, id, member.id, false);
 	if (!detail) return json(c, problem(404, "Not your copy"));
 	if (detail.openLoan)
 		return json(
@@ -245,10 +245,15 @@ copies.delete("/v1/copies/:id", async (c) => {
 	return c.body(null, 204);
 });
 
+/**
+ * The copy as its owner sees it. Writers never show the tags, so they may
+ * skip that lookup.
+ */
 async function load(
 	env: Env,
 	id: string,
 	ownerId: string,
+	withTags = true,
 ): Promise<CopyDetail | null> {
 	const row = await env.DB.prepare(
 		`SELECT c.id, c.state, c.condition, c.lending, c.relay_allowed, c.loan_days, c.note, c.created_at,
@@ -312,7 +317,7 @@ async function load(
 			title: row.work_title,
 			authors: JSON.parse(row.authors) as string[],
 			createdAt: row.work_created_at,
-			tags: await tagsForWork(env, row.work_id),
+			tags: withTags ? await tagsForWork(env, row.work_id) : [],
 			note: row.work_note,
 		},
 		editable: { details: row.others === 0 },
