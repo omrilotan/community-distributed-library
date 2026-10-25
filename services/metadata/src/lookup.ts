@@ -39,9 +39,7 @@ export async function lookup(
 		.prepare("SELECT payload, fetched_at FROM lookup_cache WHERE isbn13 = ?")
 		.bind(isbn13)
 		.first<{ payload: string; fetched_at: number }>();
-	const kept = cached
-		? MetadataLookup.safeParse(JSON.parse(cached.payload))
-		: null;
+	const kept = cached ? parseKept(cached.payload) : null;
 	if (kept?.success && now - cached!.fetched_at < HIT_TTL_SECONDS)
 		return kept.data;
 
@@ -62,9 +60,10 @@ export async function lookup(
 			continue;
 		}
 		if (!result) continue;
-		// Open data can be wrong or odd: only what fits the record is kept.
-		const record = MetadataLookup.safeParse(tidy(result));
-		if (!record.success) continue;
+		// Open data can be wrong or odd: only what fits the record is kept, and a
+		// shape tidy() cannot even read is no record at all.
+		const record = fit(result);
+		if (!record?.success) continue;
 		await db
 			.prepare(
 				"INSERT OR REPLACE INTO lookup_cache (isbn13, source, payload, fetched_at) VALUES (?, ?, ?, ?)",
@@ -98,4 +97,28 @@ function tidy(found: MetadataLookup): MetadataLookup {
 			.slice(0, 10),
 		publisher: found.publisher ? cut(found.publisher, 200) : null,
 	};
+}
+
+/**
+ * What fits the record, or null when the provider's shape cannot even be
+ * tidied.
+ */
+function fit(found: MetadataLookup) {
+	try {
+		return MetadataLookup.safeParse(tidy(found));
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * A cached row this service wrote; one it cannot read is treated as absent
+ * and replaced.
+ */
+function parseKept(payload: string) {
+	try {
+		return MetadataLookup.safeParse(JSON.parse(payload));
+	} catch {
+		return null;
+	}
 }
