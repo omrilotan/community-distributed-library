@@ -44,6 +44,22 @@ describe("tags", () => {
 		).toBe(204);
 	});
 
+	it("are logged when a moderator sets them on a book they do not hold", async () => {
+		const poetry = await poetryByNoa();
+		expect(
+			(
+				await as(DANA).put(`/v1/works/${poetry}/tags`, {
+					tags: ["genre:poetry"],
+				})
+			).status,
+		).toBe(204);
+		const logged = await env.DB.prepare(
+			"SELECT actor_id, target FROM moderation_log WHERE action = 'PUT /v1/works/:id/tags'",
+		).all();
+		// Noa tagged her own book above; only Dana's change is a moderator's.
+		expect(logged.results).toEqual([{ actor_id: DANA, target: poetry }]);
+	});
+
 	it("travel with the book: every copy of it carries the same tags", async () => {
 		await as(DANA).put(`/v1/works/${WORK}/tags`, { tags: ["genre:fiction"] });
 		const browse = await as(SAM).get("/v1/browse");
