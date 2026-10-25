@@ -589,6 +589,36 @@ describe("relays and waitlist", () => {
 		expect((await offerOf(ELI))?.copyId).toBe(COPY_B);
 	});
 
+	it("two passes at once hold the copy for the head of the queue once", async () => {
+		const id = await activeLoan(SAM, DANA, COPY_B);
+		await activeLoan(SAM, DANA, COPY_A);
+		await as(NOA).post("/v1/waitlist", { workId: WORK });
+		await as(DANA).post(`/v1/loans/${id}/returned`);
+		await env.DB.prepare(
+			"UPDATE waitlist SET offered_copy_id = NULL, offer_expires_at = NULL",
+		).run();
+		const sent = () =>
+			(
+				env.NOTIFY as unknown as {
+					sentMessages(): Promise<{ kind: string; to: string }[]>;
+				}
+			).sentMessages();
+		const before = (await sent()).length;
+
+		await Promise.all([
+			onCopyAvailable(env, COPY_B),
+			onCopyAvailable(env, COPY_B),
+		]);
+		expect(
+			(await as(NOA).get("/v1/me/waitlist")).body.entries[0].offer?.copyId,
+		).toBe(COPY_B);
+		expect(
+			(await sent())
+				.slice(before)
+				.filter((message) => message.kind === "waitlist_offer"),
+		).toHaveLength(1);
+	});
+
 	it("part of a set coming free is told to the queue, not held", async () => {
 		await activeLoan(NOA, DANA, COPY_A);
 		await env.DB.prepare("UPDATE copies SET quantity = 12 WHERE id = ?")

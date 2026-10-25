@@ -92,11 +92,16 @@ export async function onCopyAvailable(
 	}
 
 	const until = now() + HOLD_HOURS * 3600;
-	await env.DB.prepare(
-		"UPDATE waitlist SET offered_copy_id = ?, offer_expires_at = ? WHERE id = ?",
+	// Only if nobody holds it yet, the head included: two passes for one copy
+	// at once must not both hold it and both tell the head.
+	const offered = await env.DB.prepare(
+		`UPDATE waitlist SET offered_copy_id = ?1, offer_expires_at = ?2
+		  WHERE id = ?3 AND (offered_copy_id IS NULL OR offer_expires_at < ?4)
+		    AND NOT EXISTS (SELECT 1 FROM waitlist h WHERE h.offered_copy_id = ?1 AND h.offer_expires_at > ?4)`,
 	)
-		.bind(copyId, until, head.id)
+		.bind(copyId, until, head.id, now())
 		.run();
+	if (!offered.meta.changes) return;
 	await tell(env, {
 		kind: "waitlist_offer",
 		to: head.email,
@@ -283,15 +288,24 @@ async function tellWishers(
 		)
 		.all<{ member_id: string; email: string; locale: "en" | "he" }>();
 	if (!results.length) return;
-	await env.DB.batch(
+	// Stamped only if still quiet, and told only if stamped here: two passes
+	// at once must not tell the same reader twice.
+	const stamped = await env.DB.batch(
 		results.map((row) =>
 			env.DB.prepare(
-				"UPDATE wishlist SET notified_at = ? WHERE member_id = ? AND work_id = ?",
-			).bind(now(), row.member_id, copy.work_id),
+				`UPDATE wishlist SET notified_at = ?1 WHERE member_id = ?2 AND work_id = ?3
+				  AND (notified_at IS NULL OR notified_at < ?4)`,
+			).bind(
+				now(),
+				row.member_id,
+				copy.work_id,
+				now() - WISHLIST_QUIET_DAYS * 86400,
+			),
 		),
 	);
+	const fresh = results.filter((_, index) => stamped[index]?.meta.changes);
 	await Promise.all(
-		results.map((row) =>
+		fresh.map((row) =>
 			tell(env, {
 				kind: "wishlist_available",
 				to: row.email,
