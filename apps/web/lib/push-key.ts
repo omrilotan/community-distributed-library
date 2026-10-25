@@ -23,13 +23,19 @@ export function madeWith(subscription: PushSubscription, key: string): boolean {
  * keeps its old subscription and shows notifications as on, while every push
  * to it is refused. Swap it for one under the new key; the member already
  * said yes, so no prompt is shown. Quiet on any failure.
+ *
+ * `known` is the key the page came with (lib/push-public-key.ts). A
+ * subscription made under it needs nothing more; otherwise the key is asked
+ * for afresh, since the page's copy may be a minute old.
  */
 export async function renewIfStale(
 	registration: ServiceWorkerRegistration,
+	known: string | null,
 ): Promise<void> {
 	if (Notification.permission !== "granted") return;
 	const subscription = await registration.pushManager.getSubscription();
 	if (!subscription) return;
+	if (known && madeWith(subscription, known)) return;
 	const { publicKey } = (await fetch("/api/v1/push/key").then((response) =>
 		response.json(),
 	)) as { publicKey: string | null };
