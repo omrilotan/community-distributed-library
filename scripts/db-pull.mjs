@@ -117,8 +117,8 @@ try {
 		console.log(`[${key}] replacing local ${name}…`);
 		dropAllTables(local);
 		wrangler([...local, "--file", dump]);
-		for (const statement of SCRUB[key] ?? [])
-			wrangler([...local, "--command", statement]);
+		if (SCRUB[key]?.length)
+			wrangler([...local, "--command", SCRUB[key].join("; ")]);
 		console.log(`[${key}] done${SCRUB[key] ? " (credentials scrubbed)" : ""}`);
 	}
 } finally {
