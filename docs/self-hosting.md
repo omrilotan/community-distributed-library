@@ -7,6 +7,16 @@ This guide opens a library on your own domain, in your own Cloudflare account. I
 twenty minutes. Everything runs on Cloudflare, email included: you need one key, a Cloudflare API
 token, and one command does the rest.
 
+A few words this guide uses:
+
+| Word         | Meaning                                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| **Library**  | One neighbourhood's library: its own members, catalogue, data and address. You can run more than one.     |
+| **Member**   | Someone who belongs to a library. Its first member is its **admin**: you, when you open it.               |
+| **Operator** | You: the person who runs one or more libraries from this folder.                                          |
+| **Worker**   | A small program that runs on Cloudflare. A library is made of five of them.                               |
+| **Manifest** | `libraries.json`: the list of your libraries and what each one owns in Cloudflare. Every deploy reads it. |
+
 ## What you need
 
 - A domain whose DNS is on Cloudflare, for example `example.org`. Your library will live at a name
@@ -27,6 +37,8 @@ npm install
 ```
 
 ## 2. Make a Cloudflare API token
+
+The token is how the command in step 5 makes things in your Cloudflare account.
 
 1. Sign in to Cloudflare, then open
    [this link](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_kv_storage%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_r2%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22d1%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22zone%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22dns%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22email_sending%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=*&zoneId=all&name=Community%20Distributed%20Library).
@@ -83,17 +95,16 @@ Every line should start with ✓. Each ✗ says what to fix. It never prints you
 
 ## 5. Open the library
 
-Pick:
+First, decide these:
 
-- a **slug**: a short name in lowercase letters and dashes, such as `our-street`. Cloudflare names
-  everything of this library after it.
-- the **address** it will live at, such as `our-street.example.org`
-- its **name**, as members will see it
-- its **centre**: the latitude and longitude of the middle of your neighbourhood. On
-  [openstreetmap.org](https://www.openstreetmap.org), right-click the spot and choose **Show
-  address**; the numbers are at the top of the panel.
-- what it lends: `books` or `things`
-- **your email address**: you become the library's first admin
+| Choice            | Example                  | Notes                                                                                                                                                                                                             |
+| ----------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Slug**          | `our-street`             | A short name: lowercase letters, digits and dashes, starting with a letter, 2 to 40 characters. Cloudflare names everything of this library after it.                                                             |
+| **Address**       | `our-street.example.org` | Where the library will live: a name under your domain.                                                                                                                                                            |
+| **Name**          | `Our Street Library`     | As members will see it.                                                                                                                                                                                           |
+| **Centre**        | `51.6012,-0.1924`        | The latitude and longitude of the middle of your neighbourhood. On [openstreetmap.org](https://www.openstreetmap.org), right-click the spot and choose **Show address**; the numbers are at the top of the panel. |
+| **What it lends** | `books` or `things`      |                                                                                                                                                                                                                   |
+| **Your email**    | `you@example.org`        | You become the library's first admin.                                                                                                                                                                             |
 
 Then run:
 
@@ -106,10 +117,23 @@ npm run provision -- our-street \
   --admin you@example.org
 ```
 
-It makes the library's databases, storage and Workers, gives it its own push key and addresses,
-turns on Cloudflare Email Sending for your domain (which adds its mail records to your DNS), and
-makes you its admin. If it stops halfway, fix what it says and run the same command again: it
-keeps what it already made.
+It makes the library's databases, storage and Workers, gives it its own push key and three addresses
+(`our-street.example.org`, `mcp.our-street.example.org` and `images.our-street.example.org`), turns on
+Cloudflare Email Sending for your domain (which adds its mail records to your DNS), and makes you its
+admin. Your first library also makes the book lookup Worker and its database, which every later
+library shares. If it stops halfway, fix what it says and run the same command again: it keeps what
+it already made.
+
+The command takes a few more flags, all optional:
+
+| Flag                   | Does                                                                                      | Default                          |
+| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------------------- |
+| `--radius <metres>`    | How far the neighbourhood reaches from its centre.                                        | `3000`                           |
+| `--address <email>`    | The address the library's mail comes from. Its domain must be one you have on Cloudflare. | `<slug>@<your domain>`           |
+| `--from-name "<name>"` | The sender name on the library's mail.                                                    | The library's name               |
+| `--zone-id <id>`       | The Cloudflare zone of your domain, if the command cannot find it on its own.             | Found from the library's address |
+| `--no-backups`         | Skip the nightly database snapshot and the bucket that keeps it (see Optional, below).    |                                  |
+| `--dry-run`            | Print what the command would do, and make nothing.                                        |                                  |
 
 When it finishes, open your library's address and sign in with your email. In **Moderation** >
 **Settings** you can give it a description, its languages and a colour, and invite your first
@@ -117,14 +141,17 @@ neighbours.
 
 ## Keep these safe
 
-- `libraries.json`: the list of your libraries and what each one owns in Cloudflare. Every later
-  deploy reads it. Keep it in your own private repository or back it up.
-- `.keys/<slug>.vapid.json`: the library's private push key. Cloudflare keeps a copy it will not show
-  you again; without this file you cannot move the library elsewhere without asking every member's
-  phone to subscribe again.
-- `.env`: your Cloudflare token.
+| File                      | What it is                                                                                                                                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `libraries.json`          | The manifest: the list of your libraries and what each one owns in Cloudflare. Every later deploy reads it. Keep it in your own private repository or back it up.                                   |
+| `.keys/<slug>.vapid.json` | The library's private push key. Cloudflare keeps a copy it will not show you again; without this file you cannot move the library elsewhere without asking every member's phone to subscribe again. |
+| `.env`                    | Your Cloudflare token.                                                                                                                                                                              |
+
+Git ignores all three.
 
 ## Update
+
+To bring your libraries up to the latest code:
 
 ```sh
 git pull
@@ -134,7 +161,11 @@ npm run deploy -- shared metadata
 npm run deploy -- all
 ```
 
-Database changes are applied before the new code goes live.
+Database changes are applied before the new code goes live. Libraries are updated in the order the
+manifest lists them. If one fails, the others still go; read the error, fix it, and deploy that one
+again with `npm run deploy -- <slug>`.
+
+### Moving an older library's email to Cloudflare
 
 Libraries opened before email moved to Cloudflare sent it through Resend. To move one over, add
 **Email Sending: Edit** to your token, turn sending on for the domain your library mails from, and
@@ -158,7 +189,6 @@ books and data, and none of them can see another's.
 - **No nightly backup.** Each library saves a snapshot of its database to a private R2 bucket every
   night. To skip that, add `--no-backups` to `npm run provision`, or set `"backups": false` on the
   library in `libraries.json` and run `npm run deploy -- <slug> core`.
-
 - **Book covers from Google Books.** Lookups use Open Library, then Google Books. With a
   [Google Books API key](https://developers.google.com/books/docs/v1/using#APIKey) there are more
   covers:

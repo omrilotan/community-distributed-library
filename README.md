@@ -1,19 +1,27 @@
 # Community Distributed Library
 
 Neighbours lend each other what they already own. There is no building and no central stock: each
-item stays on its owner's shelf until someone asks for it. CDL provides the shared part, which is a
+item stays on its owner's shelf until someone asks for it. The library is the shared part: a
 catalogue, requests, handoff times picked from both people's week, a record of who holds what, and
 reminders.
 
-One codebase runs any number of libraries. Each library is its own deployment on Cloudflare, with its
-own members, data and address. A library lends either **books** or **things**
-(`packages/contracts/src/library-types.ts`). Libraries are invite-only and closed to search engines.
+What you can do next:
 
-**To run your own library, follow [docs/self-hosting.md](docs/self-hosting.md),** or open this folder
-in Claude Code and type `/open-a-library`. You need a domain on Cloudflare and a Cloudflare API token;
-one command does the rest. Everything runs on Cloudflare, email included.
+- **Run a library** for your street. Follow [docs/self-hosting.md](docs/self-hosting.md), or open
+  this folder in Claude Code and type `/open-a-library`. You need a domain on Cloudflare and a
+  Cloudflare API token; one command does the rest.
+- **Work on the code.** Start at [Run locally](#run-locally).
+- **Build on a library.** Everything the web app does is also open as an
+  [API, MCP server and webhooks](#api-mcp-and-webhooks).
 
 Released into the public domain under [the Unlicense](LICENSE).
+
+## One codebase, many libraries
+
+One codebase runs any number of libraries. Each library is its own deployment on Cloudflare, with its
+own members, data and address; the person who runs one or more of them is its **operator**. A library
+lends either **books** or **things** (`packages/contracts/src/library-types.ts`). Libraries are
+invite-only and closed to search engines. Everything runs on Cloudflare, email included.
 
 ## Layout
 
@@ -72,18 +80,22 @@ npm run format         # Prettier; CI fails on any diff
 npm run check:libraries
 ```
 
-CI (`.github/workflows/ci.yml`) runs types, Prettier, typecheck, the builds, the library check and every test on
-each push, then the browser tests against a local stack. CI does not deploy. After the browser tests,
-`npm run library:things` puts the local library back if you were working on things.
+`npm test` first runs `scripts/check-hosts.mjs`, which makes sure no Worker serves on `workers.dev` or
+a preview URL. The browser tests switch the local library to books, run the things project last, and
+leave it lending books; `npm run library:things` puts it back if you were working on things.
+
+CI (`.github/workflows/ci.yml`) runs on every push and pull request, in two jobs: one runs types,
+Prettier, typecheck, the builds, the library check and every test; the other runs the browser tests against a
+local stack. CI does not deploy.
 
 ## Deploy
 
 The `wrangler.jsonc` files describe one library for local development, with Workers named `cdl-*`.
-The libraries you run are listed in `libraries.json` at the repository root, or in the file
-`CDL_LIBRARIES` names: each one's slug, address, sender, push public key, D1 database IDs and OAuth
-KV namespace, plus the Cloudflare account and the shared Workers' database and addresses.
-`libraries.example.json` shows every field. They are listed in release order: the first one gets
-every release first.
+The libraries you run are listed in the **manifest**: `libraries.json` at the repository root, or the
+file `CDL_LIBRARIES` names. It holds each library's slug, address, sender, push public key, D1
+database IDs and OAuth KV namespace, plus the Cloudflare account and the shared Workers' database and
+addresses. `libraries.example.json` shows every field. Libraries are listed in release order: the
+first one gets every release first.
 
 A deploy writes one full config per library and Worker next to its template
 (`<dir>/wrangler.<slug>.json`, ignored by git) and deploys that file. Credentials come from `.env`
@@ -97,21 +109,24 @@ npm run deploy -- our-street       # every service, one library
 npm run deploy -- shared           # metadata, reports and the landing page
 ```
 
-For each library the script checks the manifest, applies remote migrations, then deploys notify,
-convo, core, mcp and web in that order, and stops that library at the first failure.
+The script checks the manifest first. Then, for each library in turn, it takes the Workers in binding
+order, notify, convo, core, mcp and web, and for each one applies its remote database migrations and
+deploys it. A failure stops that library before any later Worker of it deploys; the other libraries
+still go, and the run ends in failure.
+
+`npm run check:libraries` refuses a manifest that gives two libraries one Worker, route, database,
+bucket, KV namespace or push key, and any library config still carrying a local development value.
 
 To run wrangler by hand against a library, write its config first:
 `npx wrangler d1 execute our-street-core --remote -c "$(node scripts/config.mjs our-street core)" --command "SELECT 1"`.
 
-`npm run check:libraries` refuses a manifest that gives two libraries one Worker, route, database,
-bucket, KV namespace or push key, and any library config still carrying a local development value.
-`scripts/check-hosts.mjs` makes sure no Worker serves on `workers.dev`.
+### Secrets and sending
 
-Secret per library, on `<slug>-notify`: `VAPID_PRIVATE_JWK`
-(`npx wrangler secret put VAPID_PRIVATE_JWK -c "$(node scripts/config.mjs <slug> notify)"`). Email
-goes out through the `EMAIL` binding (Cloudflare Email Sending), which needs sending turned on for the
-sender's domain: `npx wrangler email sending enable <domain>`. Optional on `cdl-metadata`:
-`GOOGLE_BOOKS_KEY`.
+| Where                     | What                                                                     | How                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `<slug>-notify`           | `VAPID_PRIVATE_JWK`, the library's private push key                      | `npx wrangler secret put VAPID_PRIVATE_JWK -c "$(node scripts/config.mjs <slug> notify)"`  |
+| the sender's domain       | Cloudflare Email Sending turned on; the `EMAIL` binding sends through it | `npx wrangler email sending enable <domain>`                                               |
+| `cdl-metadata` (optional) | `GOOGLE_BOOKS_KEY`, for more covers                                      | `npx wrangler secret put GOOGLE_BOOKS_KEY -c "$(node scripts/config.mjs shared metadata)"` |
 
 ## API, MCP and webhooks
 
@@ -134,8 +149,11 @@ Member tools: `my_profile`, `search_catalogue`, `browse_shelves`, `get_work`, `l
 `set_item_tags`, `request_loan`, `respond_to_request`, `cancel_loan`, `extend_loan`, `nudge`,
 `list_my_loans`, `get_loan_messages`, `post_loan_message`, `join_waitlist`, `leave_waitlist`,
 `my_waitlist`, `propose_tag`, `my_tag_proposals`, `report_problem`, `invite_neighbour`,
-`my_invites`, `set_lend_limit`. Moderators also get `edit_item`, `set_item_cover`,
-`upload_item_cover`, `remove_item_cover`, `add_tag`, `edit_tag`, `remove_tag`, `rename_tag_group`.
+`my_invites`, `set_lend_limit`.
+
+Moderators also get `edit_item`, `set_item_cover`, `upload_item_cover`, `remove_item_cover`,
+`add_tag`, `edit_tag`, `remove_tag`, `rename_tag_group`.
+
 No tool can confirm a handoff or mark an item handed over or returned: a person has to be there.
 
 ## How some things work
@@ -149,7 +167,7 @@ No tool can confirm a handoff or mark an item handed over or returned: a person 
   kept 30 days; moderators can take one with `POST /v1/admin/backup`. D1 Time Travel covers the same
   30 days.
 - **Images.** Covers and photos are re-encoded in the browser (no metadata), stored in
-  `<slug>-images` and served at `images.<slug>.…`. External covers are copied in nightly.
+  `<slug>-images` and served at `images.<library host>`. External covers are copied in nightly.
 - **Location.** A member's area is snapped to a ~300 m cell; maps draw circles, never pins. The
   private meeting place a member writes is shown only to the borrower of an agreed handoff. Map tiles
   are OpenStreetMap through Leaflet.
@@ -160,5 +178,6 @@ No tool can confirm a handoff or mark an item handed over or returned: a person 
 
 Built: invite-only sign-in, catalogue with tags and filters, requests, handoffs with codes, relays,
 waitlists, wishlists, wanted books, extensions, reminders, reports and moderation, push and email,
-API, MCP and webhooks, books and things libraries with sets. Not built: drop points, reputation,
-blocks.
+API, MCP and webhooks, books and things libraries with sets.
+
+Not built: drop points, reputation, blocks.
