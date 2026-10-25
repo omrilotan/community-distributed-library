@@ -18,7 +18,7 @@ const MARK_SIZE = 300;
 const GAP = 56;
 const WHITE = "#ffffff";
 
-interface Face {
+export interface Face {
 	hebrew: Font;
 	latin: Font;
 }
@@ -168,34 +168,49 @@ function measure(text: string, face: Face, size: number): number {
 	return width;
 }
 
-/** Words into at most `max` lines; the last cut short with an ellipsis. */
-function wrap(
+/** Characters as a reader sees them: a letter keeps its marks (niqqud). */
+const letters = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+function graphemes(text: string): string[] {
+	return Array.from(letters.segment(text), (part) => part.segment);
+}
+
+/**
+ * Words into at most `max` lines; the last cut short with an ellipsis. A word
+ * wider than the column on its own (a long compound, an address) is broken
+ * between letters rather than drawn across the mark beside it.
+ */
+export function wrap(
 	text: string,
 	face: Face,
 	size: number,
 	width: number,
 	max: number,
 ): { lines: string[]; cut: boolean } {
-	const words = text.trim().split(/\s+/);
 	const lines: string[] = [];
 	let line = "";
-	for (const word of words) {
+	for (const word of text.trim().split(/\s+/)) {
 		const next = line ? `${line} ${word}` : word;
-		if (!line || measure(next, face, size) <= width) line = next;
-		else {
-			lines.push(line);
-			line = word;
+		if (measure(next, face, size) <= width) {
+			line = next;
+			continue;
+		}
+		if (line) lines.push(line);
+		line = "";
+		for (const letter of graphemes(word)) {
+			if (line && measure(line + letter, face, size) > width) {
+				lines.push(line);
+				line = letter;
+			} else line += letter;
 		}
 	}
 	if (line) lines.push(line);
-	const cut =
-		lines.length > max || lines.some((one) => measure(one, face, size) > width);
+	const cut = lines.length > max;
 	if (!cut) return { lines, cut };
 	const kept = lines.slice(0, max);
-	let last = kept[max - 1] ?? kept[kept.length - 1]!;
+	let last = kept[max - 1]!;
 	while (last && measure(`${last}…`, face, size) > width)
-		last = last.slice(0, -1).trimEnd();
-	kept[kept.length - 1] = `${last}…`;
+		last = graphemes(last).slice(0, -1).join("").trimEnd();
+	kept[max - 1] = `${last}…`;
 	return { lines: kept, cut };
 }
 
