@@ -66,3 +66,14 @@ export async function activeLoan(
 	await as(lender).post(`/v1/loans/${id}/handed`);
 	return id;
 }
+
+/**
+ * The few minutes a new request waits before its owner hears of it, passed:
+ * every held notice falls due and the scheduled pass sends it, as the cron
+ * would.
+ */
+export async function heard() {
+	const { sendHeldNotices } = await import("../src/notify.ts");
+	await env.DB.prepare("UPDATE held_notices SET send_at = 0").run();
+	return sendHeldNotices(env);
+}

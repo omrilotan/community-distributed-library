@@ -315,8 +315,6 @@ const dictionary = {
 		dismiss: "Dismiss",
 		bookTurnedUp: "Book turned up",
 		borrow: "Borrow",
-		countdownCancel: "Cancel",
-		countdownCancelled: "Not sent.",
 		requestRelay: "Ask to be next",
 		waitlistJoin: "Tell me when a copy is free",
 		waitlistJoined:
@@ -786,7 +784,8 @@ const dictionary = {
 		request: "Request",
 		requestNote: "A note for the owner",
 		requiredKey: "Required",
-		requestSent: "Request sent. The owner will get an email.",
+		requestSent:
+			"Request made. The owner hears about it in five minutes; until then you can cancel it under Loans.",
 		requestTaken: "Someone else has an open request on this copy.",
 		requestFailed: "That did not work. Try again.",
 		requestAway: "Its owner is away. Ask again once they are back.",
@@ -1097,8 +1096,6 @@ const dictionary = {
 		dismiss: "ביטול",
 		bookTurnedUp: "הספר נמצא",
 		borrow: "בקשת השאלה",
-		countdownCancel: "ביטול",
-		countdownCancelled: "לא נשלח.",
 		requestRelay: "לבקש להיות הבא/ה בתור",
 		waitlistJoin: "עדכנו אותי כשעותק מתפנה",
 		waitlistJoined: "אתם ברשימה. כשעותק יתפנה תקבלו זכות ראשונים.",
@@ -1551,7 +1548,8 @@ const dictionary = {
 		request: "בקשה",
 		requestNote: "הערה לבעלים",
 		requiredKey: "חובה למלא",
-		requestSent: "הבקשה נשלחה. הבעלים יקבלו אימייל.",
+		requestSent:
+			"הבקשה נרשמה. הבעלים ישמעו עליה בעוד חמש דקות; עד אז אפשר לבטל אותה בהשאלות.",
 		requestTaken: "למישהו אחר יש כבר בקשה פתוחה על העותק הזה.",
 		requestFailed: "הפעולה לא הצליחה. נסו שוב.",
 		requestAway: "הבעלים לא נמצאים כרגע. בקשו שוב כשיחזרו.",
@@ -1856,10 +1854,10 @@ function helpers(locale: Locale) {
 			he
 				? `${copies} ${plural(copies, "עותק", "עותקים")} בקהילה · ${waiting} ${plural(waiting, "ממתין/ה", "ממתינים")}`
 				: `${copies} ${plural(copies, "copy", "copies")} in the community · ${waiting} waiting`,
-		countdownSendingIn: (seconds: number) =>
+		requestHeld: (name: string, minutes: number) =>
 			he
-				? `הבקשה תישלח בעוד ${seconds} ${plural(seconds, "שנייה", "שניות")}. לחצו שוב כדי לבטל.`
-				: `Sending your request in ${seconds} ${plural(seconds, "second", "seconds")}. Press again to cancel.`,
+				? `הבקשה תגיע אל ${name} בעוד ${minutes} ${plural(minutes, "דקה", "דקות")}. ביטול לפני כן, והיא לא תגיע בכלל.`
+				: `${name} hears about it in ${minutes} ${plural(minutes, "minute", "minutes")}. Cancel before then and they never will.`,
 		tooManyLinks: (minutes: number) =>
 			he
 				? `נשלחו כבר כמה קישורי כניסה. בדקו את תיבת הדואר (גם בספאם) ונסו שוב בעוד ${minutes} ${plural(minutes, "דקה", "דקות")}.`

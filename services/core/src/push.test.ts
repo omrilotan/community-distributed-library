@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { as, COPY_B, DANA, SAM } from "../test/api.ts";
+import { as, COPY_B, DANA, heard, SAM } from "../test/api.ts";
 
 const subscribe = (member: string, endpoint: string) =>
 	as(member).put("/v1/me/push", {
@@ -79,6 +79,7 @@ describe("email follows a push, but only if it was missed", () => {
 		await subscribe(DANA, "https://fcm.googleapis.com/fcm/send/dana");
 		// Sam asks Dana for a book: Dana has a device, so the email waits.
 		await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await heard();
 
 		const queued = await pending();
 		expect(queued.results).toHaveLength(1);
@@ -95,6 +96,7 @@ describe("email follows a push, but only if it was missed", () => {
 
 	it("emails at once when the member has no device", async () => {
 		await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await heard();
 		expect((await pending()).results).toHaveLength(0);
 	});
 
@@ -102,6 +104,7 @@ describe("email follows a push, but only if it was missed", () => {
 		const { sendPendingEmails } = await import("./notify.ts");
 		await subscribe(DANA, "https://fcm.googleapis.com/fcm/send/dana");
 		await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await heard();
 
 		// Dana looked at the app after the request arrived, and the wait elapsed.
 		// last_seen_at is stamped by any authenticated call, throttled to once a
@@ -119,6 +122,7 @@ describe("email follows a push, but only if it was missed", () => {
 		const { sendPendingEmails } = await import("./notify.ts");
 		await subscribe(DANA, "https://fcm.googleapis.com/fcm/send/dana");
 		await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await heard();
 
 		// Nobody looked: the row is older than last_seen_at, so out it goes.
 		await env.DB.prepare(
@@ -144,6 +148,7 @@ describe("email follows a push, but only if it was missed", () => {
 			.bind(DANA)
 			.run();
 		await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await heard();
 		// The assistant polls; Dana herself has not looked.
 		await api({ token: minted.body.token }, "GET", "/v1/events");
 		await env.DB.prepare("UPDATE pending_emails SET send_after = 0").run();

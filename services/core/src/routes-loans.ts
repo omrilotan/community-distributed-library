@@ -12,7 +12,7 @@ import {
 import { BACK_WITH_OWNER, CLAIMED, OWNER_OUT } from "./sets.ts";
 import type { Env } from "./env.ts";
 import { dropStaleHandoffs } from "./stale-handoffs.ts";
-import { tell } from "./notify.ts";
+import { holdNotice, stillHeld, tell } from "./notify.ts";
 import { viewerWith } from "./auth.ts";
 import { ulid, now } from "./ids.ts";
 import { denied, json } from "./problem.ts";
@@ -173,6 +173,18 @@ loans.post("/v1/loans", async (c) => {
 		`DELETE FROM waitlist WHERE member_id = ? AND work_id = ? AND community_id = ?
 		   AND EXISTS (SELECT 1 FROM loans WHERE id = ?)`,
 	).bind(member.id, copy.work_id, member.communityId, id);
+	// The owner hears of it in a few minutes, not now: until then the asker
+	// can take it back and nobody is told (notify.ts, HOLD_MINUTES).
+	const notice = holdNotice(c.env, id, {
+		kind: "loan_request",
+		to: copy.email,
+		locale: copy.locale,
+		url: `${c.env.APP_URL}/loans`,
+		bookTitle: copy.title,
+		borrowerName: copy.borrower_name ?? "",
+		note: message ?? null,
+		relay,
+	});
 	if (ofSet) {
 		// Asked and counted in one statement, so two neighbours asking at once
 		// cannot take more of the set than there is; and one open loan of it
@@ -195,6 +207,7 @@ loans.post("/v1/loans", async (c) => {
 				quantity,
 			),
 			spent,
+			notice,
 		]).catch((error: unknown) => {
 			if (String(error).includes("UNIQUE")) return null;
 			throw error;
@@ -228,6 +241,7 @@ loans.post("/v1/loans", async (c) => {
 					copyId,
 				),
 				spent,
+				notice,
 			]);
 		} catch (error) {
 			if (String(error).includes("UNIQUE")) {
@@ -242,19 +256,6 @@ loans.post("/v1/loans", async (c) => {
 			}
 			throw error;
 		}
-
-	c.executionCtx.waitUntil(
-		tell(c.env, {
-			kind: "loan_request",
-			to: copy.email,
-			locale: copy.locale,
-			url: `${c.env.APP_URL}/loans`,
-			bookTitle: copy.title,
-			borrowerName: copy.borrower_name ?? "",
-			note: message ?? null,
-			relay,
-		}).catch((error: unknown) => console.error("[loans] notify failed", error)),
-	);
 
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "loan.requested", { loanId: id }),
@@ -298,6 +299,11 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 		c.env.DB.prepare(
 			"UPDATE loans SET status = ?, decided_at = ? WHERE id = ? AND status = 'requested'",
 		).bind(accept ? "accepted" : "declined", at, id),
+		// Answered, so plainly heard of: its held notice has nothing left to say.
+		c.env.DB.prepare(
+			`DELETE FROM held_notices WHERE loan_id = ?1
+			   AND EXISTS (SELECT 1 FROM loans WHERE id = ?1 AND status != 'requested' AND decided_at = ?2)`,
+		).bind(id, at),
 		...(accept
 			? [
 					c.env.DB.prepare(
@@ -367,6 +373,11 @@ loans.post("/v1/loans/:id/cancel", async (c) => {
 		c.env.DB.prepare(
 			"UPDATE loans SET status = 'cancelled', outcome = 'cancelled', closed_at = ? WHERE id = ? AND status IN ('requested', 'accepted')",
 		).bind(at, id),
+		// Taken back before the owner heard of it: they never will.
+		c.env.DB.prepare(
+			`DELETE FROM held_notices WHERE loan_id = ?1
+			   AND EXISTS (SELECT 1 FROM loans WHERE id = ?1 AND status = 'cancelled' AND closed_at = ?2)`,
+		).bind(id, at),
 		c.env.DB.prepare(
 			`UPDATE copies SET state = 'shelved' WHERE id = ?1 AND state = 'reserved'
 			   AND EXISTS (SELECT 1 FROM loans WHERE id = ?2 AND status = 'cancelled' AND closed_at = ?3)`,
@@ -570,6 +581,16 @@ loans.post("/v1/loans/:id/nudge", async (c) => {
 		return json(c, suspendedProblem());
 
 	const iAmBorrower = member.id === party.borrower.id;
+	// A request the owner has not heard of yet is not theirs to be nudged about.
+	if (await stillHeld(c.env, id))
+		return json(
+			c,
+			problem(
+				409,
+				"Not sent yet",
+				"The owner hears about the request in a few minutes",
+			),
+		);
 	// Each side has a nudge a day; on a relay the reader handing it on too.
 	const iAmRelay = member.id === party.relay?.id;
 	const column = iAmBorrower
@@ -694,17 +715,24 @@ loans.post("/v1/loans/:id/messages", async (c) => {
 			: member.id === party.lender.id
 				? party.lender
 				: (party.relay ?? party.lender);
-	c.executionCtx.waitUntil(
-		tell(c.env, {
-			kind: "loan_message",
-			to: other.email,
-			locale: other.locale,
-			url: `${c.env.APP_URL}/loans/${party.loanId}`,
-			bookTitle: party.title,
-			fromName: me.name,
-			body: message.body,
-		}).catch((error: unknown) => console.error("[loans] notify failed", error)),
-	);
+	// The request itself has not reached the owner yet: the message waits in
+	// its thread, and the request's own notice brings them to it.
+	const waiting =
+		other.id === party.lender.id && (await stillHeld(c.env, party.loanId));
+	if (!waiting)
+		c.executionCtx.waitUntil(
+			tell(c.env, {
+				kind: "loan_message",
+				to: other.email,
+				locale: other.locale,
+				url: `${c.env.APP_URL}/loans/${party.loanId}`,
+				bookTitle: party.title,
+				fromName: me.name,
+				body: message.body,
+			}).catch((error: unknown) =>
+				console.error("[loans] notify failed", error),
+			),
+		);
 	return c.json(message, 201);
 });
 

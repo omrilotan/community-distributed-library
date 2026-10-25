@@ -1070,15 +1070,6 @@ button.tile:active {
 	inline-size: 6rem;
 }
 
-/* Counting down to send: the button now takes it back, so it looks like a
-   way out rather than the thing to press. */
-.request.counting button {
-	background: transparent;
-	color: var(--ink);
-	border-color: var(--line-strong);
-	font-variant-numeric: tabular-nums;
-}
-
 @media (max-width: 44rem) {
 	.request button {
 		justify-self: stretch;

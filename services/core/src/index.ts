@@ -4,7 +4,7 @@ import { backup } from "./backup.ts";
 import { rehostCovers } from "./covers.ts";
 import type { Env } from "./env.ts";
 import { deliverPending } from "./events.ts";
-import { sendPendingEmails } from "./notify.ts";
+import { sendHeldNotices, sendPendingEmails } from "./notify.ts";
 import { runReminders } from "./reminders.ts";
 import { redeemConsent, revokeAbandonedConsents } from "./tokens-store.ts";
 
@@ -21,7 +21,11 @@ export class Internal extends WorkerEntrypoint<Env> {
 
 export default {
 	fetch: app.fetch,
-	/** Daily reminders (reminders.ts) and, every 15 minutes, webhook retries (events.ts). */
+	/**
+	 * Daily reminders (reminders.ts) and backups; and every minute, the loan
+	 * requests whose owners are due to hear of them (notify.ts), webhook
+	 * retries (events.ts) and the emails that follow an unopened push.
+	 */
 	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
 		if (event.cron === "0 8 * * *") {
 			ctx.waitUntil(
@@ -62,6 +66,15 @@ export default {
 					if (sent) console.log("[webhooks] delivered", sent);
 				})
 				.catch((error: unknown) => console.error("[webhooks] failed", error)),
+		);
+		// Requests made a few minutes ago and not taken back: now the owner hears.
+		ctx.waitUntil(
+			sendHeldNotices(env)
+				.then((result) => {
+					if (result.sent || result.dropped)
+						console.log("[requests]", JSON.stringify(result));
+				})
+				.catch((error: unknown) => console.error("[requests] failed", error)),
 		);
 		// The email that follows a push nobody picked up.
 		ctx.waitUntil(
