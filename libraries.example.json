@@ -13,6 +13,7 @@
       "address": "our-street@example.org",
       "fromName": "Our Street Library",
       "vapidPublicKey": "BExamplePublicKeyFromNpxWebPushGenerateVapidKeys",
+      "backups": true,
       "databases": {
         "core": "00000000-0000-4000-8000-000000000001",
         "convo": "00000000-0000-4000-8000-000000000002"
