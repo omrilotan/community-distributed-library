@@ -12,8 +12,9 @@ change, you agree that it is released the same way.
 - **Anything bigger** (a new feature, a change to how lending works, a new dependency): open an issue
   first and say what you have in mind. A library is a small community's shared space, and some ideas
   are left out on purpose: there are no ratings, no reviews and no stars, for items or for people.
-- **A security problem:** please do not describe it in a public issue. Open an issue that says only
-  that you have found one, and you will be given a private way to send the details.
+- **A security problem:** please do not open a public issue.
+  [Report it privately](https://github.com/omrilotan/community-distributed-library/security/advisories/new)
+  instead; [SECURITY.md](SECURITY.md) says what helps.
 
 ## Run it
 
