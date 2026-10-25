@@ -38,8 +38,13 @@ export async function fragment<T>(
 	const cache = caches.default;
 	const hit = await cache.match(request(key)).catch(() => undefined);
 	if (hit) {
-		const value = (await hit.json().catch(() => null)) as T | null;
-		if (value !== null) return value;
+		// A stored null is an answer too (a postcode nobody has); only an
+		// entry that cannot be read is built again.
+		try {
+			return (await hit.json()) as T;
+		} catch {
+			// damaged entry: rebuilt below
+		}
 	}
 
 	const value = await build();

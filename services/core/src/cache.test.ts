@@ -25,6 +25,19 @@ describe("the fragment cache", () => {
 		expect(built).toBe(1);
 	});
 
+	it("answers a stored null from the store too", async () => {
+		const name = key("test");
+		let built = 0;
+		const build = async () => {
+			built += 1;
+			return null;
+		};
+
+		expect(await fragment(caching, undefined, name, 60, build)).toBeNull();
+		expect(await fragment(caching, undefined, name, 60, build)).toBeNull();
+		expect(built).toBe(1);
+	});
+
 	it("builds again once the fragment is forgotten", async () => {
 		const name = key("test");
 		let built = 0;
