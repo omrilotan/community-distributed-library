@@ -9,5 +9,6 @@
 
 ## Links
 
+- [Connect your assistant](https://community-distributed-library.com/assistants): adding a library's MCP server to Claude, ChatGPT or another assistant, signing in, and choosing what it may do
 - [Source code](https://github.com/omrilotan/community-distributed-library): the repository
 - [Self-hosting guide](https://github.com/omrilotan/community-distributed-library/blob/main/docs/self-hosting.md): how to open a library

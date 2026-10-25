@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Copies site/ to dist/ and inlines the icons: every <svg data-icon="name">
-// in the HTML gets the Phosphor glyph of that name inside it, so the page
-// ships one HTML file with no icon requests and no script.
+// in a page gets the Phosphor glyph of that name inside it, so each page
+// ships as one HTML file with no icon requests and no script.
 import { createHash } from "node:crypto";
 import {
 	cpSync,
 	mkdirSync,
+	readdirSync,
 	readFileSync,
 	rmSync,
 	writeFileSync,
@@ -41,14 +42,13 @@ const glyph = (name) => {
 	return svg.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
 };
 
-const html = restyled(readFileSync(`${site}/index.html`, "utf8")).replace(
-	/<svg data-icon="([a-z-]+)"([^>]*)><\/svg>/g,
-	(_, name, attrs) =>
-		`<svg${attrs} viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${glyph(name)}</svg>`,
-);
-writeFileSync(`${dist}/index.html`, html);
-writeFileSync(
-	`${dist}/404.html`,
-	restyled(readFileSync(`${site}/404.html`, "utf8")),
-);
+// Every page: the stylesheet by its stamped name, and its icons inlined.
+for (const page of readdirSync(site).filter((name) => name.endsWith(".html"))) {
+	const html = restyled(readFileSync(`${site}/${page}`, "utf8")).replace(
+		/<svg data-icon="([a-z-]+)"([^>]*)><\/svg>/g,
+		(_, name, attrs) =>
+			`<svg${attrs} viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${glyph(name)}</svg>`,
+	);
+	writeFileSync(`${dist}/${page}`, html);
+}
 console.log("built dist/");

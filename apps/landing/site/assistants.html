@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Connect your assistant · Community Distributed Library</title>
+		<meta
+			name="description"
+			content="Connect Claude, ChatGPT or any assistant that speaks MCP to your neighbourhood library in four steps: add it, sign in, type the code, choose what it may do."
+		/>
+		<meta name="robots" content="index, follow, max-image-preview:large" />
+		<meta name="color-scheme" content="light dark" />
+		<meta
+			name="theme-color"
+			content="#f5f7f6"
+			media="(prefers-color-scheme: light)"
+		/>
+		<meta
+			name="theme-color"
+			content="#131817"
+			media="(prefers-color-scheme: dark)"
+		/>
+		<link
+			rel="canonical"
+			href="https://community-distributed-library.com/assistants"
+		/>
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+		<meta property="og:type" content="article" />
+		<meta property="og:site_name" content="Community Distributed Library" />
+		<meta property="og:locale" content="en_GB" />
+		<meta
+			property="og:url"
+			content="https://community-distributed-library.com/assistants"
+		/>
+		<meta property="og:title" content="Connect your assistant to the library" />
+		<meta
+			property="og:description"
+			content="Four steps, about a minute: then ask your assistant to find, list and lend for you."
+		/>
+		<meta
+			property="og:image"
+			content="https://community-distributed-library.com/images/share.jpg"
+		/>
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta
+			property="og:image:alt"
+			content="Picnic tables between tall pines in a neighbourhood park"
+		/>
+		<meta name="twitter:card" content="summary_large_image" />
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "HowTo",
+				"name": "Connect your assistant to a community library",
+				"description": "Connect Claude, ChatGPT or any assistant that speaks MCP to a Community Distributed Library.",
+				"totalTime": "PT1M",
+				"step": [
+					{
+						"@type": "HowToStep",
+						"name": "Add your library",
+						"text": "In your library, open My account, then Connect an assistant. Copy the MCP address and add it to your assistant: in Claude, Settings, Connectors, Add custom connector."
+					},
+					{
+						"@type": "HowToStep",
+						"name": "Sign in",
+						"text": "Your assistant opens your library's sign-in page in its own window. Enter the email you use for the library."
+					},
+					{
+						"@type": "HowToStep",
+						"name": "Type the code",
+						"text": "If the email's link opens somewhere else, type its eight-digit code in the assistant's window."
+					},
+					{
+						"@type": "HowToStep",
+						"name": "Choose what it may do",
+						"text": "Tick what the assistant may do, and allow."
+					}
+				]
+			}
+		</script>
+		<link
+			rel="preload"
+			href="/fonts/outfit-latin.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
+		<link rel="stylesheet" href="/styles.css" />
+	</head>
+	<body>
+		<header class="top">
+			<a class="mark" href="/">
+				<svg viewBox="0 0 1110 936" aria-hidden="true">
+					<path
+						d="M289.6 102.4c135.3 135.2 182.8 323.8 140.6 490.9 167.1-42.2 355.7 5.4 490.9 140.6L820.9 834.1C676.5 689.7 450.1 681.4 314 815.5L208 709.6c134.1-136.2 125.8-362.5-18.6-507Z"
+					/>
+				</svg>
+				<span>Community Distributed Library</span>
+			</a>
+			<nav aria-label="Sections">
+				<a href="/#how">How it works</a>
+				<a href="/#open">Start one</a>
+			</nav>
+		</header>
+
+		<main>
+			<section class="hero guide-intro">
+				<div class="hero-copy">
+					<h1>Connect your assistant</h1>
+					<p>
+						Every library has its own MCP server. Add it to Claude, ChatGPT or
+						any assistant that speaks MCP, sign in once, and the assistant can
+						search the shelf, list what you own and arrange loans for you. It
+						takes about a minute.
+					</p>
+				</div>
+			</section>
+
+			<section class="guide">
+				<ol class="walkthrough">
+					<li>
+						<picture>
+							<source
+								srcset="/images/assistant-connect.webp"
+								type="image/webp"
+							/>
+							<img
+								src="/images/assistant-connect.jpg"
+								width="600"
+								height="1169"
+								alt="The library's Connect an assistant page, showing its MCP address and how to add it to Claude"
+							/>
+						</picture>
+						<div>
+							<h2>Add your library</h2>
+							<p>
+								In your library, open <strong>My account</strong>, then
+								<strong>Connect an assistant</strong>. It shows your library's
+								MCP address, such as
+								<code>https://mcp.our-street.example.org/mcp</code>, and how to
+								add it to each assistant.
+							</p>
+							<p>
+								In Claude: <strong>Settings</strong> →
+								<strong>Connectors</strong> →
+								<strong>Add custom connector</strong>, then paste the address.
+							</p>
+						</div>
+					</li>
+					<li>
+						<picture>
+							<source
+								srcset="/images/assistant-sign-in.webp"
+								type="image/webp"
+							/>
+							<img
+								src="/images/assistant-sign-in.jpg"
+								width="600"
+								height="1169"
+								alt="The library's sign-in page with an email address filled in"
+								loading="lazy"
+							/>
+						</picture>
+						<div>
+							<h2>Sign in</h2>
+							<p>
+								Your assistant opens your library's sign-in page in a window of
+								its own. Enter the email you use for the library, and ask for a
+								sign-in link.
+							</p>
+						</div>
+					</li>
+					<li>
+						<picture>
+							<source srcset="/images/assistant-code.webp" type="image/webp" />
+							<img
+								src="/images/assistant-code.jpg"
+								width="600"
+								height="1169"
+								alt="The sign-in page asking for the code from the email, with a code typed in"
+								loading="lazy"
+							/>
+						</picture>
+						<div>
+							<h2>Type the code</h2>
+							<p>
+								The email has a link and an eight-digit code. A link opens in
+								your phone's browser or mail app, not in the assistant's window,
+								so type the code there instead.
+							</p>
+							<p>
+								The code works only in the window that asked for it, and only
+								once.
+							</p>
+						</div>
+					</li>
+					<li>
+						<picture>
+							<source
+								srcset="/images/assistant-consent.webp"
+								type="image/webp"
+							/>
+							<img
+								src="/images/assistant-consent.jpg"
+								width="600"
+								height="1169"
+								alt="The consent screen: Claude wants access to the library, with permissions to tick"
+								loading="lazy"
+							/>
+						</picture>
+						<div>
+							<h2>Choose what it may do</h2>
+							<p>
+								The library asks what the assistant may do. Looking is ticked;
+								acting for you, like asking for a book or answering a request,
+								is yours to tick. Allow, and you are back in your assistant.
+							</p>
+						</div>
+					</li>
+				</ol>
+			</section>
+
+			<section class="agents guide-ask">
+				<div class="open-intro">
+					<h2>Then just ask</h2>
+					<p>
+						In your own words, the way you would ask a neighbour. It checks with
+						you before it writes to anyone.
+					</p>
+				</div>
+				<ul class="features">
+					<li>
+						<svg data-icon="magnifying-glass" class="icon"></svg>
+						<div>
+							<h3>“Is anyone lending a ladder this weekend?”</h3>
+							<p>It searches the shelf and offers to ask the owner.</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="list-checks" class="icon"></svg>
+						<div>
+							<h3>“Add these three books to my shelf.”</h3>
+							<p>With a photo of their spines, or just their titles.</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="calendar-check" class="icon"></svg>
+						<div>
+							<h3>“Accept Noa's request and say Saturday morning suits me.”</h3>
+							<p>It answers the request and writes to the borrower.</p>
+						</div>
+					</li>
+					<li>
+						<svg data-icon="plugs-connected" class="icon"></svg>
+						<div>
+							<h3>Change your mind any time</h3>
+							<p>
+								Your connected assistants are listed under
+								<strong>My account</strong>, each with a button to disconnect
+								it. An assistant never sees other members' addresses or emails.
+							</p>
+						</div>
+					</li>
+				</ul>
+				<p class="actions">
+					<a class="button" href="/#open">Start a library</a>
+					<a class="button quiet" href="/">Back to the front</a>
+				</p>
+			</section>
+		</main>
+
+		<footer>
+			<span>Community Distributed Library</span>
+			<a href="https://github.com/omrilotan/community-distributed-library"
+				>Open source, public domain</a
+			>
+		</footer>
+	</body>
+</html>
