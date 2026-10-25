@@ -276,12 +276,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 		headers.set(BROWSE_CHANGED_HEADER, remembered.changed);
 	// A secret shown once (lib/shown-once.ts): handed to this page view in a
 	// header only middleware sets, and the cookie that carried it cleared.
+	// The cookie arrives percent-decoded; encoded again, the header stays
+	// ASCII and lib/shown-once.ts decodes it once.
 	headers.delete(SHOWN_ONCE_HEADER);
 	const shownOnce =
 		request.method === "GET"
 			? request.cookies.get(SHOWN_ONCE_COOKIE)?.value
 			: undefined;
-	if (shownOnce) headers.set(SHOWN_ONCE_HEADER, shownOnce);
+	if (shownOnce) headers.set(SHOWN_ONCE_HEADER, encodeURIComponent(shownOnce));
 	const response = NextResponse.next({ request: { headers } });
 	if (remembered.changed !== undefined)
 		rememberFilters(response, remembered.changed);
