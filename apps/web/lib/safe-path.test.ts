@@ -12,6 +12,9 @@ describe("safePath", () => {
 	it("refuses anything a browser would take to another host", () => {
 		for (const input of [
 			"//evil.example",
+			"/.//evil.example",
+			"/%2e//evil.example",
+			"/a/..//evil.example",
 			"/\\evil.example",
 			"/\t/evil.example",
 			"https://evil.example",
