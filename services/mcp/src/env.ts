@@ -15,6 +15,8 @@ export interface Env {
 	OAUTH_PROVIDER: OAuthHelpers;
 	CORE: Fetcher;
 	CORE_INTERNAL: Fetcher & CoreInternal;
+	/** Dynamic client registrations allowed per caller address (wrangler.jsonc). */
+	REGISTER_LIMIT: RateLimit;
 	/** Where the consent screen lives (the web app). */
 	APP_URL: string;
 	/** This worker's public origin — the OAuth resource identifier. */

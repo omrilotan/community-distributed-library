@@ -14,6 +14,15 @@
   "kv_namespaces": [
     { "binding": "OAUTH_KV", "id": "00000000000040008000000000000a07" },
   ],
+  // Client registrations per caller address: five a minute. The namespace
+  // is the account's, shared by every library's MCP Worker.
+  "ratelimits": [
+    {
+      "name": "REGISTER_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 5, "period": 60 },
+    },
+  ],
   "services": [
     { "binding": "CORE", "service": "cdl-core" },
     {
