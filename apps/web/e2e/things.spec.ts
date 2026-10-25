@@ -244,7 +244,8 @@ test.describe("a library of things", () => {
 		);
 		await page.locator("input[name=quantity]").fill("2");
 		await page.locator("form.request button[type=submit]").click();
-		await expect(page).toHaveURL(/requested=1/);
+		// Sent after the three-second countdown (countdown-forms.tsx).
+		await expect(page).toHaveURL(/requested=1/, { timeout: 10_000 });
 		// Asked for: the row says so as the asker's, and leads to the loan.
 		await expect(page.locator(".choose-row .badge").first()).toHaveText(
 			"you asked",
