@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 
 /*
  * Direction comes from <html dir>. No physical left/right anywhere, no paired
@@ -1774,6 +1774,9 @@ button.toggle:hover {
 	position: absolute;
 	inline-size: 1px;
 	block-size: 1px;
+	margin: -1px;
+	padding: 0;
+	border-width: 0;
 	overflow: hidden;
 	clip-path: inset(50%);
 	white-space: nowrap;

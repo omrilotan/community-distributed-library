@@ -55,8 +55,10 @@ A Hebrew UI listing an English title, or the reverse, is the normal case here, n
 - Nothing checks the stylesheet mechanically yet: there is no Stylelint in the repository. The rule
   holds by review. Before a change ships, search `apps/web/app/globals.css` for the physical names
   in the table above; none should be there.
-- Tailwind is imported in `apps/web/app/globals.css`, but the pages are styled by hand-written
-  classes. If its utilities are ever used, use only the logical ones (`ms-`, `me-`, `ps-`, `pe-`,
+- Tailwind is imported in `apps/web/app/globals.css` for its preflight and theme only: with
+  `source(none)` it scans nothing, so no utility class is generated and the pages are styled by
+  hand-written classes. A utility written in markup compiles to nothing until an `@source` is
+  added for it; if one is ever used, use only the logical ones (`ms-`, `me-`, `ps-`, `pe-`,
   `start-`, `end-`). Its `ltr:` / `rtl:` variants are banned by the same reasoning.
 - `apps/web/e2e/a11y.spec.ts` opens every page a member reaches in Hebrew as well as English,
   asserts `lang` and `dir`, and runs axe. A mirrored control or a missing `dir` fails there, in the
