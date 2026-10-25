@@ -596,11 +596,11 @@ async function ensureTag(
 	)
 		.bind(namespace)
 		.first<{ position: number }>();
-	await env.DB.prepare(
-		`INSERT INTO tags (id, namespace, value, slug, label_en, label_he, builtin, position, created_at, created_by)
-		 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
-	)
-		.bind(
+	await env.DB.batch([
+		env.DB.prepare(
+			`INSERT INTO tags (id, namespace, value, slug, label_en, label_he, builtin, position, created_at, created_by)
+			 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+		).bind(
 			id,
 			namespace,
 			value,
@@ -610,13 +610,11 @@ async function ensureTag(
 			next?.position ?? 100,
 			now(),
 			input.createdBy,
-		)
-		.run();
-	await env.DB.prepare(
-		"INSERT INTO tag_communities (tag_id, community_id, created_at) VALUES (?, ?, ?)",
-	)
-		.bind(id, input.communityId, now())
-		.run();
+		),
+		env.DB.prepare(
+			"INSERT INTO tag_communities (tag_id, community_id, created_at) VALUES (?, ?, ?)",
+		).bind(id, input.communityId, now()),
+	]);
 	return { id, slug, created: true };
 }
 
