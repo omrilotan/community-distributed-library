@@ -1554,16 +1554,13 @@ button.toggle:hover {
 .report-entry {
 	display: grid;
 	gap: 0.2rem;
+	text-align: start;
+	max-inline-size: min(100%, 34rem);
 }
 
 .report-entry time {
 	font-size: 0.6875rem;
 	opacity: 0.8;
-}
-
-.report-entry {
-	text-align: start;
-	max-inline-size: min(100%, 34rem);
 }
 
 .report-status {
@@ -2639,40 +2636,6 @@ html[data-filters-settling] .filters-panel > * {
 }
 
 .map.leaflet-container .leaflet-control-attribution a {
-	color: var(--muted);
-}
-
-/* Leaflet's own furniture, made flat to match: no shadows, our hairlines. */
-.map .leaflet-bar,
-.map .leaflet-tooltip {
-	box-shadow: none;
-	border: 1px solid var(--line-strong);
-}
-
-.map .leaflet-bar a {
-	background: var(--surface);
-	color: var(--ink);
-	border-color: var(--line);
-}
-
-.map .leaflet-tooltip {
-	background: var(--surface);
-	color: var(--ink);
-	border-radius: var(--radius-sm);
-	font: inherit;
-	font-size: 0.8125rem;
-}
-
-.map .leaflet-tooltip-top::before {
-	border-top-color: var(--line-strong);
-}
-
-.map .leaflet-control-attribution {
-	background: color-mix(in srgb, var(--surface) 85%, transparent);
-	color: var(--muted);
-}
-
-.map .leaflet-control-attribution a {
 	color: var(--muted);
 }
 
