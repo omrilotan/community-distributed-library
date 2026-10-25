@@ -1,4 +1,4 @@
-import type { LoanView } from "@cdl/contracts";
+import { REQUEST_HOLD_MINUTES, type LoanView } from "@cdl/contracts";
 import type { Strings } from "../../lib/i18n.ts";
 
 /** The levers each side has at each stage. One form per lever; no JavaScript needed. */
@@ -18,6 +18,16 @@ export function LoanActions({
 	const open = ["requested", "accepted", "active"].includes(loan.status);
 	// A suspended member is not nudged; the moderators take it from here.
 	const reachable = !counterpart(loan, side).suspended;
+	// A request its owner has not heard of yet (core holds it a few minutes):
+	// the asker can still take it back unheard, and nobody nudges about it.
+	const heldFor =
+		loan.status === "requested"
+			? Math.ceil(
+					(loan.requestedAt + REQUEST_HOLD_MINUTES * 60 - Date.now() / 1000) /
+						60,
+				)
+			: 0;
+	const held = heldFor > 0;
 	const button = (
 		action: string,
 		label: string,
@@ -68,12 +78,17 @@ export function LoanActions({
 						"quiet",
 					)
 				: null}
-			{open && reachable ? (
+			{open && reachable && !held ? (
 				loan.nudgeCooldown > 0 ? (
 					<span className="muted">{t.nudgedRecently}</span>
 				) : (
 					button("nudge", t.nudge, "quiet")
 				)
+			) : null}
+			{loan.status === "requested" && side === "borrower" && held ? (
+				<span className="muted">
+					{t.requestHeld(loan.lender.displayName, heldFor)}
+				</span>
 			) : null}
 			{loan.status === "requested" && side === "borrower"
 				? button("cancel", t.cancel, "link")

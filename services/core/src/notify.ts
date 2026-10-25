@@ -1,4 +1,8 @@
-import type { LibraryType, Message } from "@cdl/contracts";
+import {
+	REQUEST_HOLD_MINUTES,
+	type LibraryType,
+	type Message,
+} from "@cdl/contracts";
 import type { Env, PushOutcome } from "./env.ts";
 import { ulid, now } from "./ids.ts";
 
@@ -7,6 +11,74 @@ export const EMAIL_AFTER_MINUTES = 5;
 
 /** Refusals in a row after which a browser is left out, and email goes instead. */
 export const PUSH_REFUSALS = 5;
+
+/** How long a new loan request waits before its owner hears of it. */
+export const HOLD_MINUTES = REQUEST_HOLD_MINUTES;
+
+/**
+ * Hold the owner's notice of a new request, in the batch that writes it: only
+ * once the loan is in, and gone with it. `sendHeldNotices` tells them later,
+ * if it is still a request.
+ */
+export function holdNotice(
+	env: Env,
+	loanId: string,
+	message: Message,
+	minutes = HOLD_MINUTES,
+) {
+	return env.DB.prepare(
+		`INSERT INTO held_notices (id, loan_id, message, send_at)
+		 SELECT ?1, ?2, ?3, ?4 WHERE EXISTS (SELECT 1 FROM loans WHERE id = ?2)`,
+	).bind(ulid(), loanId, JSON.stringify(message), now() + minutes * 60);
+}
+
+/** Whether a loan is still a request its owner has not heard of yet. */
+export async function stillHeld(env: Env, loanId: string): Promise<boolean> {
+	const row = await env.DB.prepare(
+		`SELECT 1 AS held FROM held_notices h JOIN loans l ON l.id = h.loan_id
+		  WHERE h.loan_id = ? AND l.status = 'requested' LIMIT 1`,
+	)
+		.bind(loanId)
+		.first<{ held: number }>();
+	return Boolean(row);
+}
+
+/**
+ * The held notices that are due. Each is claimed by deleting it, so two runs
+ * at once send it once, and told only if its loan is still a request: one
+ * taken back, accepted or declined meanwhile is dropped unsent.
+ */
+export async function sendHeldNotices(
+	env: Env,
+): Promise<{ sent: number; dropped: number }> {
+	const { results } = await env.DB.prepare(
+		`SELECT h.id, h.message, l.status
+		   FROM held_notices h JOIN loans l ON l.id = h.loan_id
+		  WHERE h.send_at <= ?
+		  ORDER BY h.send_at LIMIT 100`,
+	)
+		.bind(now())
+		.all<{ id: string; message: string; status: string }>();
+	let sent = 0;
+	let dropped = 0;
+	for (const row of results) {
+		const claimed = await env.DB.prepare(
+			"DELETE FROM held_notices WHERE id = ?",
+		)
+			.bind(row.id)
+			.run();
+		if (!claimed.meta.changes) continue;
+		if (row.status !== "requested") {
+			dropped += 1;
+			continue;
+		}
+		await tell(env, JSON.parse(row.message) as Message).catch(
+			(error: unknown) => console.error("[notify] held notice failed", error),
+		);
+		sent += 1;
+	}
+	return { sent, dropped };
+}
 
 interface Subscription {
 	id: string;
@@ -133,7 +205,7 @@ export async function sendPendingEmails(
 	for (const row of results) {
 		const opened = (row.last_seen_at ?? 0) >= row.created_at;
 		// Claimed by deleting it: two runs at once (the 08:00 and the
-		// quarter-hour crons coincide) must not both send it, and its words
+		// every-minute crons coincide) must not both send it, and its words
 		// are not kept once it is sent or seen.
 		const claimed = await env.DB.prepare(
 			"DELETE FROM pending_emails WHERE id = ?",

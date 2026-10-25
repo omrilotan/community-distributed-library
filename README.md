@@ -160,10 +160,12 @@ No tool can confirm a handoff or mark an item handed over or returned: a person 
 ## How some things work
 
 - **Notifications.** Push first; the email follows five minutes later only if the member has not
-  opened the app (`services/core/src/notify.ts`). Without push, email at once. To rotate a library's
-  VAPID keys, set a new pair and clear `push_subscriptions`; every browser subscribes again.
-- **Scheduled work.** core: reminders and escalation at 08:00 UTC, webhook and email delivery every
-  15 minutes, backup and cover rehosting at 03:20. convo: thread purge at 04:15.
+  opened the app (`services/core/src/notify.ts`). Without push, email at once. A new loan request
+  reaches its owner five minutes after it is made, so the asker can still take it back unheard; a
+  nudge or a message on it waits for it too. To rotate a library's VAPID keys, set a new pair and
+  clear `push_subscriptions`; every browser subscribes again.
+- **Scheduled work.** core: reminders and escalation at 08:00 UTC; held requests, webhook and email
+  delivery every minute; backup and cover rehosting at 03:20. convo: thread purge at 04:15.
 - **Backups.** A SQL snapshot of `<slug>-core` goes to the private `<slug>-backups` bucket nightly,
   kept 30 days; moderators can take one with `POST /v1/admin/backup`. D1 Time Travel covers the same
   30 days.

@@ -21,7 +21,6 @@ import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr/BookmarkSimple";
 import { dateFormat } from "../../../lib/dates.ts";
 import { AsyncForms } from "../../async-forms.tsx";
-import { CountdownForms } from "../../countdown-forms.tsx";
 
 /** The public card, once per request: the head and the page both want it. */
 const publicCard = cache((id: string) =>
@@ -303,14 +302,6 @@ export default async function WorkPageView({
 				</p>
 			) : null}
 
-			{/* Asking waits three seconds, to be taken back (countdown-forms.tsx). */}
-			<CountdownForms
-				labels={{
-					cancel: t.countdownCancel,
-					sendingIn: [1, 2, 3].map(t.countdownSendingIn),
-					cancelled: t.countdownCancelled,
-				}}
-			/>
 			{/* The chooser: scan who has it, open the one you want, ask. */}
 			<ol className="choose">
 				{copies.map((copy) => {
@@ -430,12 +421,7 @@ export default async function WorkPageView({
 									{t.offerHeld(dateTime.format(copy.heldForMe * 1000))}
 								</p>
 							) : null}
-							<form
-								action="/api/loans"
-								method="post"
-								className="request"
-								data-countdown
-							>
+							<form action="/api/loans" method="post" className="request">
 								<input type="hidden" name="copyId" value={copy.id} />
 								<input type="hidden" name="workId" value={work.id} />
 								{/* A set: borrow as many as are needed, of those free. */}

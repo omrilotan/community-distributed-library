@@ -8,6 +8,7 @@ import {
 	COPY_A,
 	COPY_B,
 	DANA,
+	heard,
 	NOA,
 	SAM,
 	WORK,
@@ -175,6 +176,7 @@ describe("loan lifecycle", () => {
 		const before = (await sent()).length;
 
 		const { body } = await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await heard();
 		expect((await as(DANA).post(`/v1/loans/${body.id}/accept`)).status).toBe(
 			204,
 		);
@@ -191,6 +193,81 @@ describe("loan lifecycle", () => {
 			"loan_request:dana@example.com:Sam",
 			"loan_decision:sam@example.com:Dana",
 		]);
+	});
+});
+
+describe("a new request", () => {
+	const sent = async () =>
+		(
+			await (
+				env.NOTIFY as unknown as {
+					sentMessages(): Promise<{ kind: string; to: string }[]>;
+				}
+			).sentMessages()
+		).filter((message) => message.to === "dana@example.com");
+	const held = async () =>
+		(
+			await env.DB.prepare("SELECT count(*) AS n FROM held_notices").first<{
+				n: number;
+			}>()
+		)?.n;
+
+	it("reaches its owner a few minutes later, and never if taken back first", async () => {
+		const before = (await sent()).length;
+		const { body } = await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		expect((await sent()).length).toBe(before);
+		expect(await held()).toBe(1);
+
+		expect((await as(SAM).post(`/v1/loans/${body.id}/cancel`)).status).toBe(
+			204,
+		);
+		expect(await held()).toBe(0);
+		expect(await heard()).toEqual({ sent: 0, dropped: 0 });
+		expect((await sent()).length).toBe(before);
+	});
+
+	it("is told once when it falls due", async () => {
+		const before = (await sent()).length;
+		await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		expect(await heard()).toEqual({ sent: 1, dropped: 0 });
+		expect(await heard()).toEqual({ sent: 0, dropped: 0 });
+		expect((await sent()).slice(before).map((message) => message.kind)).toEqual(
+			["loan_request"],
+		);
+	});
+
+	it("needs no telling once the owner has answered it", async () => {
+		const before = (await sent()).length;
+		const { body } = await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		await as(DANA).post(`/v1/loans/${body.id}/decline`);
+		expect(await held()).toBe(0);
+		expect(await heard()).toEqual({ sent: 0, dropped: 0 });
+		expect(
+			(await sent())
+				.slice(before)
+				.some((message) => message.kind === "loan_request"),
+		).toBe(false);
+	});
+
+	it("keeps its nudge and its messages from the owner until it reaches them", async () => {
+		const before = (await sent()).length;
+		const { body } = await as(SAM).post("/v1/loans", { copyId: COPY_B });
+		expect((await as(SAM).post(`/v1/loans/${body.id}/nudge`)).status).toBe(409);
+		expect(
+			(
+				await as(SAM).post(`/v1/loans/${body.id}/messages`, {
+					body: "Is Saturday good?",
+				})
+			).status,
+		).toBe(201);
+		expect((await sent()).length).toBe(before);
+
+		await heard();
+		expect((await sent()).slice(before).map((message) => message.kind)).toEqual(
+			["loan_request"],
+		);
+		expect((await as(SAM).post(`/v1/loans/${body.id}/nudge`)).status).toBe(204);
+		await as(SAM).post(`/v1/loans/${body.id}/cancel`);
 	});
 });
 

@@ -571,8 +571,8 @@ export function createServer(
 		"request_loan",
 		{
 			description: kind.sets
-				? "Ask to borrow a thing (from get_work or search_catalogue). For a set (quantity above 1), say how many of it, up to those free. Optional note to the owner."
-				: "Ask to borrow a copy (from get_work or search_catalogue). Works on a copy that is on loan too when the owner allows relays: the current reader then hands it straight to you. Optional note to the owner.",
+				? "Ask to borrow a thing (from get_work or search_catalogue). For a set (quantity above 1), say how many of it, up to those free. Optional note to the owner. The owner hears of it five minutes later; cancel_loan before then and they never do."
+				: "Ask to borrow a copy (from get_work or search_catalogue). Works on a copy that is on loan too when the owner allows relays: the current reader then hands it straight to you. Optional note to the owner. The owner hears of it five minutes later; cancel_loan before then and they never do.",
 			inputSchema: {
 				copyId: z.string(),
 				message: z.string().max(280).optional(),
@@ -615,7 +615,8 @@ export function createServer(
 	server.registerTool(
 		"cancel_loan",
 		{
-			description: "Cancel a request or an accepted loan before the handoff.",
+			description:
+				"Cancel a request or an accepted loan before the handoff. Within five minutes of asking, the owner never hears of the request.",
 			inputSchema: { loanId: z.string() },
 		},
 		({ loanId }) =>

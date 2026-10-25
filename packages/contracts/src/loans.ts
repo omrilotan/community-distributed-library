@@ -3,6 +3,12 @@ import { Id, Timestamp } from "./primitives.ts";
 import { Condition, CopyListing, ListingSort, WorkListing } from "./copies.ts";
 import { Edition, Work } from "./catalogue.ts";
 
+/**
+ * Minutes a new loan request waits before its owner hears of it: until then
+ * the asker can take it back and nobody is told.
+ */
+export const REQUEST_HOLD_MINUTES = 5;
+
 export const LoanStatus = z.enum([
 	"requested",
 	"accepted",

@@ -157,7 +157,7 @@ interface Due {
 	created_at: number;
 }
 
-/** Push every due delivery once. Called after emit and every 15 minutes by cron. */
+/** Push every due delivery once. Called after emit and every minute by cron. */
 export async function deliverPending(env: Env, limit = 25): Promise<number> {
 	const { results } = await env.DB.prepare(
 		`SELECT d.id, d.webhook_id, d.event_id, d.attempts, w.url, w.secret,
