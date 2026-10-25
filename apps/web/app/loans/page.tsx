@@ -289,7 +289,9 @@ function LoanRow({
 							{t.needsTime}
 						</a>
 					) : null}
-					<a href={`/loans/${loan.id}`}>{t.messages}</a>
+					<a className="btn quiet" href={`/loans/${loan.id}`}>
+						{t.messages}
+					</a>
 				</div>
 				<LoanActions loan={loan} side={side} t={t} back="/loans" compact />
 			</div>

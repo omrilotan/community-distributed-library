@@ -397,7 +397,9 @@ export default async function WorkPageView({
 											: copy.myLoanStatus === "accepted"
 												? t.youAgreed
 												: t.youRequested}{" "}
-										<a href={`/loans/${copy.myLoanId}`}>{t.yourLoan}</a>
+										<a className="btn quiet" href={`/loans/${copy.myLoanId}`}>
+											{t.yourLoan}
+										</a>
 									</p>
 								) : copy.heldUntil ? (
 									<p className="muted">
