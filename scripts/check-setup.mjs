@@ -76,6 +76,11 @@ else {
 	if (account) {
 		const r2 = await cf(`/accounts/${account}/r2/buckets`);
 		if (r2.success) ok("R2 storage is on");
+		// 10000 is Cloudflare's "Authentication error": a token without the scope.
+		else if (r2.errors?.some((error) => error.code === 10000))
+			bad(
+				"The token cannot reach R2: it needs Workers R2 Storage: Edit (step 2)",
+			);
 		else
 			bad(
 				"R2 storage is not on for this account: in Cloudflare, open R2 Object Storage and turn it on",
