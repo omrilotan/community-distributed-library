@@ -103,9 +103,11 @@ export default async function WorkPageView({
 		return (
 			<main className="book">
 				{og}
+				{/* React already preloads the cover from the head; "high" asks for
+				    it ahead of the scripts, for whoever arrives from a link. */}
 				<div className="book-cover">
 					{card.body.coverUrl ? (
-						<img alt="" src={card.body.coverUrl} />
+						<img alt="" src={card.body.coverUrl} fetchPriority="high" />
 					) : (
 						<PlainCover title={card.body.title} size="book" />
 					)}
@@ -182,7 +184,7 @@ export default async function WorkPageView({
 			<header className="book-head">
 				<div className="book-cover" style={coverTransition(work.id)}>
 					{cover ? (
-						<img alt="" src={cover} />
+						<img alt="" src={cover} fetchPriority="high" />
 					) : (
 						<PlainCover title={work.title} size="book" />
 					)}
