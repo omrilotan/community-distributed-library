@@ -1,6 +1,7 @@
 import type { EventKind } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { ulid, now } from "./ids.ts";
+import { publicTarget } from "./webhook-target.ts";
 
 /** Retry schedule in seconds; the fifth miss spends the delivery. */
 const BACKOFF = [60, 900, 3600, 21_600, 86_400];
@@ -179,12 +180,17 @@ export async function deliverPending(env: Env, limit = 25): Promise<number> {
 			.bind(now() + LEASE_SECONDS, due.id, now())
 			.run();
 		if (!claimed.meta.changes) continue;
-		const outcome = await post(due.url, due.secret, {
-			id: due.event_id,
-			kind: due.kind,
-			data: JSON.parse(due.data) as unknown,
-			createdAt: due.created_at,
-		});
+		const outcome = await post(
+			due.url,
+			due.secret,
+			{
+				id: due.event_id,
+				kind: due.kind,
+				data: JSON.parse(due.data) as unknown,
+				createdAt: due.created_at,
+			},
+			env.DEV_AUTH === "true",
+		);
 		const attempts = due.attempts + 1;
 		const done = outcome.ok || attempts >= MAX_ATTEMPTS;
 		const statements = [
@@ -224,12 +230,19 @@ export async function deliverPending(env: Env, limit = 25): Promise<number> {
 	return sent;
 }
 
-/** A signed POST. Signature: HMAC-SHA256 of `${timestamp}.${body}` with the hook's secret. */
+/**
+ * A signed POST. Signature: HMAC-SHA256 of `${timestamp}.${body}` with the
+ * hook's secret. A hook saved before addresses were checked is checked here
+ * too, and a private one fails like an unreachable one.
+ */
 export async function post(
 	url: string,
 	secret: string,
 	event: { id: string; kind: string; data: unknown; createdAt: number },
+	allowLocal = false,
 ): Promise<{ ok: boolean; status: number | null; error: string | null }> {
+	if (!publicTarget(url, allowLocal))
+		return { ok: false, status: null, error: "Not a public address" };
 	const body = JSON.stringify(event);
 	const timestamp = String(now());
 	const signature = await sign(secret, `${timestamp}.${body}`);
