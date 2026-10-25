@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getMe } from "../lib/profile.ts";
+import { pushPublicKey } from "../lib/push-public-key.ts";
 import { cookies, headers } from "next/headers";
 // Heebo, served from this site (no third party sees a visitor, and the CSP's
 // font-src 'self' covers it). The browser fetches only the ranges a page uses.
@@ -75,7 +76,12 @@ export default async function RootLayout({
 	const accent = accentCss(info.accent);
 	const images = imagesOrigin();
 	const hasSession = Boolean(await sessionToken());
-	const me = hasSession ? await getMe().catch(() => null) : null;
+	// The push key rides along for a member's browser to check its
+	// subscription against, rather than asking for it on every view.
+	const [me, pushKey] = await Promise.all([
+		hasSession ? getMe().catch(() => null) : null,
+		hasSession ? pushPublicKey() : null,
+	]);
 	// A cookie whose session was ended (signed out elsewhere, suspended,
 	// erased) is no sign-in: such a visitor gets the signed-out page, so the
 	// contact form and sign-in link are where they look for them.
@@ -178,7 +184,7 @@ export default async function RootLayout({
 							"addEventListener('pageswap',function(e){var t=e.viewTransition,a=e.activation;if(t&&!(a&&[a.from,a.entry].some(function(h){return h&&/^\\/works\\//.test(new URL(h.url).pathname)})))(t.ready.catch(function(){}),t.skipTransition())});",
 					}}
 				/>
-				<ServiceWorker />
+				<ServiceWorker publicKey={pushKey} />
 				<FormGuard />
 				<header className="topbar">
 					<div className="topbar-inner">
