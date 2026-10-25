@@ -27,6 +27,28 @@ describe("a session", () => {
 	});
 });
 
+describe("a suspended member", () => {
+	it("gets no session from a link", async () => {
+		await env.DB.prepare(
+			"UPDATE memberships SET status = 'suspended' WHERE member_id = ?",
+		)
+			.bind(DANA)
+			.run();
+		const asked = await api(null, "POST", "/v1/auth/magic-link", {
+			email: "dana@example.com",
+		});
+		const token = new URL(asked.body.debugUrl).searchParams.get("token");
+		expect(
+			(await api(null, "POST", "/v1/auth/exchange", { token })).status,
+		).toBe(410);
+		await env.DB.prepare(
+			"UPDATE memberships SET status = 'active' WHERE member_id = ?",
+		)
+			.bind(DANA)
+			.run();
+	});
+});
+
 describe("a personal token", () => {
 	it("opens nothing once revoked, and only its own member may revoke it", async () => {
 		const minted = await as(SAM).post("/v1/me/tokens", {

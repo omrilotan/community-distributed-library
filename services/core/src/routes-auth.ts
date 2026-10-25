@@ -271,9 +271,17 @@ async function signIn(
 	c: Context<{ Bindings: Env }>,
 	link: { email: string; invite_id: string | null },
 ) {
-	let member = await c.env.DB.prepare("SELECT id FROM members WHERE email = ?")
+	let member = await c.env.DB.prepare(
+		`SELECT m.id, (m.deactivated_at IS NULL AND EXISTS (
+		          SELECT 1 FROM memberships ms WHERE ms.member_id = m.id AND ms.status = 'active'
+		        )) AS open
+		   FROM members m WHERE m.email = ?`,
+	)
 		.bind(link.email)
-		.first<{ id: string }>();
+		.first<{ id: string; open: number }>();
+	// A session would open nothing for them (auth.ts), so none is made; the
+	// answer is a spent link's, which says nothing about why.
+	if (member && !member.open) return json(c, problem(410, "Link expired"));
 	let isNew = false;
 
 	if (!member) {
@@ -299,7 +307,7 @@ async function signIn(
 				"INSERT INTO memberships (member_id, community_id, role, status, joined_at) VALUES (?, ?, 'member', 'active', ?)",
 			).bind(id, invite.community_id, now()),
 		]);
-		member = { id };
+		member = { id, open: 1 };
 		isNew = true;
 	}
 
