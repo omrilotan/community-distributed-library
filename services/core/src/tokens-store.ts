@@ -30,16 +30,11 @@ export async function mintTokenWithConsent(
 			at,
 			at + TOKEN_DAYS * 86_400,
 		),
+		// The plain token is kept only until the code is redeemed; see redeemConsent.
 		env.DB.prepare(
-			"INSERT INTO consent_codes (code_hash, token_id, expires_at) VALUES (?, ?, ?)",
-		).bind(await hashToken(code), id, at + CONSENT_MINUTES * 60),
+			"INSERT INTO consent_codes (code_hash, token_id, token_plain, expires_at) VALUES (?, ?, ?, ?)",
+		).bind(await hashToken(code), id, token, at + CONSENT_MINUTES * 60),
 	]);
-	// The plain token is kept only until the code is redeemed; see redeemConsent.
-	await env.DB.prepare(
-		"UPDATE consent_codes SET token_plain = ? WHERE code_hash = ?",
-	)
-		.bind(token, await hashToken(code))
-		.run();
 	return { code, expiresAt: at + CONSENT_MINUTES * 60 };
 }
 
