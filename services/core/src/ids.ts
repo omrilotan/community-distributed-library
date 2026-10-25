@@ -1,9 +1,9 @@
 const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford base32, no I L O U
 
-/** ULID: 48-bit timestamp then 80 bits of randomness, sortable by creation time. */
 /** The moment, in the seconds every table keeps. */
 export const now = () => Math.floor(Date.now() / 1000);
 
+/** ULID: 48-bit timestamp then 80 bits of randomness, sortable by creation time. */
 export function ulid(at = Date.now()): string {
 	let time = "";
 	let remaining = at;
