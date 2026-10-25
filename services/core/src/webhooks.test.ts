@@ -92,6 +92,10 @@ describe("webhooks", () => {
 			url: "http://example.com/hook",
 		});
 		expect(plain.status).toBe(422);
+		const inside = await as(SAM).post("/v1/me/webhooks", {
+			url: "https://169.254.169.254/latest/meta-data",
+		});
+		expect(inside.status).toBe(422);
 		const ok = await as(SAM).post("/v1/me/webhooks", {
 			url: "https://hooks.ok/hook",
 			kinds: ["loan.accepted"],

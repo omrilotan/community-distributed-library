@@ -14,6 +14,7 @@ import { ulid, now } from "./ids.ts";
 import { denied, json } from "./problem.ts";
 import { newToken } from "./tokens.ts";
 import { post } from "./events.ts";
+import { publicTarget } from "./webhook-target.ts";
 
 export const webhooks = new Hono<{ Bindings: Env }>();
 webhooks.get("/v1/me/webhooks", async (c) => {
@@ -36,11 +37,11 @@ webhooks.post("/v1/me/webhooks", async (c) => {
 	const parsed = CreateWebhook.safeParse(await c.req.json().catch(() => null));
 	if (!parsed.success) return json(c, problem(422, "Invalid webhook"));
 	const url = new URL(parsed.data.url);
-	const local =
-		c.env.DEV_AUTH === "true" &&
-		["localhost", "127.0.0.1"].includes(url.hostname);
-	if (url.protocol !== "https:" && !local)
-		return json(c, problem(422, "Invalid webhook", "https URLs only"));
+	if (!publicTarget(url.href, c.env.DEV_AUTH === "true"))
+		return json(
+			c,
+			problem(422, "Invalid webhook", "A public https address only"),
+		);
 	const count = await c.env.DB.prepare(
 		"SELECT count(*) AS n FROM webhooks WHERE member_id = ? AND disabled_at IS NULL",
 	)
@@ -103,12 +104,17 @@ webhooks.post("/v1/me/webhooks/:id/test", async (c) => {
 		.bind(c.req.param("id"), member.id)
 		.first<{ url: string; secret: string }>();
 	if (!hook) return json(c, problem(404, "No such webhook"));
-	const outcome = await post(hook.url, hook.secret, {
-		id: ulid(),
-		kind: "ping",
-		data: { memberId: member.id },
-		createdAt: now(),
-	});
+	const outcome = await post(
+		hook.url,
+		hook.secret,
+		{
+			id: ulid(),
+			kind: "ping",
+			data: { memberId: member.id },
+			createdAt: now(),
+		},
+		c.env.DEV_AUTH === "true",
+	);
 	await c.env.DB.prepare(
 		`UPDATE webhooks SET last_status = ?, last_at = ?, failures = CASE WHEN ? THEN 0 ELSE failures END,
 		        disabled_at = CASE WHEN ? THEN NULL ELSE disabled_at END WHERE id = ?`,
