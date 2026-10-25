@@ -217,7 +217,11 @@ app.post("/v1/copies", async (c) => {
 			),
 		);
 	// Someone may have been waiting for exactly this book.
-	c.executionCtx.waitUntil(onCopyAvailable(c.env, id).catch(() => undefined));
+	c.executionCtx.waitUntil(
+		onCopyAvailable(c.env, id).catch((error: unknown) =>
+			console.error("[waitlist] offer failed", id, error),
+		),
+	);
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "copy.listed", { copyId: id }),
 	);

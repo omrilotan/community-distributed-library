@@ -106,7 +106,9 @@ reports.post("/v1/loans/:id/report", async (c) => {
 			}),
 		);
 		c.executionCtx.waitUntil(
-			c.env.CONVO.closed(loanId, at).catch(() => undefined),
+			c.env.CONVO.closed(loanId, at).catch((error: unknown) =>
+				console.error("[convo] close failed", loanId, error),
+			),
 		);
 	}
 
@@ -372,7 +374,9 @@ reports.post("/v1/admin/reports/:id/:action", async (c) => {
 			);
 			if (found?.meta.changes)
 				c.executionCtx.waitUntil(
-					onCopyAvailable(c.env, loan.copy_id).catch(() => undefined),
+					onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
+						console.error("[waitlist] offer failed", loan.copy_id, error),
+					),
 				);
 		}
 	}

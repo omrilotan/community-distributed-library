@@ -180,7 +180,11 @@ copies.patch("/v1/copies/:id", async (c) => {
 		statements.push(releaseHolds(c.env, id));
 	if (statements.length) await c.env.DB.batch(statements);
 	if (body.lending === "lendable" && detail.lending !== "lendable") {
-		c.executionCtx.waitUntil(onCopyAvailable(c.env, id).catch(() => undefined));
+		c.executionCtx.waitUntil(
+			onCopyAvailable(c.env, id).catch((error: unknown) =>
+				console.error("[waitlist] offer failed", id, error),
+			),
+		);
 	}
 	return c.body(null, 204);
 });

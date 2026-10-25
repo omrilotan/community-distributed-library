@@ -447,7 +447,11 @@ auth.patch("/v1/me", async (c) => {
 				.bind(member.id)
 				.run();
 		} else {
-			c.executionCtx.waitUntil(offerWaitedFor(c.env).catch(() => undefined));
+			c.executionCtx.waitUntil(
+				offerWaitedFor(c.env).catch((error: unknown) =>
+					console.error("[waitlist] offers failed", error),
+				),
+			);
 		}
 	}
 	return c.body(null, 204);
