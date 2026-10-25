@@ -74,15 +74,18 @@ children.push(run("mcp", ["run", "dev:mcp"], { prefix: true }));
 await answers("http://localhost:8788/", 60);
 children.push(run("web", ["run", "dev:web"], { prefix: true }));
 
+let stopping = false;
 const stop = () => {
+	stopping = true;
 	for (const child of children) child.kill("SIGTERM");
 };
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);
 for (const child of children) {
 	child.on("exit", (code) => {
-		// One side dying should not leave the other half running silently.
+		// One side dying should not leave the other half running silently; a
+		// stop that was asked for (Ctrl-C) is no failure.
+		if (!stopping) process.exitCode = code ?? 1;
 		stop();
-		process.exitCode = code ?? 1;
 	});
 }
