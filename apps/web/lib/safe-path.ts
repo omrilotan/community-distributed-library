@@ -10,7 +10,10 @@ export function safePath(input: unknown, fallback = "/"): string {
 	try {
 		const url = new URL(input, base);
 		if (url.origin !== base) return fallback;
-		return `${url.pathname}${url.search}${url.hash}`;
+		// Resolving can still leave "//evil.example" as the path ("/.//evil.example"
+		// does), which a browser reads as another host once it is a Location.
+		const path = `${url.pathname}${url.search}${url.hash}`;
+		return /^\/(?![/\\])/.test(path) ? path : fallback;
 	} catch {
 		return fallback;
 	}
