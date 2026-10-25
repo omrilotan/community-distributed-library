@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@cdl/contracts": "*",
-    "@cloudflare/workers-oauth-provider": "^0.10.3",
+    "@cloudflare/workers-oauth-provider": "^1.2.4",
     "@modelcontextprotocol/server": "2.3.1",
     "agents": "^0.30.1",
     "zod": "^4.1.5"
