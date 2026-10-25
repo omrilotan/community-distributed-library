@@ -313,7 +313,7 @@ admin.get("/v1/admin/members", async (c) => {
 		.bind(who.communityId)
 		.all<MemberRow>();
 	// Addresses are the admin's: a moderator looks after people by name.
-	const seesEmail = (await roleOf(c.env, who.id, who.communityId)) === "admin";
+	const seesEmail = who.role === "admin";
 
 	return c.json({
 		members: results.map((row) => ({
@@ -548,7 +548,7 @@ admin.get("/v1/admin/members/:id", async (c) => {
 		>();
 	if (!row) return json(c, problem(404, "Not a member"));
 
-	const [invite, invited, filed, about, loans, mine] = await Promise.all([
+	const [invite, invited, filed, about, loans] = await Promise.all([
 		row.invited_via
 			? c.env.DB.prepare(
 					`SELECT i.id, i.created_at, i.uses, i.max_uses, i.created_by, m.display_name
@@ -588,13 +588,12 @@ admin.get("/v1/admin/members/:id", async (c) => {
 		)
 			.bind(id, who.communityId)
 			.first<{ borrowed: number; lent: number; open: number }>(),
-		roleOf(c.env, who.id, who.communityId),
 	]);
 
 	const detail: AdminMemberDetail = {
 		member: {
 			id: row.id,
-			email: mine === "admin" ? row.email : null,
+			email: who.role === "admin" ? row.email : null,
 			displayName: row.display_name,
 			areaLabel: row.area_label,
 			role: row.role,
@@ -621,9 +620,11 @@ admin.get("/v1/admin/members/:id", async (c) => {
 				}
 			: null,
 		// Tracing how someone came in, all the way back, is the admin's.
-		trail: mine === "admin" ? await trail(c.env, id) : null,
+		trail: who.role === "admin" ? await trail(c.env, id) : null,
 		openInvites:
-			mine === "admin" ? await openInvites(c.env, id, who.communityId) : null,
+			who.role === "admin"
+				? await openInvites(c.env, id, who.communityId)
+				: null,
 		invited: invited.results.map((entry) => ({
 			id: entry.id,
 			displayName: entry.display_name,
@@ -661,15 +662,12 @@ admin.post("/v1/admin/members/:id/role", async (c) => {
 	const target = c.req.param("id");
 	const role = parsed.data.role;
 
-	const [mine, theirs] = await Promise.all([
-		roleOf(c.env, who.id, who.communityId),
-		roleOf(c.env, target, who.communityId),
-	]);
+	const theirs = await roleOf(c.env, target, who.communityId);
 	if (!theirs) return json(c, problem(404, "Not a member"));
 	// Roles are the admin's to give and take. A moderator may only step down.
 	const steppingDown =
 		target === who.id && theirs === "moderator" && role === "member";
-	if (mine !== "admin" && !steppingDown)
+	if (who.role !== "admin" && !steppingDown)
 		return json(c, problem(403, "Admins only", "Only the admin changes roles"));
 
 	// Never leave a community without an admin, or without anybody to moderate.
@@ -713,12 +711,9 @@ admin.post("/v1/admin/members/:id/status", async (c) => {
 		return json(c, problem(409, "Cannot suspend yourself"));
 	// A moderator looks after members; suspending a moderator or the admin is
 	// the admin's call, and the last admin cannot be suspended at all.
-	const [mine, theirs] = await Promise.all([
-		roleOf(c.env, who.id, who.communityId),
-		roleOf(c.env, target, who.communityId),
-	]);
+	const theirs = await roleOf(c.env, target, who.communityId);
 	if (!theirs) return json(c, problem(404, "Not a member"));
-	if (theirs !== "member" && mine !== "admin")
+	if (theirs !== "member" && who.role !== "admin")
 		return json(c, problem(403, "Admins only", "Only the admin can do that"));
 	if (
 		theirs === "admin" &&
@@ -852,7 +847,7 @@ admin.get("/v1/admin/invites", async (c) => {
 		.all<InviteRow & { created_by_id: string }>();
 	// Addresses are the admin's, as on the members' list; a moderator sees
 	// the ones they typed in themselves.
-	const seesAll = (await roleOf(c.env, who.id, who.communityId)) === "admin";
+	const seesAll = who.role === "admin";
 	return c.json({
 		invites: results.map((row) => ({
 			id: row.id,
