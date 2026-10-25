@@ -74,14 +74,14 @@ function magicLink(message: MagicLinkMessage): Rendered {
 		message.locale === "he"
 			? {
 					subject: "קישור הכניסה שלך לספריית הקהילה",
-					lead: "לחצו על הקישור כדי להיכנס:",
-					code: "או הקלידו את הקוד הזה בדף שבו ביקשתם להיכנס. אל תמסרו אותו לאף אחד:",
+					lead: "לחצו על הקישור כדי להיכנס. תיכנסו בכל מקום שבו הוא נפתח:",
+					code: "הקישור נפתח בדפדפן או באפליקציה אחרים מאלה שבהם ביקשתם להיכנס? הקלידו שם את הקוד הזה. הוא עובד רק שם, ופעם אחת. אל תמסרו אותו לאף אחד:",
 					tail: `הקישור תקף ל־${message.expiresInMinutes} דקות ולשימוש אחד. אם ההודעה הגיעה לספאם — סמנו אותה כ"לא ספאם" והוסיפו אותנו לאנשי הקשר, וההודעות הבאות יגיעו לתיבה. אם לא ביקשתם את הקישור, אפשר להתעלם.`,
 				}
 			: {
 					subject: "Your sign-in link for the Community Library",
-					lead: "Click the link to sign in:",
-					code: "Or type this code on the page where you asked to sign in. Never give it to anyone:",
+					lead: "Tap the link to sign in. You are signed in wherever it opens:",
+					code: "Did the link open in another browser or app than the one you asked from? Type this code there instead. It works only there, and only once. Never give it to anyone:",
 					tail: `The link works for ${message.expiresInMinutes} minutes and only once. If this landed in your junk folder, mark it "not junk" and add us to your contacts, and the next one will arrive properly. If you did not ask for this, ignore it.`,
 				};
 	return wrap(
