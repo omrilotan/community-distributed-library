@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { SCOPE_DESCRIPTIONS } from "@cdl/contracts";
 import { strings, type Locale } from "../../../lib/i18n.ts";
 import { requireProfile } from "../../../lib/profile.ts";
+import { sessionToken } from "../../../lib/session.ts";
 import { Callout, PageHead } from "../../ui.tsx";
 import { env } from "cloudflare:workers";
 import { pendingConsent } from "../../../lib/consent.ts";
@@ -19,8 +21,14 @@ export default async function ConsentPage({
 }: {
 	searchParams: Promise<{ req?: string; error?: string }>;
 }) {
-	const me = await requireProfile();
 	const { req, error } = await searchParams;
+	// Signed out, as an assistant's in-app sign-in window always is: sign in,
+	// then straight back to this request rather than to the books.
+	if (!(await sessionToken())) {
+		const here = `/oauth/consent?req=${encodeURIComponent(req ?? "")}`;
+		redirect(`/login?back=${encodeURIComponent(here)}`);
+	}
+	const me = await requireProfile();
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
 	const mcpUrl =

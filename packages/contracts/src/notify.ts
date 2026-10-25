@@ -10,6 +10,11 @@ export const MagicLinkMessage = z.object({
 	url: z.url(),
 	/** Minutes until the link dies, for the email body. */
 	expiresInMinutes: z.number().int().positive(),
+	/** Eight digits to type instead, in the browser that asked. */
+	code: z
+		.string()
+		.regex(/^\d{8}$/)
+		.optional(),
 });
 
 /** A moderator invited this address by email: one link that joins and signs in. */

@@ -1,6 +1,6 @@
 import type { Session } from "@cdl/contracts";
 import { core } from "../../../../lib/core.ts";
-import { sessionCookie } from "../../../../lib/session.ts";
+import { signInBack, signedIn } from "../../../../lib/sign-in.ts";
 
 /**
  * The sign-in page's button posts the link's token here, and only here does
@@ -20,13 +20,5 @@ export async function POST(request: Request): Promise<Response> {
 			headers: { location: "/login?error=1" },
 		});
 	}
-
-	return new Response(null, {
-		status: 303,
-		headers: {
-			// A new member gets the explanation first; everyone else, the books.
-			location: body.isNew ? "/start" : "/",
-			"set-cookie": sessionCookie(body.token, body.expiresAt),
-		},
-	});
+	return signedIn(body, await signInBack());
 }

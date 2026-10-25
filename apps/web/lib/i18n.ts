@@ -254,6 +254,12 @@ const dictionary = {
 		sendLink: "Send me a sign-in link",
 		linkSent: "Check your email for a sign-in link. It works for 15 minutes.",
 		linkFailed: "That link did not work. Ask for a new one.",
+		signInCodeLabel: "Or type the code from the email",
+		signInCodeHint:
+			"Handy when the link opens somewhere else, such as an app's sign-in window.",
+		signInCodeSubmit: "Sign in with the code",
+		signInCodeFailed:
+			"That code did not work. Check the newest email, or ask for a new link.",
 		finishSignIn: "One tap to finish signing in on this device.",
 		join: "Join the library",
 		joinHint: "You were invited. Enter your email to get a sign-in link.",
@@ -1029,6 +1035,11 @@ const dictionary = {
 		sendLink: "שלחו לי קישור כניסה",
 		linkSent: "בדקו את האימייל לקישור כניסה. הוא תקף ל־15 דקות.",
 		linkFailed: "הקישור לא עבד. בקשו קישור חדש.",
+		signInCodeLabel: "או הקלידו את הקוד מהאימייל",
+		signInCodeHint:
+			"שימושי כשהקישור נפתח במקום אחר, כמו חלון הכניסה של אפליקציה.",
+		signInCodeSubmit: "כניסה עם הקוד",
+		signInCodeFailed: "הקוד לא עבד. בדקו את האימייל האחרון, או בקשו קישור חדש.",
 		finishSignIn: "נגיעה אחת כדי לסיים את הכניסה במכשיר הזה.",
 		join: "הצטרפות לספרייה",
 		joinHint: "הוזמנתם. הזינו אימייל לקבלת קישור כניסה.",

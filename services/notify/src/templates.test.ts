@@ -62,3 +62,28 @@ describe("a subject", () => {
 		expect(request.subject).toContain("Sam Bcc: everyone@example.com");
 	});
 });
+
+describe("a sign-in email", () => {
+	const ask = (code?: string) =>
+		render({
+			kind: "magic_link",
+			to: "sam@example.com",
+			locale: "he",
+			url: "https://library.example.org/auth/callback?token=t",
+			expiresInMinutes: 15,
+			...(code ? { code } : {}),
+		});
+
+	it("shows the code under the link, split in two, left to right", () => {
+		const sent = ask("12345678");
+		expect(sent.text).toContain("1234 5678");
+		expect(sent.html).toContain('dir="ltr"');
+		expect(sent.html).toContain("1234 5678");
+	});
+
+	it("says nothing of a code when none was made", () => {
+		const sent = ask();
+		expect(sent.text).not.toMatch(/\d{4} \d{4}/);
+		expect(sent.html).not.toContain('dir="ltr" style');
+	});
+});

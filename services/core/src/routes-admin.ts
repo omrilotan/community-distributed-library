@@ -941,7 +941,12 @@ admin.post("/v1/admin/invites/email", async (c) => {
 		days,
 		email,
 	);
-	const token = await createMagicLink(c.env, email, invite.id, days * 24 * 60);
+	const { token } = await createMagicLink(
+		c.env,
+		email,
+		invite.id,
+		days * 24 * 60,
+	);
 	const delivery = await c.env.NOTIFY.send({
 		kind: "invitation",
 		libraryType: about.type,

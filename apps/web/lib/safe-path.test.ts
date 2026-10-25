@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safePath } from "./safe-path.ts";
+import { backAfterSignIn, safePath } from "./safe-path.ts";
 
 describe("safePath", () => {
 	it("keeps our own paths", () => {
@@ -26,5 +26,29 @@ describe("safePath", () => {
 		]) {
 			expect(safePath(input, "/home")).toBe("/home");
 		}
+	});
+});
+
+describe("backAfterSignIn", () => {
+	it("comes back to an assistant's consent screen", () => {
+		const here = "/oauth/consent?req=0b7c1e52-3f0a-4d4e-9c8a-2a1f5e6d7c8b";
+		expect(backAfterSignIn(here)).toBe(here);
+	});
+
+	it("goes nowhere else, on this site or off it", () => {
+		for (const input of [
+			"/logout",
+			"/view-as",
+			"/api/auth/exchange",
+			"/oauth/consentx?req=abc",
+			"/oauth/consent",
+			"/oauth/consent?req=abc",
+			"/oauth/consent?req=0b7c1e52-3f0a-4d4e-9c8a-2a1f5e6d7c8b&next=/logout",
+			"//evil.example/oauth/consent?req=abc",
+			"https://evil.example/oauth/consent?req=abc",
+			"/\\evil.example/oauth/consent?req=abc",
+			null,
+		])
+			expect(backAfterSignIn(input)).toBeNull();
 	});
 });

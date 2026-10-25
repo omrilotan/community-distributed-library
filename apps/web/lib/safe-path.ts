@@ -18,3 +18,18 @@ export function safePath(input: unknown, fallback = "/"): string {
 		return fallback;
 	}
 }
+
+/**
+ * A place to come back to after signing in, or null. Only an assistant's
+ * consent screen for now: a link to /login with any other `back` must not be
+ * able to land a fresh session on a page that does something when opened.
+ */
+export function backAfterSignIn(input: unknown): string | null {
+	const path = safePath(input, "");
+	// The request id is the MCP server's crypto.randomUUID() (services/mcp/src/consent.ts).
+	return /^\/oauth\/consent\?req=[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(
+		path,
+	)
+		? path
+		: null;
+}
