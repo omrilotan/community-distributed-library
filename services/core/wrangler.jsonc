@@ -33,9 +33,9 @@
   "vars": {
     // Origin the web app is served from; magic links and invites point here.
     "APP_URL": "http://localhost:3000",
-    // Where the images bucket is served. Locally core serves uploads itself.
     // Web push. The private half is a secret on the notify Worker.
     "VAPID_PUBLIC_KEY": "",
+    // Where the images bucket is served. Locally core serves uploads itself.
     "COVERS_PUBLIC_URL": "http://localhost:8787/v1/covers",
     // Where the contact form's messages go: a person, not a queue.
     "CONTACT_ADDRESS": "library@example.org",
