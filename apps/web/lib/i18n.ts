@@ -288,6 +288,8 @@ const dictionary = {
 		workNote: "About this book",
 		workNoteHint:
 			"A few words everyone sees: the edition, a series, a translation, the year.",
+		workNoteFromCopy:
+			"Filled in from the note one owner wrote. Keep what describes the book itself before saving.",
 		profile: "My account",
 		areaRequired:
 			"Set your area first — distances on the shelves depend on it.",
@@ -1068,6 +1070,8 @@ const dictionary = {
 			"לספר הזה יש יותר ממהדורה אחת, ולכן אי אפשר להחליף כאן את הכריכה. מזגו אותן קודם.",
 		workNote: "על הספר",
 		workNoteHint: "כמה מילים שכולם רואים: המהדורה, סדרה, תרגום, השנה.",
+		workNoteFromCopy:
+			"מולא מההערה שכתב/ה אחד הבעלים. השאירו רק את מה שמתאר את הספר עצמו לפני השמירה.",
 		profile: "החשבון שלי",
 		areaRequired: "קודם קבעו את האזור שלכם — המרחקים על המדפים תלויים בו.",
 		areaMissing: "בחרו נקודה על המפה או השתמשו במיקום.",
