@@ -4,9 +4,19 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+# A newer push to a branch supersedes its running checks; on main every
+# commit keeps its own result, so a red one can still be found.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || '' }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -26,6 +36,7 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
