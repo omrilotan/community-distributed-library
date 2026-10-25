@@ -10,7 +10,8 @@ What you can do next:
 - **Run a library** for your street. Follow [docs/self-hosting.md](docs/self-hosting.md), or open
   this folder in Claude Code and type `/open-a-library`. You need a domain on Cloudflare and a
   Cloudflare API token; one command does the rest.
-- **Work on the code.** Start at [Run locally](#run-locally).
+- **Work on the code.** Start at [Run locally](#run-locally), and read
+  [CONTRIBUTING.md](CONTRIBUTING.md) for how changes are made here.
 - **Build on a library.** Everything the web app does is also open as an
   [API, MCP server and webhooks](#api-mcp-and-webhooks).
 
