@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 // Plain Node: push.ts is Web Crypto and fetch, both of which Node provides;
@@ -5,8 +6,9 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	resolve: {
 		alias: {
-			"cloudflare:workers": new URL("./src/workers-stub.ts", import.meta.url)
-				.pathname,
+			"cloudflare:workers": fileURLToPath(
+				new URL("./src/workers-stub.ts", import.meta.url),
+			),
 		},
 	},
 	test: { include: ["src/**/*.test.ts"] },
