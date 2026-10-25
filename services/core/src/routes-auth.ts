@@ -52,11 +52,26 @@ auth.post("/v1/auth/magic-link", async (c) => {
 	const { email, invite, locale, browser } = parsed.data;
 
 	// This endpoint sends email to an address the caller only has to name, so
-	// it is limited hard and the limit is told to whoever hit it. The short
-	// window is the address from one place, so somebody elsewhere asking for
-	// it cannot use up its owner's; the day's cap is the address anywhere,
-	// so nobody can send a member more than a handful a day.
+	// it is limited hard and the limit is told to whoever hit it. The place
+	// comes first: a caller it turns away spends nothing of anybody's address.
+	// The short window is the address from one place, so somebody elsewhere
+	// asking for it cannot use up its owner's; the day's cap is the address
+	// anywhere, so nobody can send a member more than a handful a day.
 	const ip = callerIp(c.req.raw);
+	const perCaller = await take(c.env, {
+		bucket: "magic_link:ip",
+		subject: ip,
+		allow: 10,
+		per: 60 * 60,
+	});
+	if (!perCaller.ok) {
+		return tooMany(
+			c,
+			"Too many sign-in links",
+			"Too many sign-in attempts from here. Try again later.",
+			perCaller.retryAfter,
+		);
+	}
 	const perEmail = await take(c.env, {
 		bucket: "magic_link:email",
 		subject: `${email} ${ip}`,
@@ -83,20 +98,6 @@ auth.post("/v1/auth/magic-link", async (c) => {
 			"Too many sign-in links",
 			"That address has had enough links for today. Check your inbox, including spam, or sign in from another device you use.",
 			perDay.retryAfter,
-		);
-	}
-	const perCaller = await take(c.env, {
-		bucket: "magic_link:ip",
-		subject: ip,
-		allow: 10,
-		per: 60 * 60,
-	});
-	if (!perCaller.ok) {
-		return tooMany(
-			c,
-			"Too many sign-in links",
-			"Too many sign-in attempts from here. Try again later.",
-			perCaller.retryAfter,
 		);
 	}
 
