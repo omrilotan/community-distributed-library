@@ -252,12 +252,17 @@ const dictionary = {
 		signIn: "Sign in",
 		email: "Email",
 		sendLink: "Send me a sign-in link",
-		linkSent: "Check your email for a sign-in link. It works for 15 minutes.",
+		linkSentTitle: "Check your email",
+		linkSent:
+			"If the address belongs to a member, a sign-in email is on its way. Use it within 15 minutes, either way:",
+		linkSentTapLink:
+			"Tap the link in the email. You are signed in wherever it opens.",
+		linkSentTypeCode:
+			"Or, if it opens in another browser or app than this one, type the email's eight-digit code here.",
 		linkFailed: "That link did not work. Ask for a new one.",
-		signInCodeLabel: "Or type the code from the email",
-		signInCodeHint:
-			"Handy when the link opens somewhere else, such as an app's sign-in window.",
+		signInCodeLabel: "Code from the email",
 		signInCodeSubmit: "Sign in with the code",
+		sendNewLink: "Send a new link, or to another address",
 		signInCodeFailed:
 			"That code did not work. Check the newest email, or ask for a new link.",
 		finishSignIn: "One tap to finish signing in on this device.",
@@ -1033,12 +1038,16 @@ const dictionary = {
 		signIn: "כניסה",
 		email: "אימייל",
 		sendLink: "שלחו לי קישור כניסה",
-		linkSent: "בדקו את האימייל לקישור כניסה. הוא תקף ל־15 דקות.",
+		linkSentTitle: "בדקו את האימייל",
+		linkSent:
+			"אם הכתובת שייכת לחבר/ה בספרייה, אימייל כניסה כבר בדרך. השתמשו בו תוך 15 דקות, באחת משתי הדרכים:",
+		linkSentTapLink: "לחצו על הקישור באימייל. תיכנסו בכל מקום שבו הוא נפתח.",
+		linkSentTypeCode:
+			"או, אם הוא נפתח בדפדפן או באפליקציה אחרים, הקלידו כאן את הקוד בן שמונה הספרות מהאימייל.",
 		linkFailed: "הקישור לא עבד. בקשו קישור חדש.",
-		signInCodeLabel: "או הקלידו את הקוד מהאימייל",
-		signInCodeHint:
-			"שימושי כשהקישור נפתח במקום אחר, כמו חלון הכניסה של אפליקציה.",
+		signInCodeLabel: "הקוד מהאימייל",
 		signInCodeSubmit: "כניסה עם הקוד",
+		sendNewLink: "שליחת קישור חדש, או לכתובת אחרת",
 		signInCodeFailed: "הקוד לא עבד. בדקו את האימייל האחרון, או בקשו קישור חדש.",
 		finishSignIn: "נגיעה אחת כדי לסיים את הכניסה במכשיר הזה.",
 		join: "הצטרפות לספרייה",

@@ -3057,6 +3057,20 @@ input.tag-quick-add[type="text"] {
 	color: var(--accent-ink);
 }
 
+/* After asking for a sign-in link: the two ways in, numbered, a line apart,
+   then the code's own field with room before the junk warning. */
+.sign-in-ways {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding-inline-start: 1.25rem;
+	list-style: decimal;
+}
+
+.sign-in-code {
+	margin-block-end: 1.5rem;
+}
+
 /* After asking for a sign-in link: look in junk, said so it cannot be missed. */
 .junk-warning {
 	border-inline-start: 4px solid var(--warn);
