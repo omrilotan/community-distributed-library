@@ -4,6 +4,8 @@ import { cookies, headers } from "next/headers";
 // Heebo, served from this site (no third party sees a visitor, and the CSP's
 // font-src 'self' covers it). The browser fetches only the ranges a page uses.
 import "@fontsource-variable/heebo";
+import heeboLatin from "@fontsource-variable/heebo/files/heebo-latin-wght-normal.woff2?url";
+import heeboHebrew from "@fontsource-variable/heebo/files/heebo-hebrew-wght-normal.woff2?url";
 import "./globals.css";
 import { direction, locales, strings, type Locale } from "../lib/i18n.ts";
 import { library, libraryWords } from "../lib/library.ts";
@@ -97,6 +99,25 @@ export default async function RootLayout({
 				    stylesheet is still on its way, so the first cover does not wait
 				    for a handshake. */}
 				{images ? <link rel="preconnect" href={images} /> : null}
+				{/* The stylesheet names the font only once it has arrived; ask for
+				    it now, as the stylesheet will (anonymous, or it comes twice).
+				    Latin carries the digits and punctuation every page has. */}
+				<link
+					rel="preload"
+					as="font"
+					type="font/woff2"
+					href={heeboLatin}
+					crossOrigin="anonymous"
+				/>
+				{locale === "he" ? (
+					<link
+						rel="preload"
+						as="font"
+						type="font/woff2"
+						href={heeboHebrew}
+						crossOrigin="anonymous"
+					/>
+				) : null}
 				<meta name="robots" content={robots} />
 				{/* Written here, not in the metadata: vinext streams that into the
 				    body, and Chrome sees no manifest outside the head, so it never
