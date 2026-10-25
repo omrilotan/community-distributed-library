@@ -420,6 +420,85 @@ main > section {
 	color: var(--muted);
 }
 
+/* The assistant guide (assistants.html): an introduction with no photo, then
+   numbered steps, each a phone screen beside its words. */
+.guide-intro {
+	padding-block-end: 0 !important;
+}
+
+.walkthrough {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 3.5rem;
+	counter-reset: step;
+}
+
+.walkthrough li {
+	display: grid;
+	gap: 1.5rem;
+	counter-increment: step;
+}
+
+.walkthrough img {
+	inline-size: 100%;
+	max-inline-size: 17rem;
+	border: 1px solid var(--line-strong);
+	border-radius: 1.25rem;
+}
+
+.walkthrough h2 {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-block-end: 0.75rem;
+}
+
+.walkthrough h2::before {
+	content: counter(step);
+	display: grid;
+	place-items: center;
+	flex: none;
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	border-radius: 50%;
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: 1.125rem;
+}
+
+.walkthrough p {
+	max-inline-size: var(--measure);
+	color: var(--muted);
+}
+
+.walkthrough p + p {
+	margin-block-start: 0.75rem;
+}
+
+.walkthrough strong {
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.walkthrough code {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+@media (min-width: 48rem) {
+	.walkthrough li {
+		grid-template-columns: 17rem 1fr;
+		gap: 3rem;
+		align-items: center;
+	}
+}
+
+.guide-ask .actions {
+	margin-block-start: 3rem;
+}
+
 /* A full-width breath of green between the mechanics and the reasons. */
 .breather {
 	inline-size: 100%;
