@@ -77,6 +77,15 @@ describe("looking an ISBN up", () => {
 		expect(await lookup(db, {}, ISBN, [knows])).toBeNull();
 	});
 
+	it("passes over a record it cannot read, from a provider or the cache", async () => {
+		const { db, cache } = memoryDb();
+		const odd = async () =>
+			({ ...book, title: 42, authors: "A. Stub" }) as unknown as MetadataLookup;
+		cache.set(ISBN, { payload: "{not json", fetched_at: 0 });
+		expect((await lookup(db, {}, ISBN, [odd, knows]))?.title).toBe("Stub Book");
+		expect(JSON.parse(cache.get(ISBN)!.payload).title).toBe("Stub Book");
+	});
+
 	it("fetches an old record again, and keeps it while providers are away", async () => {
 		const { db, cache } = memoryDb();
 		const long = Math.floor(Date.now() / 1000) - 100 * 24 * 3600;
