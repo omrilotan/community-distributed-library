@@ -7,12 +7,9 @@ self.addEventListener("activate", (event) =>
 	event.waitUntil(self.clients.claim()),
 );
 
-/**
- * Nothing is cached — the catalogue changes under you — but a browser will
- * not offer to install an app whose worker has no fetch handler, so here is
- * one that does nothing and lets the network answer.
- */
-self.addEventListener("fetch", () => {});
+// No fetch handler: nothing is cached, and an empty one only made Safari and
+// Firefox start the worker for every page and every file before the network
+// answered. Browsers offer to install the app from its manifest alone.
 
 self.addEventListener("push", (event) => {
 	let payload = {};
