@@ -59,6 +59,8 @@ test.describe("signing in for an assistant", () => {
 		expect(kept?.httpOnly).toBe(true);
 		expect(kept?.secure).toBe(true);
 		const asked = await request.post(`${CORE}/v1/auth/magic-link`, {
+			// A place of its own, so the run's other sign-ins keep their hour.
+			headers: { "x-cdl-client-ip": "198.51.100.23" },
 			data: { email, invite: invite.body.token, browser: kept!.value },
 		});
 		const { debugCode } = (await asked.json()) as { debugCode: string };

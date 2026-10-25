@@ -56,6 +56,28 @@ describe("sign-in links are rationed", () => {
 		expect(last).toBe(429);
 	});
 
+	it("turns a busy place away before it spends anything of an address's day", async () => {
+		const ask = (email: string) =>
+			SELF.fetch("http://core.test/v1/auth/magic-link", {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					"x-cdl-client-ip": "192.0.2.99",
+				},
+				body: JSON.stringify({ email }),
+			}).then((response) => response.status);
+		// One place uses up its hour on ten other addresses...
+		for (let n = 1; n <= 10; n += 1)
+			expect(await ask(`other-${n}@example.com`)).toBe(200);
+		// ...then asks for a member's: refused, and the member's day untouched.
+		expect(await ask("victim@example.com")).toBe(429);
+		const { env } = await import("cloudflare:test");
+		const day = await env.DB.prepare(
+			"SELECT count(*) AS n FROM rate_limits WHERE bucket = 'magic_link:email:day' AND subject = 'victim@example.com'",
+		).first<{ n: number }>();
+		expect(day?.n).toBe(0);
+	});
+
 	it("counts an IPv6 caller by its /64", () => {
 		expect(network("2001:db8:1:2:aaaa::1")).toBe("2001:db8:1:2::/64");
 		expect(network("2001:0db8:0001:0002:ffff:0:0:2")).toBe("2001:db8:1:2::/64");
