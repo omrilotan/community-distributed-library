@@ -243,6 +243,17 @@ privacy.post("/v1/admin/members/:id/erase", async (c) => {
 				"DELETE FROM magic_links WHERE email = (SELECT email FROM members WHERE id = ?)",
 			)
 			.bind(id),
+		// So are the counters that ration sign-in links, keyed by the address
+		// alone or by the address and the caller's network.
+		db
+			.prepare(
+				`DELETE FROM rate_limits
+				  WHERE bucket IN ('magic_link:email', 'magic_link:email:day')
+				    AND (lower(subject) = (SELECT lower(email) FROM members WHERE id = ?1)
+				      OR substr(lower(subject), 1, length((SELECT email FROM members WHERE id = ?1)) + 1)
+				         = (SELECT lower(email) FROM members WHERE id = ?1) || ' ')`,
+			)
+			.bind(id),
 		db
 			.prepare(
 				`UPDATE contact_messages SET body = '—', email = ?2

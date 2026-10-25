@@ -144,6 +144,11 @@ describe("an erasure", () => {
 				NOA,
 				COPY_A,
 			),
+			env.DB.prepare(
+				`INSERT INTO rate_limits (bucket, subject, window_end, count)
+				 VALUES ('magic_link:email', 'noa@example.com 203.0.113.9', 9999999999, 1),
+				        ('magic_link:email:day', 'noa@example.com', 9999999999, 1)`,
+			),
 		]);
 		try {
 			expect(
@@ -159,11 +164,12 @@ describe("an erasure", () => {
 					"SELECT count(*) AS n FROM invites WHERE sent_to = 'noa@example.com'",
 					"SELECT count(*) AS n FROM moderation_log WHERE instr(details, 'noa@example.com') > 0",
 					"SELECT count(*) AS n FROM copies WHERE details IS NOT NULL AND owner_id = '01J0MEMBER00000000000NXA00'",
+					"SELECT count(*) AS n FROM rate_limits WHERE instr(subject, 'noa@example.com') > 0",
 				].map((sql) => env.DB.prepare(sql)),
 			);
 			expect(
 				mentions.map((result) => (result.results[0] as { n: number }).n),
-			).toEqual([0, 0, 0, 0]);
+			).toEqual([0, 0, 0, 0, 0]);
 		} finally {
 			await env.DB.prepare(
 				"UPDATE copies SET owner_id = ?, state = 'shelved', note = NULL, details = NULL WHERE id = ?",
