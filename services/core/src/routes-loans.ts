@@ -323,10 +323,14 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 		);
 	} else {
 		c.executionCtx.waitUntil(
-			c.env.CONVO.closed(id, now()).catch(() => undefined),
+			c.env.CONVO.closed(id, now()).catch((error: unknown) =>
+				console.error("[convo] close failed", id, error),
+			),
 		);
 		c.executionCtx.waitUntil(
-			onCopyAvailable(c.env, loan.copy_id).catch(() => undefined),
+			onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
+				console.error("[waitlist] offer failed", loan.copy_id, error),
+			),
 		);
 	}
 
@@ -370,9 +374,15 @@ loans.post("/v1/loans/:id/cancel", async (c) => {
 		dropStaleHandoffs(c.env, loan.copy_id),
 	]);
 	if (!cancelled?.meta.changes) return json(c, movedOn());
-	c.executionCtx.waitUntil(c.env.CONVO.closed(id, at).catch(() => undefined));
 	c.executionCtx.waitUntil(
-		onCopyAvailable(c.env, loan.copy_id).catch(() => undefined),
+		c.env.CONVO.closed(id, at).catch((error: unknown) =>
+			console.error("[convo] close failed", id, error),
+		),
+	);
+	c.executionCtx.waitUntil(
+		onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
+			console.error("[waitlist] offer failed", loan.copy_id, error),
+		),
 	);
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "loan.closed", { loanId: id }),
@@ -470,9 +480,15 @@ loans.post("/v1/loans/:id/returned", async (c) => {
 		dropStaleHandoffs(c.env, loan.copy_id),
 	]);
 	if (!returned?.meta.changes) return json(c, movedOn());
-	c.executionCtx.waitUntil(c.env.CONVO.closed(id, at).catch(() => undefined));
 	c.executionCtx.waitUntil(
-		onCopyAvailable(c.env, loan.copy_id).catch(() => undefined),
+		c.env.CONVO.closed(id, at).catch((error: unknown) =>
+			console.error("[convo] close failed", id, error),
+		),
+	);
+	c.executionCtx.waitUntil(
+		onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
+			console.error("[waitlist] offer failed", loan.copy_id, error),
+		),
 	);
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "loan.closed", { loanId: id }),

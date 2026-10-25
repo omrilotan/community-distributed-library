@@ -433,10 +433,14 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 	if (agreed.direction === "back") {
 		// Only now is the copy back on the shelf for the waitlist to find.
 		c.executionCtx.waitUntil(
-			c.env.CONVO.closed(loanId, at).catch(() => undefined),
+			c.env.CONVO.closed(loanId, at).catch((error: unknown) =>
+				console.error("[convo] close failed", loanId, error),
+			),
 		);
 		c.executionCtx.waitUntil(
-			onCopyAvailable(c.env, changedCopy).catch(() => undefined),
+			onCopyAvailable(c.env, changedCopy).catch((error: unknown) =>
+				console.error("[waitlist] offer failed", changedCopy, error),
+			),
 		);
 	}
 	c.executionCtx.waitUntil(
@@ -542,7 +546,9 @@ export function relayed(
 	at: number,
 ) {
 	c.executionCtx.waitUntil(
-		c.env.CONVO.closed(previousLoanId, at).catch(() => undefined),
+		c.env.CONVO.closed(previousLoanId, at).catch((error: unknown) =>
+			console.error("[convo] close failed", previousLoanId, error),
+		),
 	);
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "loan.closed", { loanId: previousLoanId }),

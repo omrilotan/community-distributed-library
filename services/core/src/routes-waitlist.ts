@@ -56,7 +56,9 @@ waitlist.delete("/v1/waitlist/:id", async (c) => {
 	// Leaving with a copy held: it goes to the next in line.
 	if (left.offered_copy_id && (left.offer_expires_at ?? 0) > now())
 		c.executionCtx.waitUntil(
-			onCopyAvailable(c.env, left.offered_copy_id).catch(() => undefined),
+			onCopyAvailable(c.env, left.offered_copy_id).catch((error: unknown) =>
+				console.error("[waitlist] offer failed", left.offered_copy_id, error),
+			),
 		);
 	return c.body(null, 204);
 });

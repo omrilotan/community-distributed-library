@@ -265,10 +265,16 @@ admin.post("/v1/admin/loans/:id/close", async (c) => {
 			c,
 			problem(409, "The loan has moved on", "Someone changed it just now"),
 		);
-	c.executionCtx.waitUntil(c.env.CONVO.closed(id, at).catch(() => undefined));
+	c.executionCtx.waitUntil(
+		c.env.CONVO.closed(id, at).catch((error: unknown) =>
+			console.error("[convo] close failed", id, error),
+		),
+	);
 	if (outcome !== "lost")
 		c.executionCtx.waitUntil(
-			onCopyAvailable(c.env, loan.copy_id).catch(() => undefined),
+			onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
+				console.error("[waitlist] offer failed", loan.copy_id, error),
+			),
 		);
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "loan.closed", { loanId: id }),
@@ -752,7 +758,9 @@ admin.post("/v1/admin/members/:id/status", async (c) => {
 		]);
 		for (const row of held.results)
 			c.executionCtx.waitUntil(
-				onCopyAvailable(c.env, row.offered_copy_id).catch(() => undefined),
+				onCopyAvailable(c.env, row.offered_copy_id).catch((error: unknown) =>
+					console.error("[waitlist] offer failed", row.offered_copy_id, error),
+				),
 			);
 	}
 	return c.body(null, 204);
