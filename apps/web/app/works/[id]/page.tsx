@@ -151,6 +151,15 @@ export default async function WorkPageView({
 		return <Empty title={t.noSuchBook} />;
 	}
 	const { work, editions, copies, myWaitlist, read, wished } = page.body;
+	// A book with no description of its own often has one in a copy's note
+	// (translator, illustrator, edition): offered as the editor's starting
+	// value, the viewer's own copy first, and said to be so.
+	const noteFromCopy = work.note
+		? null
+		: ((
+				copies.find((copy) => copy.mine && copy.note) ??
+				copies.find((copy) => copy.note)
+			)?.note ?? null);
 	const waiting = card.body.waiting;
 	const anyRequestable = copies.some(
 		(copy) => !copy.mine && (copy.available || copy.relayable),
@@ -612,8 +621,14 @@ export default async function WorkPageView({
 									rows={3}
 									maxLength={500}
 									placeholder={t.workNoteHint}
-									defaultValue={work.note ?? ""}
+									defaultValue={work.note ?? noteFromCopy ?? ""}
+									aria-describedby={noteFromCopy ? "work-note-from" : undefined}
 								/>
+								{noteFromCopy ? (
+									<p className="muted" id="work-note-from">
+										{t.workNoteFromCopy}
+									</p>
+								) : null}
 								{/* The cover belongs to the edition, so it is only
 							    replaceable while there is one to belong to. */}
 								{editions.length === 1 ? (

@@ -50,6 +50,8 @@ export const thingWords = {
 			"The link may be old, or the item may have been taken off the list. Nothing is lost: the rest of the library is where you left it.",
 		emptyShelf: "Nothing listed yet.",
 		workNote: "About this item",
+		workNoteFromCopy:
+			"Filled in from the note one owner wrote. Keep what describes the item itself before saving.",
 		areaRequired: "Set your area first — distances depend on it.",
 		extendWaiting:
 			"Someone is waiting for this, so only the owner can extend it.",
@@ -167,6 +169,8 @@ export const thingWords = {
 			"אולי הקישור ישן, או שהפריט ירד מהרשימה. שום דבר לא אבד, ושאר הספרייה נשארה במקום.",
 		emptyShelf: "עדיין לא נוספו פריטים.",
 		workNote: "על הפריט",
+		workNoteFromCopy:
+			"מולא מההערה שכתב/ה אחד הבעלים. השאירו רק את מה שמתאר את הפריט עצמו לפני השמירה.",
 		areaRequired: "קודם קבעו את האזור שלכם — המרחקים תלויים בו.",
 		extendWaiting: "מישהו מחכה לזה, אז רק הבעלים יכולים להאריך.",
 		reportHint:
