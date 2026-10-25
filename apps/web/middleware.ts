@@ -91,12 +91,18 @@ function policy(nonce: string, pathname: string): string {
  * sibling subdomain counts as "same site" and its forms would carry the
  * member's cookie. Browsers send Origin on every POST; its absence means a
  * client that does not carry cookies anyway. /api/v1 is the bearer-token API
- * and takes no cookie, so it is left to its tokens.
+ * and takes no cookie, so it is left to its tokens; all but its sign-in
+ * routes, which take no token either and are rationed per caller, so another
+ * site must not be able to spend a visitor's ration for them.
  */
 function crossOrigin(request: NextRequest): boolean {
 	if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return false;
 	const url = new URL(request.url);
-	if (url.pathname.startsWith("/api/v1/")) return false;
+	if (
+		url.pathname.startsWith("/api/v1/") &&
+		!url.pathname.startsWith("/api/v1/auth/")
+	)
+		return false;
 	const origin = request.headers.get("origin");
 	return origin !== null && origin !== url.origin;
 }
