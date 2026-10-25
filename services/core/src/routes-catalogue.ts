@@ -85,77 +85,70 @@ catalogue.get("/v1/works/:id", async (c) => {
 	const workId = c.req.param("id");
 
 	// One round of reads; a missing book is answered after, not before.
-	const [
-		work,
-		workTags,
-		editions,
-		copies,
-		requests,
-		holds,
-		mine,
-		read,
-		wished,
-	] = await Promise.all([
-		c.env.DB.prepare(
-			"SELECT id, title, authors, created_at, note FROM works WHERE id = ?",
-		)
-			.bind(workId)
-			.first<{
-				id: string;
-				title: string;
-				authors: string;
-				created_at: number;
-				note: string | null;
-			}>(),
-		tagsForWork(c.env, workId),
-		c.env.DB.prepare(
-			`SELECT id, work_id, isbn13, title, publisher, published_year, language, page_count, cover_url
+	const [work, editions, copies, requests, holds, mine, read, wished] =
+		await Promise.all([
+			c.env.DB.prepare(
+				"SELECT id, title, authors, created_at, note FROM works WHERE id = ?",
+			)
+				.bind(workId)
+				.first<{
+					id: string;
+					title: string;
+					authors: string;
+					created_at: number;
+					note: string | null;
+				}>(),
+			c.env.DB.prepare(
+				`SELECT id, work_id, isbn13, title, publisher, published_year, language, page_count, cover_url
 			   FROM editions WHERE work_id = ? ORDER BY created_at`,
-		)
-			.bind(workId)
-			.all<EditionRow>(),
-		// The book's own page shows every copy, read or not.
-		listCopies(c.env, member, {
-			workId,
-			includeOwn: true,
-			includeRead: true,
-			limit: 50,
-		}),
-		c.env.DB.prepare(
-			`SELECT l.id, l.copy_id, l.status, l.due_at FROM loans l JOIN copies c ON c.id = l.copy_id
+			)
+				.bind(workId)
+				.all<EditionRow>(),
+			// The book's own page shows every copy, read or not.
+			listCopies(c.env, member, {
+				workId,
+				includeOwn: true,
+				includeRead: true,
+				limit: 50,
+			}),
+			c.env.DB.prepare(
+				`SELECT l.id, l.copy_id, l.status, l.due_at FROM loans l JOIN copies c ON c.id = l.copy_id
 			   JOIN editions e ON e.id = c.edition_id
 			  WHERE e.work_id = ? AND l.borrower_id = ? AND l.status IN ('requested', 'accepted', 'active')`,
-		)
-			.bind(workId, member.id)
-			.all<{
-				id: string;
-				copy_id: string;
-				status: "requested" | "accepted" | "active";
-				due_at: number | null;
-			}>(),
-		c.env.DB.prepare(
-			`SELECT w.offered_copy_id, w.offer_expires_at, w.member_id FROM waitlist w
+			)
+				.bind(workId, member.id)
+				.all<{
+					id: string;
+					copy_id: string;
+					status: "requested" | "accepted" | "active";
+					due_at: number | null;
+				}>(),
+			c.env.DB.prepare(
+				`SELECT w.offered_copy_id, w.offer_expires_at, w.member_id FROM waitlist w
 			  WHERE w.work_id = ? AND w.community_id = ? AND w.offer_expires_at > ?`,
-		)
-			.bind(workId, member.communityId, now())
-			.all<{
-				offered_copy_id: string;
-				offer_expires_at: number;
-				member_id: string;
-			}>(),
-		position(c.env, member.id, member.communityId, workId),
-		c.env.DB.prepare(
-			"SELECT 1 FROM read_works WHERE member_id = ? AND work_id = ?",
-		)
-			.bind(member.id, workId)
-			.first(),
-		c.env.DB.prepare(
-			"SELECT 1 FROM wishlist WHERE member_id = ? AND work_id = ?",
-		)
-			.bind(member.id, workId)
-			.first(),
-	]);
+			)
+				.bind(workId, member.communityId, now())
+				.all<{
+					offered_copy_id: string;
+					offer_expires_at: number;
+					member_id: string;
+				}>(),
+			position(c.env, member.id, member.communityId, workId),
+			c.env.DB.prepare(
+				"SELECT 1 FROM read_works WHERE member_id = ? AND work_id = ?",
+			)
+				.bind(member.id, workId)
+				.first(),
+			c.env.DB.prepare(
+				"SELECT 1 FROM wishlist WHERE member_id = ? AND work_id = ?",
+			)
+				.bind(member.id, workId)
+				.first(),
+		]);
 	if (!work) return json(c, problem(404, "No such book"));
+	// Every copy carries the book's tags already (listPage); only a book with
+	// no copy on these shelves is asked for them again.
+	const workTags = copies[0]?.work.tags ?? (await tagsForWork(c.env, workId));
 	const myLoanByCopy = new Map(
 		requests.results.map((row) => [row.copy_id, row]),
 	);
