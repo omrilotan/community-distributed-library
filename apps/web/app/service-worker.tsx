@@ -5,8 +5,8 @@ import { renewIfStale } from "../lib/push-key.ts";
 
 /**
  * Registers the worker for everyone, not only for those who turn on
- * notifications: a browser will not offer "add to home screen" until one is
- * active, and on iOS the app has to be installed before push works at all.
+ * notifications: on iOS the app has to be installed before push works at
+ * all, and the worker is what push arrives through.
  * It also renews a subscription made under an old server key, checked
  * against the key the page came with (null when signed out).
  */
