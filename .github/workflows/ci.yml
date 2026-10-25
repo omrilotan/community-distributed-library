@@ -22,7 +22,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - run: npm i
+          cache: npm
+      - run: npm ci
       # `cloudflare:workers` and the binding types are generated from each
       # wrangler config; the files are not committed.
       - run: npm run types
@@ -42,7 +43,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - run: npm i
+          cache: npm
+      - run: npm ci
       - run: npm run types
       - run: npx playwright install --with-deps chromium
         working-directory: apps/web
