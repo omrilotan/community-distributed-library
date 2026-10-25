@@ -85,6 +85,20 @@ export default {
 			const icon = url.pathname.endsWith(".ico") ? "favicon.ico" : "icon.svg";
 			return Response.redirect(`${env.APP_URL}/${icon}`, 302);
 		}
+		// Registering asks nothing of the caller and writes to storage, so it is
+		// rationed per address: plenty for an assistant, nothing to flood with.
+		if (url.pathname === "/register" && request.method === "POST") {
+			const caller = request.headers.get("cf-connecting-ip") ?? "unknown";
+			const { success } = await env.REGISTER_LIMIT.limit({ key: caller });
+			if (!success)
+				return Response.json(
+					{
+						error: "temporarily_unavailable",
+						error_description: "Too many registrations. Try again in a minute.",
+					},
+					{ status: 429, headers: { "retry-after": "60" } },
+				);
+		}
 		return oauth(env).fetch(request, env, ctx);
 	},
 };
