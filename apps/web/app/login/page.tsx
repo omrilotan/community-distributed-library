@@ -4,6 +4,7 @@ import { strings, type Locale } from "../../lib/i18n.ts";
 import { getMe } from "../../lib/profile.ts";
 import { sessionToken } from "../../lib/session.ts";
 import { backAfterSignIn } from "../../lib/safe-path.ts";
+import { signInBack } from "../../lib/sign-in.ts";
 import { titled } from "../../lib/page-title.ts";
 
 export const generateMetadata = titled((t) => t.signIn);
@@ -31,6 +32,8 @@ export default async function LoginPage({
 	}
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
+	// Asking again keeps the way back the first ask set (lib/sign-in.ts).
+	const again = sent ? await signInBack() : null;
 
 	return (
 		<main className="narrow">
@@ -39,26 +42,18 @@ export default async function LoginPage({
 			    asking for a link that never comes. */}
 			{sent ? null : <p className="muted">{t.landingInvite}</p>}
 			{sent ? (
-				<>
-					<div className="callout">
-						<p>{t.linkSent}</p>
-						<p>{t.linkNeedsInvite}</p>
-					</div>
-					{/* The first link very often lands in junk, and people give up
-					    before looking there. So this is the loudest thing on the
-					    page, with the fix for next time beside it. */}
-					<div className="callout callout-warn junk-warning" role="alert">
-						<p>
-							<strong>{t.checkJunk}</strong>
-						</p>
-						<p>
-							<a href="/contact.vcf" download>
-								{t.saveContact}
-							</a>{" "}
-							{t.saveContactWhy}
-						</p>
-					</div>
-				</>
+				// What to do now, in the order people need it: the link if it opens
+				// here, the code if it opens anywhere else.
+				<div className="callout">
+					<p>
+						<strong>{t.linkSentTitle}</strong>
+					</p>
+					<p>{t.linkSent}</p>
+					<ol className="sign-in-ways">
+						<li>{t.linkSentTapLink}</li>
+						<li>{t.linkSentTypeCode}</li>
+					</ol>
+				</div>
 			) : null}
 			{dev === "unknown_email" ? (
 				<p className="muted">
@@ -84,7 +79,6 @@ export default async function LoginPage({
 				// sign-in window: the code works here, in the browser that asked.
 				<form action="/api/auth/code" method="post" className="sign-in-code">
 					<label htmlFor="code">{t.signInCodeLabel}</label>
-					<p className="muted">{t.signInCodeHint}</p>
 					<input
 						id="code"
 						name="code"
@@ -94,26 +88,56 @@ export default async function LoginPage({
 						pattern="[0-9 -]{8,10}"
 						maxLength={10}
 						dir="ltr"
-						required
 					/>
 					<button type="submit">{t.signInCodeSubmit}</button>
 				</form>
 			) : null}
-			<form action="/api/auth/magic-link" method="post">
-				{invite ? <input type="hidden" name="invite" value={invite} /> : null}
-				{after ? <input type="hidden" name="back" value={after} /> : null}
-				<input type="hidden" name="locale" value={locale} />
-				<label htmlFor="email">{t.email}</label>
-				<input
-					id="email"
-					name="email"
-					type="email"
-					inputMode="email"
-					dir="ltr"
-					required
-				/>
-				<button type="submit">{t.sendLink}</button>
-			</form>
+			{sent ? (
+				<>
+					{/* The first link very often lands in junk, and people give up
+					    before looking there. So this is the loudest thing on the
+					    page, with the fix for next time beside it. */}
+					<div className="callout callout-warn junk-warning" role="alert">
+						<p>
+							<strong>{t.checkJunk}</strong>
+						</p>
+						<p>
+							<a href="/contact.vcf" download>
+								{t.saveContact}
+							</a>{" "}
+							{t.saveContactWhy}
+						</p>
+					</div>
+					{/* No second address field: under a code, it reads as "do it
+					    again". Asking anew is a quiet link back to the form. */}
+					<p className="muted">
+						{t.linkNeedsInvite}{" "}
+						<a
+							href={
+								again ? `/login?back=${encodeURIComponent(again)}` : "/login"
+							}
+						>
+							{t.sendNewLink}
+						</a>
+					</p>
+				</>
+			) : (
+				<form action="/api/auth/magic-link" method="post">
+					{invite ? <input type="hidden" name="invite" value={invite} /> : null}
+					{after ? <input type="hidden" name="back" value={after} /> : null}
+					<input type="hidden" name="locale" value={locale} />
+					<label htmlFor="email">{t.email}</label>
+					<input
+						id="email"
+						name="email"
+						type="email"
+						inputMode="email"
+						dir="ltr"
+						required
+					/>
+					<button type="submit">{t.sendLink}</button>
+				</form>
+			)}
 			<p className="muted">
 				{t.termsHint} <a href="/terms">{t.terms}</a>
 			</p>
