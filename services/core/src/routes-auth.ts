@@ -457,13 +457,6 @@ auth.patch("/v1/me", async (c) => {
 	return c.body(null, 204);
 });
 
-/** Moderators only. The plain token is returned once; only its hash is kept. */
-/**
- * Anyone may bring a neighbour in — that is how the community grows, and a
- * member vouching for someone they know is the whole of our vetting. A
- * member's invite is for one person and a fortnight; a moderator's can be a
- * batch, for a WhatsApp group.
- */
 /** The join page asks what became of its invite before promising an email. */
 auth.post("/v1/invites/state", async (c) => {
 	const body = (await c.req.json().catch(() => null)) as {
@@ -480,6 +473,13 @@ auth.post("/v1/invites/state", async (c) => {
 	return c.json({ state: await inviteState(c.env, body.token) });
 });
 
+/**
+ * Anyone may bring a neighbour in — that is how the community grows, and a
+ * member vouching for someone they know is the whole of our vetting. A
+ * member's invite is for one person and a fortnight; a moderator's can be a
+ * batch, for a WhatsApp group. The plain token is returned once; only its
+ * hash is kept.
+ */
 auth.post("/v1/invites", async (c) => {
 	const member = await viewer(c);
 	if (!member) return json(c, problem(401, "Not signed in"));
@@ -547,7 +547,6 @@ auth.post("/v1/invites", async (c) => {
 	);
 });
 
-/** The invites I have out, and who has come in on them. */
 /** The same figures as a book's, added up over everything a member owns. */
 auth.get("/v1/me/stats", async (c) => {
 	const { member, forbidden } = await viewerWith(c, "profile:read");
@@ -589,6 +588,7 @@ auth.get("/v1/me/stats", async (c) => {
 	});
 });
 
+/** The invites I have out, and who has come in on them. */
 auth.get("/v1/me/invites", async (c) => {
 	const member = await viewer(c);
 	if (!member) return json(c, problem(401, "Not signed in"));
