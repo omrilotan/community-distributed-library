@@ -190,12 +190,8 @@ function wrangler(args) {
 }
 
 function devServerRunning() {
-	const probe = spawnSync(
-		"/usr/sbin/lsof",
-		["-nP", "-iTCP:8787", "-sTCP:LISTEN"],
-		{
-			encoding: "utf8",
-		},
-	);
+	const probe = spawnSync("lsof", ["-nP", "-iTCP:8787", "-sTCP:LISTEN"], {
+		encoding: "utf8",
+	});
 	return (probe.stdout ?? "").trim().split("\n").filter(Boolean).length > 1;
 }
