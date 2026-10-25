@@ -519,7 +519,8 @@ button.danger,
 	color: #fff;
 }
 
-button.quiet {
+button.quiet,
+.btn.quiet {
 	margin: 0;
 	padding: 0.3rem 0.7rem;
 	font-size: 0.875rem;
@@ -529,7 +530,8 @@ button.quiet {
 	font-weight: 500;
 }
 
-button.quiet:hover {
+button.quiet:hover,
+.btn.quiet:hover {
 	background: var(--surface);
 }
 
@@ -986,6 +988,11 @@ button.tile:active {
 /* One column, phone first: the page is a sequence, not two columns of it. */
 .book > section {
 	margin-block-start: 1.5rem;
+}
+
+/* What just happened (asked, saved, refused) stands apart from the book. */
+.book > .callout {
+	margin-block: 1.25rem;
 }
 
 .book-head {

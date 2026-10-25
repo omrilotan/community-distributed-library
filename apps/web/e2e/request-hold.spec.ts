@@ -37,6 +37,9 @@ test.describe("a request not yet sent on", () => {
 		const row = page.locator("article", { hasText: "Held " }).first();
 		await expect(row).toContainText(/hears about it in [1-5] minutes?/);
 		await expect(row.getByRole("button", { name: "Nudge" })).toHaveCount(0);
+		await expect(row.getByRole("link", { name: "Messages" })).toHaveClass(
+			/btn quiet/,
+		);
 
 		await row.getByRole("button", { name: "Cancel" }).click();
 		await expect(page.locator("article", { hasText: "Held " })).toHaveCount(0);
