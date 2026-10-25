@@ -356,8 +356,10 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 	// On a relay, the loan of the reader handing it on, which ends here.
 	let previous: string | null = null;
 	const statements = [
+		// Still agreed when written: a cancel landing since the read keeps its
+		// handoff cancelled.
 		c.env.DB.prepare(
-			"UPDATE handoffs SET status = 'completed', completed_at = ? WHERE id = ?",
+			"UPDATE handoffs SET status = 'completed', completed_at = ? WHERE id = ? AND status = 'agreed'",
 		).bind(at, agreed.id),
 	];
 	if (agreed.direction === "out") {
