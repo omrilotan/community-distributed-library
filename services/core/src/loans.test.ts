@@ -267,6 +267,57 @@ describe("relays and waitlist", () => {
 		).toBe(true);
 	});
 
+	it("a relay waiting on a loan reported lost ends with it", async () => {
+		const first = await activeLoan(SAM, DANA, COPY_A);
+		const relay = (await as(NOA).post("/v1/loans", { copyId: COPY_A })).body.id;
+		await as(DANA).post(`/v1/loans/${relay}/accept`);
+		expect(
+			(
+				await as(SAM).post(`/v1/loans/${first}/report`, {
+					kind: "loss",
+					body: "Left it on the bus",
+				})
+			).status,
+		).toBe(201);
+		const ended = await env.DB.prepare(
+			"SELECT status, outcome FROM loans WHERE id = ?",
+		)
+			.bind(relay)
+			.first();
+		expect(ended).toMatchObject({ status: "cancelled", outcome: "cancelled" });
+		expect(await closedAt(relay)).toBeTruthy();
+		// Nothing to hand on: the lost copy stays lost.
+		expect((await as(SAM).post(`/v1/loans/${relay}/handed`)).status).not.toBe(
+			204,
+		);
+		expect(await copyState(COPY_A)).toMatchObject({ state: "lost" });
+	});
+
+	it("a relay waiting on a loan a moderator closes as lost ends with it", async () => {
+		const first = await activeLoan(SAM, DANA, COPY_A);
+		const relay = (await as(NOA).post("/v1/loans", { copyId: COPY_A })).body.id;
+		// Only a loan with a suspended member is the moderators' to close.
+		await env.DB.prepare(
+			"UPDATE memberships SET status = 'suspended' WHERE member_id = ?",
+		)
+			.bind(SAM)
+			.run();
+		const closing = await as(DANA).post(`/v1/admin/loans/${first}/close`, {
+			outcome: "lost",
+		});
+		await env.DB.prepare(
+			"UPDATE memberships SET status = 'active' WHERE member_id = ?",
+		)
+			.bind(SAM)
+			.run();
+		expect(closing.status).toBe(204);
+		const ended = await env.DB.prepare("SELECT status FROM loans WHERE id = ?")
+			.bind(relay)
+			.first();
+		expect(ended).toMatchObject({ status: "cancelled" });
+		expect(await copyState(COPY_A)).toMatchObject({ state: "lost" });
+	});
+
 	it("a relay can be handed over with the code", async () => {
 		await env.DB.prepare(
 			"UPDATE members SET meeting_place = 'porch' WHERE id IN (?, ?)",

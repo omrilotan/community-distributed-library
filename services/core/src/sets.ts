@@ -1,4 +1,5 @@
 import type { Env } from "./env.ts";
+import { emit } from "./events.ts";
 
 /**
  * Sets lent in part (decision 0031). A set's copy never changes hands as a
@@ -49,6 +50,56 @@ export function markLost(
 		        quantity = CASE WHEN quantity <= ?1 THEN quantity ELSE quantity - ?1 END
 		  WHERE id = ?2 AND EXISTS (SELECT 1 FROM loans WHERE id = ?3 AND lost_mark = ?4)`,
 	).bind(quantity, copyId, loanId, mark);
+}
+
+/**
+ * A relay waiting on a loan that was just closed as lost by `mark`, asked for
+ * or already agreed, cannot happen: there is nothing left to hand on. It ends
+ * in the same batch, so its handover can never bring a lost copy back as out
+ * on loan (and a later "found" then count it twice).
+ */
+export function endWaitingRelays(
+	env: Env,
+	copyId: string,
+	loanId: string,
+	mark: string,
+	at: number,
+) {
+	return env.DB.prepare(
+		`UPDATE loans SET status = 'cancelled', outcome = 'cancelled', closed_at = ?1
+		  WHERE copy_id = ?2 AND of_set = 0 AND relay_from IS NOT NULL
+		    AND status IN ('requested', 'accepted')
+		    AND EXISTS (SELECT 1 FROM loans WHERE id = ?3 AND lost_mark = ?4)`,
+	).bind(at, copyId, loanId, mark);
+}
+
+/** Relays ended by a loss: their threads close and listeners hear it. */
+export function relaysEnded(
+	env: Env,
+	ctx: { waitUntil(promise: Promise<unknown>): void },
+	ids: string[],
+	at: number,
+) {
+	for (const relay of ids) {
+		ctx.waitUntil(
+			env.CONVO.closed(relay, at).catch((error: unknown) =>
+				console.error("[convo] close failed", relay, error),
+			),
+		);
+		ctx.waitUntil(emit(env, ctx, "loan.closed", { loanId: relay }));
+	}
+}
+
+/** The relays `endWaitingRelays` would end, read before it runs. */
+export async function waitingRelays(env: Env, copyId: string) {
+	const { results } = await env.DB.prepare(
+		`SELECT id FROM loans
+		  WHERE copy_id = ? AND of_set = 0 AND relay_from IS NOT NULL
+		    AND status IN ('requested', 'accepted')`,
+	)
+		.bind(copyId)
+		.all<{ id: string }>();
+	return results.map((row) => row.id);
 }
 
 /**

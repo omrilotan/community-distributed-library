@@ -7,7 +7,13 @@ import {
 	type ReportThread,
 	type ReportView,
 } from "@cdl/contracts";
-import { markFound, markLost } from "./sets.ts";
+import {
+	endWaitingRelays,
+	markFound,
+	markLost,
+	relaysEnded,
+	waitingRelays,
+} from "./sets.ts";
 import type { Env } from "./env.ts";
 import { dropStaleHandoffs } from "./stale-handoffs.ts";
 import { tell } from "./notify.ts";
@@ -84,6 +90,7 @@ reports.post("/v1/loans/:id/report", async (c) => {
 	// Only a loan that is out can be lost; the report says so on the loan too.
 	const losing = parsed.data.kind === "loss" && loan.status === "active";
 	const at = now();
+	const relays = losing ? await waitingRelays(c.env, loan.copy_id) : [];
 	if (losing) {
 		statements.push(
 			c.env.DB.prepare(
@@ -91,10 +98,13 @@ reports.post("/v1/loans/:id/report", async (c) => {
 			).bind(at, id, loanId),
 			// A whole item is lost; part of a set comes off its count.
 			markLost(c.env, loan.copy_id, loan.quantity, loanId, id),
+			// Nobody can be handed on what is lost: a relay waiting on it ends.
+			endWaitingRelays(c.env, loan.copy_id, loanId, id, at),
 			dropStaleHandoffs(c.env, loan.copy_id),
 		);
 	}
 	const written = await c.env.DB.batch(statements);
+	if (written[3]?.meta.changes) relaysEnded(c.env, c.executionCtx, relays, at);
 	// Lost by this report, not by one filed a moment before it.
 	if (losing && written[1]?.meta.changes) {
 		c.executionCtx.waitUntil(

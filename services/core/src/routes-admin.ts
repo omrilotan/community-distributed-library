@@ -15,7 +15,13 @@ import {
 	type LogPage,
 	type MemberReport,
 } from "@cdl/contracts";
-import { BACK_WITH_OWNER, markLost } from "./sets.ts";
+import {
+	BACK_WITH_OWNER,
+	endWaitingRelays,
+	markLost,
+	relaysEnded,
+	waitingRelays,
+} from "./sets.ts";
 import type { Env } from "./env.ts";
 import { libraryAdmin, moderator, viewer } from "./auth.ts";
 import { createInvite } from "./invites.ts";
@@ -238,7 +244,9 @@ admin.post("/v1/admin/loans/:id/close", async (c) => {
 		).bind(loan.copy_id, id, mark),
 		lost: markLost(c.env, loan.copy_id, loan.quantity, id, mark),
 	}[outcome];
-	const [closed] = await c.env.DB.batch([
+	const relays =
+		outcome === "lost" ? await waitingRelays(c.env, loan.copy_id) : [];
+	const [closed, , ended] = await c.env.DB.batch([
 		c.env.DB.prepare(
 			"UPDATE loans SET status = ?, outcome = ?, closed_at = ?, lost_mark = ? WHERE id = ? AND status = ?",
 		).bind(
@@ -250,6 +258,10 @@ admin.post("/v1/admin/loans/:id/close", async (c) => {
 			loan.status,
 		),
 		copy,
+		// Nobody can be handed on what is lost: a relay waiting on it ends.
+		...(outcome === "lost"
+			? [endWaitingRelays(c.env, loan.copy_id, id, mark, at)]
+			: []),
 		// A pending relay on a returned copy is now an ordinary request.
 		...(outcome === "returned"
 			? [
@@ -265,6 +277,8 @@ admin.post("/v1/admin/loans/:id/close", async (c) => {
 			c,
 			problem(409, "The loan has moved on", "Someone changed it just now"),
 		);
+	if (outcome === "lost" && ended?.meta.changes)
+		relaysEnded(c.env, c.executionCtx, relays, at);
 	c.executionCtx.waitUntil(
 		c.env.CONVO.closed(id, at).catch((error: unknown) =>
 			console.error("[convo] close failed", id, error),
