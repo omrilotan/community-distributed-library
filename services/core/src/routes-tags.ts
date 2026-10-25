@@ -63,30 +63,25 @@ tags.put("/v1/works/:id/tags", async (c) => {
 	const parsed = SetWorkTags.safeParse(await c.req.json().catch(() => null));
 	if (!parsed.success) return json(c, problem(422, "Invalid tags"));
 
-	if (
-		!(await mayTag(
+	const [{ owns, moderates }, known] = await Promise.all([
+		mayTag(
 			c.env,
 			workId,
 			member.id,
 			member.communityId,
 			// A moderator's token without the admin scope acts as a member.
 			member.scopes.includes("admin"),
-		))
-	) {
+		),
+		// Slugs outside the vocabulary are dropped: the way in is a proposal.
+		knownTags(c.env, parsed.data.tags, member.communityId),
+	]);
+	if (!owns && !moderates) {
 		return json(
 			c,
 			problem(403, "Not your book", "Tags are set by members who own a copy"),
 		);
 	}
-	// Slugs outside the vocabulary are dropped: the way in is a proposal.
-	const known = await knownTags(c.env, parsed.data.tags, member.communityId);
 	// Tagging a book one does not hold is a moderator's power: logged.
-	const owns = await c.env.DB.prepare(
-		`SELECT 1 AS yes FROM copies cp JOIN editions e ON e.id = cp.edition_id
-		  WHERE e.work_id = ? AND cp.owner_id = ? AND cp.state != 'retired'`,
-	)
-		.bind(workId, member.id)
-		.first();
 	if (!owns)
 		await record(c.env, {
 			communityId: member.communityId,
@@ -461,22 +456,25 @@ tags.patch("/v1/admin/tag-namespaces/:id", async (c) => {
 	return c.body(null, 204);
 });
 
+/** Whether the member holds a copy of the book, and whether they moderate it. */
 async function mayTag(
 	env: Env,
 	workId: string,
 	memberId: string,
 	communityId: string,
 	asModerator: boolean,
-) {
-	return env.DB.prepare(
-		`SELECT 1 FROM copies c JOIN editions e ON e.id = c.edition_id
-		  WHERE e.work_id = ? AND c.owner_id = ? AND c.state != 'retired'
-		  UNION SELECT 1 FROM memberships m
-		   JOIN work_communities wc ON wc.work_id = ? AND wc.community_id = m.community_id
-		  WHERE ? AND m.member_id = ? AND m.community_id = ? AND m.role IN ('moderator', 'admin')`,
+): Promise<{ owns: boolean; moderates: boolean }> {
+	const row = await env.DB.prepare(
+		`SELECT EXISTS (SELECT 1 FROM copies c JOIN editions e ON e.id = c.edition_id
+		                 WHERE e.work_id = ?1 AND c.owner_id = ?2 AND c.state != 'retired') AS owns,
+		        EXISTS (SELECT 1 FROM memberships m
+		                  JOIN work_communities wc ON wc.work_id = ?1 AND wc.community_id = m.community_id
+		                 WHERE ?3 AND m.member_id = ?2 AND m.community_id = ?4
+		                   AND m.role IN ('moderator', 'admin')) AS moderates`,
 	)
-		.bind(workId, memberId, workId, asModerator ? 1 : 0, memberId, communityId)
-		.first();
+		.bind(workId, memberId, asModerator ? 1 : 0, communityId)
+		.first<{ owns: number; moderates: number }>();
+	return { owns: Boolean(row?.owns), moderates: Boolean(row?.moderates) };
 }
 
 async function list(
