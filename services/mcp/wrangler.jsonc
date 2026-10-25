@@ -5,6 +5,8 @@
   "compatibility_date": "2026-08-22",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Stack traces of uncaught exceptions name src/ files, not the bundle.
+  "upload_source_maps": true,
   // Public: MCP clients connect here. It holds no data and no logic of its
   // own — every tool is a call to core's public API with the member's token.
   "workers_dev": false,

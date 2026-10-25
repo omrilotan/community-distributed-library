@@ -5,6 +5,8 @@
   "compatibility_date": "2026-08-22",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Stack traces of uncaught exceptions name src/ files, not the bundle.
+  "upload_source_maps": true,
   // Daily reminders (reminders.ts); webhook retries every 15 minutes (events.ts);
   // a database snapshot overnight (backup.ts).
   "triggers": { "crons": ["0 8 * * *", "*/15 * * * *", "20 3 * * *"] },
