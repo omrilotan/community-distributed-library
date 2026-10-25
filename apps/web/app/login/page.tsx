@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { strings, type Locale } from "../../lib/i18n.ts";
 import { getMe } from "../../lib/profile.ts";
 import { sessionToken } from "../../lib/session.ts";
+import { backAfterSignIn } from "../../lib/safe-path.ts";
 import { titled } from "../../lib/page-title.ts";
 
 export const generateMetadata = titled((t) => t.signIn);
@@ -16,14 +17,17 @@ export default async function LoginPage({
 		error?: string;
 		wait?: string;
 		dev?: string;
+		back?: string;
 	}>;
 }) {
-	const { sent, invite, error, dev, wait } = await searchParams;
+	const { sent, invite, error, dev, wait, back } = await searchParams;
+	// Where to go once signed in, such as an assistant's consent screen.
+	const after = backAfterSignIn(back);
 	// Already in: the door is not the place to stand. A stale cookie stays
 	// here to sign in again; a failing core stays here too, rather than loop.
 	if (await sessionToken()) {
 		const me = await getMe().catch(() => null);
-		if (me?.status === 200) redirect("/");
+		if (me?.status === 200) redirect(after ?? "/");
 	}
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
@@ -69,11 +73,35 @@ export default async function LoginPage({
 					{t.tooManyLinks(Math.ceil((Number(wait) || 900) / 60))}
 				</p>
 			) : null}
-			{error && error !== "rate" ? (
+			{error === "code" ? (
+				<p className="callout callout-warn">{t.signInCodeFailed}</p>
+			) : null}
+			{error && error !== "rate" && error !== "code" ? (
 				<p className="callout callout-warn">{t.linkFailed}</p>
+			) : null}
+			{sent ? (
+				// For a browser the email's link cannot reach, such as an app's
+				// sign-in window: the code works here, in the browser that asked.
+				<form action="/api/auth/code" method="post" className="sign-in-code">
+					<label htmlFor="code">{t.signInCodeLabel}</label>
+					<p className="muted">{t.signInCodeHint}</p>
+					<input
+						id="code"
+						name="code"
+						type="text"
+						inputMode="numeric"
+						autoComplete="one-time-code"
+						pattern="[0-9 -]{8,10}"
+						maxLength={10}
+						dir="ltr"
+						required
+					/>
+					<button type="submit">{t.signInCodeSubmit}</button>
+				</form>
 			) : null}
 			<form action="/api/auth/magic-link" method="post">
 				{invite ? <input type="hidden" name="invite" value={invite} /> : null}
+				{after ? <input type="hidden" name="back" value={after} /> : null}
 				<input type="hidden" name="locale" value={locale} />
 				<label htmlFor="email">{t.email}</label>
 				<input

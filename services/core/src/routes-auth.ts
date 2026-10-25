@@ -1,5 +1,6 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import {
+	CodeRequest,
 	CreateInvite,
 	ExchangeRequest,
 	MagicLinkRequest,
@@ -18,6 +19,7 @@ import {
 } from "./invites.ts";
 import {
 	MAGIC_LINK_MINUTES,
+	consumeCode,
 	consumeMagicLink,
 	createMagicLink,
 	createSession,
@@ -33,6 +35,10 @@ import { unreadByLoan } from "./unread.ts";
 
 export const auth = new Hono<{ Bindings: Env }>();
 
+/** Sign-in links an address may be sent in a day, and how many of them carry a code. */
+const LINKS_A_DAY = 20;
+const CODES_A_DAY = 5;
+
 /**
  * Step 1 of sign-in. Known address → link. Unknown address with a valid
  * invite → link that will create the member. Anything else → the same 200,
@@ -43,7 +49,7 @@ auth.post("/v1/auth/magic-link", async (c) => {
 		await c.req.json().catch(() => null),
 	);
 	if (!parsed.success) return json(c, problem(422, "Invalid request"));
-	const { email, invite, locale } = parsed.data;
+	const { email, invite, locale, browser } = parsed.data;
 
 	// This endpoint sends email to an address the caller only has to name, so
 	// it is limited hard and the limit is told to whoever hit it. The short
@@ -68,7 +74,7 @@ auth.post("/v1/auth/magic-link", async (c) => {
 	const perDay = await take(c.env, {
 		bucket: "magic_link:email:day",
 		subject: email,
-		allow: 20,
+		allow: LINKS_A_DAY,
 		per: 24 * 60 * 60,
 	});
 	if (!perDay.ok) {
@@ -111,10 +117,14 @@ auth.post("/v1/auth/magic-link", async (c) => {
 	}
 
 	const issue = async () => {
-		const token = await createMagicLink(
+		const { token, code } = await createMagicLink(
 			c.env,
 			email,
 			member ? null : (usableInvite?.id ?? null),
+			MAGIC_LINK_MINUTES,
+			// Only an address's first few links of the day carry a code: every
+			// code is a few more guesses (sessions.ts), and nobody needs more.
+			perDay.remaining >= LINKS_A_DAY - CODES_A_DAY ? (browser ?? null) : null,
 		);
 		const url = `${c.env.APP_URL}/auth/callback?token=${encodeURIComponent(token)}`;
 		// Development always logs the link, whether or not notify also emails it.
@@ -126,14 +136,20 @@ auth.post("/v1/auth/magic-link", async (c) => {
 			locale,
 			url,
 			expiresInMinutes: MAGIC_LINK_MINUTES,
+			...(code ? { code } : {}),
 		});
-		return { url, delivery };
+		return { url, code, delivery };
 	};
 
 	// Only development gets the link back; production has to read its email.
 	if (c.env.DEV_AUTH === "true") {
-		const { url, delivery } = await issue();
-		return c.json({ ok: true, debugUrl: url, delivery });
+		const { url, code, delivery } = await issue();
+		return c.json({
+			ok: true,
+			debugUrl: url,
+			...(code ? { debugCode: code } : {}),
+			delivery,
+		});
 	}
 	// Answered before the link is even made, so a member's address takes no
 	// longer to answer than a stranger's.
@@ -179,7 +195,7 @@ auth.post("/v1/me/device-link", async (c) => {
 		.bind(member.id)
 		.first<{ email: string }>();
 	if (!row) return json(c, problem(404, "Not a member"));
-	const token = await createMagicLink(
+	const { token } = await createMagicLink(
 		c.env,
 		row.email,
 		null,
@@ -197,20 +213,8 @@ auth.post("/v1/me/device-link", async (c) => {
 /** Step 2. Trades a one-shot link for a session; creates the member on an invite. */
 auth.post("/v1/auth/exchange", async (c) => {
 	// A one-shot token is 32 random characters; this is belt and braces.
-	const guesses = await take(c.env, {
-		bucket: "exchange:ip",
-		subject: callerIp(c.req.raw),
-		allow: 20,
-		per: 15 * 60,
-	});
-	if (!guesses.ok) {
-		return tooMany(
-			c,
-			"Too many attempts",
-			"Too many sign-in attempts from here. Try again later.",
-			guesses.retryAfter,
-		);
-	}
+	const guesses = await signInAttempt(c);
+	if (guesses) return guesses;
 	const parsed = ExchangeRequest.safeParse(
 		await c.req.json().catch(() => null),
 	);
@@ -219,7 +223,54 @@ auth.post("/v1/auth/exchange", async (c) => {
 	const link = await consumeMagicLink(c.env, parsed.data.token);
 	if (!link)
 		return json(c, problem(410, "Link expired", "Ask for a new sign-in link"));
+	return signIn(c, link);
+});
 
+/**
+ * Step 2, typed: the email's code, from the browser that asked for it. For a
+ * browser the link cannot reach, such as an assistant's in-app sign-in sheet.
+ * Eight digits are rationed twice over: the same per-place
+ * limit as links, and a handful of wrong ones spends the code
+ * (sessions.ts, CODE_TRIES).
+ */
+auth.post("/v1/auth/code", async (c) => {
+	const guesses = await signInAttempt(c);
+	if (guesses) return guesses;
+	const parsed = CodeRequest.safeParse(await c.req.json().catch(() => null));
+	if (!parsed.success) return json(c, problem(422, "Invalid request"));
+
+	const link = await consumeCode(c.env, parsed.data.browser, parsed.data.code);
+	if (!link)
+		return json(
+			c,
+			problem(410, "Code not valid", "Check the newest email, or ask again"),
+		);
+	return signIn(c, link);
+});
+
+/** Too many sign-in attempts from one place, by link or by code: the answer, or null. */
+async function signInAttempt(c: Context<{ Bindings: Env }>) {
+	const guesses = await take(c.env, {
+		bucket: "exchange:ip",
+		subject: callerIp(c.req.raw),
+		allow: 20,
+		per: 15 * 60,
+	});
+	return guesses.ok
+		? null
+		: tooMany(
+				c,
+				"Too many attempts",
+				"Too many sign-in attempts from here. Try again later.",
+				guesses.retryAfter,
+			);
+}
+
+/** A spent link becomes a session; an invite's link makes the member first. */
+async function signIn(
+	c: Context<{ Bindings: Env }>,
+	link: { email: string; invite_id: string | null },
+) {
 	let member = await c.env.DB.prepare("SELECT id FROM members WHERE email = ?")
 		.bind(link.email)
 		.first<{ id: string }>();
@@ -259,7 +310,7 @@ auth.post("/v1/auth/exchange", async (c) => {
 		expiresAt: session.expiresAt,
 		isNew,
 	});
-});
+}
 
 auth.post("/v1/auth/logout", async (c) => {
 	const bearer = c.req.header("Authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];

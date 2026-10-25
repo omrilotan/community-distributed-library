@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+	CodeRequest,
 	CreateInvite,
 	ExchangeRequest,
 	Invite,
@@ -930,6 +931,16 @@ export const ROUTES: readonly Route[] = [
 		summary: "Trade a sign-in link's token for a session",
 		access: "public",
 		body: ExchangeRequest,
+		response: Session,
+	},
+	{
+		method: "post",
+		path: "/v1/auth/code",
+		tag: "Auth",
+		summary:
+			"Trade the sign-in email's code for a session, from the browser that asked",
+		access: "public",
+		body: CodeRequest,
 		response: Session,
 	},
 	{

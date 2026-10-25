@@ -75,14 +75,23 @@ function magicLink(message: MagicLinkMessage): Rendered {
 			? {
 					subject: "קישור הכניסה שלך לספריית הקהילה",
 					lead: "לחצו על הקישור כדי להיכנס:",
+					code: "או הקלידו את הקוד הזה בדף שבו ביקשתם להיכנס. אל תמסרו אותו לאף אחד:",
 					tail: `הקישור תקף ל־${message.expiresInMinutes} דקות ולשימוש אחד. אם ההודעה הגיעה לספאם — סמנו אותה כ"לא ספאם" והוסיפו אותנו לאנשי הקשר, וההודעות הבאות יגיעו לתיבה. אם לא ביקשתם את הקישור, אפשר להתעלם.`,
 				}
 			: {
 					subject: "Your sign-in link for the Community Library",
 					lead: "Click the link to sign in:",
+					code: "Or type this code on the page where you asked to sign in. Never give it to anyone:",
 					tail: `The link works for ${message.expiresInMinutes} minutes and only once. If this landed in your junk folder, mark it "not junk" and add us to your contacts, and the next one will arrive properly. If you did not ask for this, ignore it.`,
 				};
-	return wrap(message.locale, copy.subject, copy.lead, message.url, copy.tail);
+	return wrap(
+		message.locale,
+		copy.subject,
+		copy.lead,
+		message.url,
+		copy.tail,
+		message.code ? { label: copy.code, value: message.code } : undefined,
+	);
 }
 
 /** Only ever pushed: it checks a device, so it never becomes an email. */
@@ -454,15 +463,18 @@ function wrap(
 	lead: string,
 	url: string,
 	tail: string,
+	/** A sign-in code, shown under the link: four digits, a space, four. */
+	code?: { label: string; value: string },
 ): Rendered {
 	const dir = locale === "he" ? "rtl" : "ltr";
+	const spaced = code ? `${code.value.slice(0, 4)} ${code.value.slice(4)}` : "";
 	return {
 		subject,
-		text: `${lead}\n\n${url}\n\n${tail}\n`,
+		text: `${lead}\n\n${url}\n\n${code ? `${code.label}\n\n${spaced}\n\n` : ""}${tail}\n`,
 		html: `<!doctype html><html lang="${locale}" dir="${dir}"><body style="font-family:system-ui,sans-serif;line-height:1.5">
 <p>${escape(lead).replace(/\n/g, "<br>")}</p>
 <p><a href="${escape(url)}">${escape(url)}</a></p>
-<p style="color:#555">${escape(tail)}</p>
+${code ? `<p>${escape(code.label)}</p>\n<p dir="ltr" style="font-size:1.75em;font-weight:700;letter-spacing:0.1em">${escape(spaced)}</p>\n` : ""}<p style="color:#555">${escape(tail)}</p>
 </body></html>`,
 	};
 }

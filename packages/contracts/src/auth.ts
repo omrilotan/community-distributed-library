@@ -11,6 +11,17 @@ export const MagicLinkRequest = z.object({
 	email: Email,
 	invite: z.string().min(16).max(128).optional(),
 	locale: Locale.default("en"),
+	/**
+	 * A random value the asking browser keeps. With it the email also carries
+	 * a code that signs in that browser alone (CodeRequest).
+	 */
+	browser: z.string().min(32).max(128).optional(),
+});
+
+/** Sign in with the email's code, from the browser that asked for it. */
+export const CodeRequest = z.object({
+	browser: z.string().min(32).max(128),
+	code: z.string().regex(/^\d{8}$/),
 });
 
 /** Always the same shape whether or not the address is known — no enumeration. */
@@ -18,6 +29,8 @@ export const MagicLinkResponse = z.object({
 	ok: z.literal(true),
 	/** Only present when DEV_AUTH is on; lets local development skip the email. */
 	debugUrl: z.url().optional(),
+	/** Only present when DEV_AUTH is on and a browser was named: the email's code. */
+	debugCode: z.string().optional(),
 	/** Only present when DEV_AUTH is on: the address is not a member and no invite was given. */
 	debugReason: z.enum(["unknown_email"]).optional(),
 });
@@ -124,6 +137,7 @@ export const Invite = z.object({
 export type MagicLinkRequest = z.input<typeof MagicLinkRequest>;
 export type MagicLinkResponse = z.infer<typeof MagicLinkResponse>;
 export type ExchangeRequest = z.infer<typeof ExchangeRequest>;
+export type CodeRequest = z.infer<typeof CodeRequest>;
 export type Session = z.infer<typeof Session>;
 export type Me = z.infer<typeof Me>;
 export type UpdateMe = z.input<typeof UpdateMe>;
