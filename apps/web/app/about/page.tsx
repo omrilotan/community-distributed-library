@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { strings, type Locale } from "../../lib/i18n.ts";
 import { library, libraryWords } from "../../lib/library.ts";
-import { appBase } from "../../lib/site.ts";
 import { libraryType } from "../../lib/library-type.ts";
 
 /** The page's own words, in the language it opens in. */
@@ -109,8 +108,6 @@ export default async function AboutPage() {
 				start: "Start your own library",
 			};
 
-	const base = appBase();
-	const here = "/about";
 	return (
 		<main className="about">
 			<header className="about-head">

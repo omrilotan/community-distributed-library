@@ -5,7 +5,6 @@ import { Robot } from "@phosphor-icons/react/dist/ssr/Robot";
 import {
 	SCOPE_DESCRIPTIONS,
 	type Availability,
-	type Me,
 	type MemberStats,
 	type MyInvite,
 	type TokenSummary,

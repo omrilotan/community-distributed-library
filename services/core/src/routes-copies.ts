@@ -14,7 +14,7 @@ import {
 	thingSearchKey,
 } from "./things.ts";
 import type { Env } from "./env.ts";
-import { viewer, viewerWith } from "./auth.ts";
+import { viewerWith } from "./auth.ts";
 import { deleteUnusedImages, ownCover } from "./covers.ts";
 import { forget, vocabularyKey } from "./cache.ts";
 import { searchKey } from "./normalise.ts";

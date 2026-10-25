@@ -13,7 +13,7 @@ import { BACK_WITH_OWNER, CLAIMED, OWNER_OUT } from "./sets.ts";
 import type { Env } from "./env.ts";
 import { dropStaleHandoffs } from "./stale-handoffs.ts";
 import { tell } from "./notify.ts";
-import { viewer, viewerWith, type Viewer } from "./auth.ts";
+import { viewerWith } from "./auth.ts";
 import { ulid, now } from "./ids.ts";
 import { denied, json } from "./problem.ts";
 import { holdOn, onCopyAvailable } from "./waitlist.ts";

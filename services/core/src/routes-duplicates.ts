@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { EditWork, problem } from "@cdl/contracts";
 import type { Env } from "./env.ts";
-import { moderator, viewer, viewerWith } from "./auth.ts";
+import { moderator, viewerWith } from "./auth.ts";
 import { ownCover } from "./covers.ts";
 import { denied, json } from "./problem.ts";
 import { searchKey } from "./normalise.ts";
@@ -10,7 +10,6 @@ import {
 	mergeWorks,
 	similarWorks,
 	similarity,
-	type Candidate,
 	duplicatePairs,
 } from "./duplicates.ts";
 import { workInCommunity } from "./community-catalogue.ts";

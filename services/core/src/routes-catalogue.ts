@@ -7,7 +7,7 @@ import {
 	type WorkPage,
 } from "@cdl/contracts";
 import type { Env } from "./env.ts";
-import { viewer, viewerWith } from "./auth.ts";
+import { viewerWith } from "./auth.ts";
 import { ownCover } from "./covers.ts";
 import { listCopies, listWorks } from "./listings.ts";
 import { denied, json } from "./problem.ts";
