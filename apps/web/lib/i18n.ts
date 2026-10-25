@@ -315,6 +315,8 @@ const dictionary = {
 		dismiss: "Dismiss",
 		bookTurnedUp: "Book turned up",
 		borrow: "Borrow",
+		countdownCancel: "Cancel",
+		countdownCancelled: "Not sent.",
 		requestRelay: "Ask to be next",
 		waitlistJoin: "Tell me when a copy is free",
 		waitlistJoined:
@@ -1095,6 +1097,8 @@ const dictionary = {
 		dismiss: "ביטול",
 		bookTurnedUp: "הספר נמצא",
 		borrow: "בקשת השאלה",
+		countdownCancel: "ביטול",
+		countdownCancelled: "לא נשלח.",
 		requestRelay: "לבקש להיות הבא/ה בתור",
 		waitlistJoin: "עדכנו אותי כשעותק מתפנה",
 		waitlistJoined: "אתם ברשימה. כשעותק יתפנה תקבלו זכות ראשונים.",
@@ -1852,6 +1856,10 @@ function helpers(locale: Locale) {
 			he
 				? `${copies} ${plural(copies, "עותק", "עותקים")} בקהילה · ${waiting} ${plural(waiting, "ממתין/ה", "ממתינים")}`
 				: `${copies} ${plural(copies, "copy", "copies")} in the community · ${waiting} waiting`,
+		countdownSendingIn: (seconds: number) =>
+			he
+				? `הבקשה תישלח בעוד ${seconds} ${plural(seconds, "שנייה", "שניות")}. לחצו שוב כדי לבטל.`
+				: `Sending your request in ${seconds} ${plural(seconds, "second", "seconds")}. Press again to cancel.`,
 		tooManyLinks: (minutes: number) =>
 			he
 				? `נשלחו כבר כמה קישורי כניסה. בדקו את תיבת הדואר (גם בספאם) ונסו שוב בעוד ${minutes} ${plural(minutes, "דקה", "דקות")}.`
