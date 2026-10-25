@@ -103,31 +103,29 @@ tags.post("/v1/tags/proposals", async (c) => {
 	if (!parsed.success) return json(c, problem(422, "Invalid suggestion"));
 	const { namespace, namespaceLabel, label, workId } = parsed.data;
 
-	if (namespace) {
-		const exists = await c.env.DB.prepare(
-			"SELECT 1 FROM tag_namespaces WHERE id = ?",
+	// Three facts none of which waits on another: asked for together.
+	const [exists, open, locale] = await Promise.all([
+		namespace
+			? c.env.DB.prepare("SELECT 1 FROM tag_namespaces WHERE id = ?")
+					.bind(namespace)
+					.first()
+			: true,
+		c.env.DB.prepare(
+			`SELECT count(*) AS n FROM tag_proposals
+			  WHERE proposed_by = ? AND status = 'pending'`,
 		)
-			.bind(namespace)
-			.first();
-		if (!exists) return json(c, problem(404, "No such label"));
-	}
-	const open = await c.env.DB.prepare(
-		`SELECT count(*) AS n FROM tag_proposals
-		  WHERE proposed_by = ? AND status = 'pending'`,
-	)
-		.bind(member.id)
-		.first<{ n: number }>();
+			.bind(member.id)
+			.first<{ n: number }>(),
+		c.env.DB.prepare("SELECT locale FROM members WHERE id = ?")
+			.bind(member.id)
+			.first<{ locale: string }>(),
+	]);
+	if (!exists) return json(c, problem(404, "No such label"));
 	if ((open?.n ?? 0) >= 10)
 		return json(
 			c,
 			problem(409, "Too many open suggestions", "Wait for the moderators"),
 		);
-
-	const locale = await c.env.DB.prepare(
-		"SELECT locale FROM members WHERE id = ?",
-	)
-		.bind(member.id)
-		.first<{ locale: string }>();
 
 	const id = ulid();
 	await c.env.DB.prepare(
