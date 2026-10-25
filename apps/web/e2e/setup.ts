@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 const run = promisify(execFile);
@@ -38,7 +39,7 @@ export default async function setup(): Promise<void> {
 				"--command",
 				"DELETE FROM rate_limits",
 			],
-			{ cwd: new URL("../../..", import.meta.url).pathname },
+			{ cwd: fileURLToPath(new URL("../../..", import.meta.url)) },
 		);
 	} catch (error) {
 		// A fresh database has nothing to clear, and wrangler says so loudly.

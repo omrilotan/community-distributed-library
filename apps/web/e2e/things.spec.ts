@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import { BORROWER, CORE, OWNER, asMember } from "./library.ts";
 
@@ -126,8 +127,8 @@ test.describe("a library of things", () => {
 		await page
 			.locator(".photos-picker input[type=file][accept]")
 			.setInputFiles([
-				new URL("./fixtures/portrait.png", import.meta.url).pathname,
-				new URL("./fixtures/landscape.png", import.meta.url).pathname,
+				fileURLToPath(new URL("./fixtures/portrait.png", import.meta.url)),
+				fileURLToPath(new URL("./fixtures/landscape.png", import.meta.url)),
 			]);
 		const squares = page.locator(".photos-slots canvas");
 		await expect(squares).toHaveCount(2);
@@ -136,7 +137,7 @@ test.describe("a library of things", () => {
 		await page
 			.locator(".photos-picker input[type=file][accept]")
 			.setInputFiles([
-				new URL("./fixtures/near-square.png", import.meta.url).pathname,
+				fileURLToPath(new URL("./fixtures/near-square.png", import.meta.url)),
 			]);
 		await expect(squares).toHaveCount(3);
 		const sliders = page.locator(".photos-slots input[type=range]");
