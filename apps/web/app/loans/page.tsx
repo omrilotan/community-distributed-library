@@ -272,16 +272,16 @@ function LoanRow({
 							<bdi>{other.areaLabel}</bdi>
 						</>
 					) : null}
-					{" · "}
-					{when}
 				</div>
-				<div className="actions">
+				{/* Where it stands, and when: the time left once there is one,
+				    else the day it was asked for. */}
+				<div className="loan-status">
 					<span
 						className={`badge${live ? " badge-ok" : ""}${timer?.overdue ? " badge-warn" : ""}`}
 					>
 						{t.loanStatus(loan.status)}
 					</span>
-					{timer ? <span className="muted">{timer.text}</span> : null}
+					<span className="muted">{timer ? timer.text : when}</span>
 					{relay ? <span className="badge">{relay}</span> : null}
 					{/* A day since it was accepted and no time on the table yet. */}
 					{loan.needsTime ? (
@@ -289,11 +289,12 @@ function LoanRow({
 							{t.needsTime}
 						</a>
 					) : null}
+				</div>
+				<LoanActions loan={loan} side={side} t={t} back="/loans" compact>
 					<a className="btn quiet" href={`/loans/${loan.id}`}>
 						{t.messages}
 					</a>
-				</div>
-				<LoanActions loan={loan} side={side} t={t} back="/loans" compact />
+				</LoanActions>
 			</div>
 		</article>
 	);
