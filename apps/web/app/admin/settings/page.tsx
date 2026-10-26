@@ -283,6 +283,8 @@ export default async function SettingsPage({
 						areaHint: t.settingsCentreHint,
 						locate: t.locate,
 						located: t.located,
+						locatedNoName: t.locatedNoName,
+						locatedFar: t.locatedFar,
 						locateFailed: t.locateFailed,
 						mapHint: t.mapHint,
 						mapMore: t.settingsCentreMap,

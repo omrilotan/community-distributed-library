@@ -274,6 +274,9 @@ const dictionary = {
 		mapMore: "Not on the list? Place yourself on the map",
 		located: "Got it — stored roughly, not exactly.",
 		locateFailed: "Could not get a location. Type your neighbourhood instead.",
+		locatedNoName: "Got it. Now type your neighbourhood's name.",
+		locatedFar:
+			"That is far from this library, so it was not used. Type your neighbourhood instead.",
 		language: "Language",
 		editEditionsFirst:
 			"This book has more than one edition, so its cover cannot be replaced here. Merge them first.",
@@ -1053,6 +1056,8 @@ const dictionary = {
 		mapMore: "לא ברשימה? סמנו את עצמכם על המפה",
 		located: "התקבל — נשמר בקירוב, לא במדויק.",
 		locateFailed: "לא הצלחנו לקבל מיקום. כתבו את השכונה במקום.",
+		locatedNoName: "התקבל. עכשיו כתבו את שם השכונה.",
+		locatedFar: "המיקום רחוק מהספרייה, ולכן לא נשמר. כתבו את השכונה במקום.",
 		language: "שפה",
 		editEditionsFirst:
 			"לספר הזה יש יותר ממהדורה אחת, ולכן אי אפשר להחליף כאן את הכריכה. מזגו אותן קודם.",

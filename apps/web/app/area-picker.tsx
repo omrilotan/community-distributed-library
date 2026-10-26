@@ -6,11 +6,21 @@ import { AreaMap } from "./area-map.tsx";
 type Point = { lat: number; lng: number };
 type Place = Point & { name: string; detail: string | null };
 
+/**
+ * How far from a library a member's located point may be: as far as core
+ * looks for the places it suggests (places.ts, REACH_M).
+ */
+export const MEMBER_REACH_M = 40_000;
+
 interface Labels {
 	area: string;
 	areaHint: string;
 	locate: string;
 	located: string;
+	/** Located, but no place name came back: the name is still to type. */
+	locatedNoName: string;
+	/** Located somewhere far from the library: not kept. */
+	locatedFar: string;
 	locateFailed: string;
 	mapHint: string;
 	mapMore: string;
@@ -29,12 +39,18 @@ export function AreaPicker({
 	initial,
 	labels,
 	optional = false,
+	reach,
 }: {
 	centre: Point;
 	initial: { label: string; lat: number; lng: number } | null;
 	labels: Labels;
 	/** The library's own centre has a point already; its name may stay empty. */
 	optional?: boolean;
+	/**
+	 * How far from the centre, in metres, a member's located point may be.
+	 * A phone abroad is not where its owner lives in this library.
+	 */
+	reach?: number;
 }) {
 	const [label, setLabel] = useState(initial?.label ?? "");
 	const [point, setPoint] = useState<Point | null>(
@@ -44,9 +60,10 @@ export function AreaPicker({
 	// typed name no longer moves the pin. A saved point does not count, so a
 	// member who picks another neighbourhood is moved there.
 	const [exact, setExact] = useState(false);
-	const [state, setState] = useState<"idle" | "locating" | "ok" | "failed">(
-		"idle",
-	);
+	const [state, setState] = useState<
+		"idle" | "locating" | "ok" | "unnamed" | "far" | "failed"
+	>("idle");
+	const field = useRef<HTMLInputElement>(null);
 	// The map is for being exact; it is built only once somebody opens it.
 	const [mapOpen, setMapOpen] = useState(false);
 
@@ -87,10 +104,21 @@ export function AreaPicker({
 		navigator.geolocation.getCurrentPosition(
 			({ coords }) => {
 				const here = { lat: coords.latitude, lng: coords.longitude };
+				if (reach && distanceM(here, centre) > reach) {
+					setState("far");
+					field.current?.focus();
+					return;
+				}
 				setPoint(here);
 				setExact(true);
 				setState("ok");
-				// Name the area for them, unless they already have.
+				// Name the area for them, unless they already have. Where no name
+				// comes back (somewhere the place names do not cover), say the
+				// name is still to type rather than leave the field empty.
+				const unnamed = () => {
+					setState("unnamed");
+					field.current?.focus();
+				};
 				if (!label.trim())
 					fetch(`/api/places/at?lat=${here.lat}&lng=${here.lng}`)
 						.then((response) => (response.ok ? response.json() : null))
@@ -98,8 +126,9 @@ export function AreaPicker({
 							const body = reply as { name?: string | null } | null;
 							if (body?.name)
 								setLabel((now) => (now.trim() ? now : body.name!));
+							else unnamed();
 						})
-						.catch(() => undefined);
+						.catch(unnamed);
 			},
 			() => setState("failed"),
 			{ enableHighAccuracy: false, timeout: 10_000 },
@@ -111,6 +140,7 @@ export function AreaPicker({
 			<label htmlFor="areaLabel">{labels.area}</label>
 			<div className="field-with-button">
 				<input
+					ref={field}
 					id="areaLabel"
 					name="areaLabel"
 					type="text"
@@ -140,6 +170,10 @@ export function AreaPicker({
 			</datalist>
 			<div role="status">
 				{state === "ok" ? <p className="muted">{labels.located}</p> : null}
+				{state === "unnamed" ? (
+					<p className="muted">{labels.locatedNoName}</p>
+				) : null}
+				{state === "far" ? <p className="muted">{labels.locatedFar}</p> : null}
 				{state === "failed" ? (
 					<p className="muted">{labels.locateFailed}</p>
 				) : null}
@@ -175,4 +209,15 @@ export function AreaPicker({
 			</details>
 		</div>
 	);
+}
+
+/** Metres between two points, on a round Earth: plenty for "too far". */
+function distanceM(a: Point, b: Point): number {
+	const rad = Math.PI / 180;
+	const dLat = (b.lat - a.lat) * rad;
+	const dLng = (b.lng - a.lng) * rad;
+	const h =
+		Math.sin(dLat / 2) ** 2 +
+		Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+	return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
 }
