@@ -3,18 +3,22 @@ import { fragment } from "./cache.ts";
 import { distanceM, snapArea } from "./geo.ts";
 
 /**
- * Place names and postcodes, from postcodes.io: open data from the Ordnance
- * Survey and the ONS, no key, asked from here and never from a member's
- * browser. UK only, like the library; a community elsewhere brings another
- * provider behind the same three functions. Answers are cached for a month,
- * since neither place names nor postcodes move.
+ * Place names and postcodes, asked from here and never from a member's
+ * browser, each from the open service for the library's country:
  *
- * Naming a point ("Use my location") also asks OpenStreetMap's Nominatim
- * where postcodes.io has nothing, so a point anywhere gets a name. One
- * lookup per tap, cached, which its usage policy allows; it forbids
- * suggestions as you type, so the suggestions stay with postcodes.io.
+ * - Britain: postcodes.io, open data from the Ordnance Survey and the ONS, no
+ *   key. Postcodes, place names as you type, and the ward around a point.
+ * - The United States: Zippopotam.us, GeoNames data, no key. ZIP codes. No
+ *   free service suggests US place names as you type.
+ * - Naming a point ("Use my location") anywhere postcodes.io does not cover:
+ *   OpenStreetMap's Nominatim. One lookup per tap, cached, which its usage
+ *   policy allows; it forbids suggestions as you type.
+ *
+ * Answers are cached for a month, since neither place names nor postcodes
+ * move. Whatever comes back is kept only within reach of the library.
  */
 const API = "https://api.postcodes.io";
+const ZIPPOPOTAM = "https://api.zippopotam.us";
 const NOMINATIM = "https://nominatim.openstreetmap.org";
 /** Nominatim asks every caller to say who it is. */
 const AGENT =
@@ -36,6 +40,30 @@ type Point = { lat: number; lng: number };
 
 const FULL_POSTCODE = /^[a-z]{1,2}\d[a-z\d]?\s*\d[a-z]{2}$/i;
 const OUTCODE = /^[a-z]{1,2}\d[a-z\d]?$/i;
+/** A US ZIP code, with or without its four extra digits. */
+const ZIP = /^(\d{5})(?:-?\d{4})?$/;
+
+type Region = "gb" | "us" | null;
+
+/**
+ * Which country's service a point belongs to, by rough boxes: Britain and
+ * Northern Ireland; the lower 48, Alaska, Hawaii and Puerto Rico. A box takes
+ * in a little of a neighbour (Toronto sits in the lower 48's), which costs
+ * nothing: an answer from the wrong country is out of the library's reach.
+ */
+export function regionOf({ lat, lng }: Point): Region {
+	const within = (s: number, n: number, w: number, e: number) =>
+		lat >= s && lat <= n && lng >= w && lng <= e;
+	if (within(49.8, 60.9, -8.7, 1.8)) return "gb";
+	if (
+		within(24.4, 49.4, -125, -66.9) ||
+		within(51, 71.5, -180, -129.9) ||
+		within(18.9, 22.3, -160.3, -154.8) ||
+		within(17.9, 18.6, -67.3, -65.2)
+	)
+		return "us";
+	return null;
+}
 
 /** "n33ss" → "N3 3SS"; a district alone stays as it is. */
 export function tidyPostcode(text: string): string {
@@ -47,12 +75,15 @@ export function tidyPostcode(text: string): string {
 
 /**
  * What a member's area may be called: a full postcode narrows a home to a
- * dozen doors, so it becomes its district ("N3 3SS" → "N3"); anything else
- * stays as typed.
+ * dozen doors, so it becomes its district ("N3 3SS" → "N3"), and a ZIP+4 to a
+ * block, so it becomes its ZIP ("11215-1234" → "11215"); anything else stays
+ * as typed.
  */
 export function areaName(text: string): string {
 	const bare = text.replace(/\s+/g, "").toUpperCase();
-	return FULL_POSTCODE.test(bare) ? bare.slice(0, -3) : text.trim();
+	if (FULL_POSTCODE.test(bare)) return bare.slice(0, -3);
+	const zip = ZIP.exec(bare);
+	return zip ? zip[1]! : text.trim();
 }
 
 export function looksLikePostcode(text: string): boolean {
@@ -117,6 +148,31 @@ async function postcodePlace(text: string): Promise<Place | null> {
 	};
 }
 
+/** A ZIP code's place, named by the ZIP itself, from Zippopotam.us. */
+async function zipPlace(zip: string): Promise<Place | null> {
+	const response = await fetch(`${ZIPPOPOTAM}/us/${zip}`, {
+		headers: { accept: "application/json" },
+	});
+	if (response.status === 404) return null;
+	if (!response.ok) throw new Error(`zippopotam.us ${response.status}`);
+	const body = (await response.json()) as {
+		places?: {
+			"place name": string;
+			latitude: string;
+			longitude: string;
+			"state abbreviation": string;
+		}[];
+	};
+	const first = body.places?.[0];
+	if (!first) return null;
+	return {
+		name: zip,
+		lat: Number(first.latitude),
+		lng: Number(first.longitude),
+		detail: `${first["place name"]}, ${first["state abbreviation"]}`,
+	};
+}
+
 /** Places whose name starts like `query`, nearest the library first. */
 export async function suggestPlaces(
 	env: Env,
@@ -126,6 +182,16 @@ export async function suggestPlaces(
 ): Promise<Place[]> {
 	const q = query.trim();
 	if (q.length < 2) return [];
+	const region = regionOf(centre);
+	if (region === "us") {
+		const zip = ZIP.exec(q.replace(/\s+/g, ""))?.[1];
+		if (!zip) return [];
+		const one = await lookup(env, ctx, `place:zip:${zip}`, null, () =>
+			zipPlace(zip),
+		);
+		return one && distanceM(centre, one) <= REACH_M ? [one] : [];
+	}
+	if (region !== "gb") return [];
 	if (looksLikePostcode(q)) {
 		const one = await lookup(
 			env,
@@ -203,6 +269,7 @@ export async function placeAt(
 	// "at2": a point outside the UK was cached nameless before Nominatim.
 	const key = `place:at2:${snapped.lat.toFixed(4)},${snapped.lng.toFixed(4)}`;
 	return lookup(env, ctx, key, null as string | null, async () => {
+		if (regionOf(snapped) !== "gb") return nominatimAt(snapped);
 		const found = await ask<
 			{ admin_ward: string | null; outcode: string | null }[]
 		>(`/postcodes?lon=${snapped.lng}&lat=${snapped.lat}&limit=1&radius=1000`);
