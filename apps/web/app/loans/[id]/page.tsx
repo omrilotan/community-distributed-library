@@ -58,6 +58,8 @@ export default async function LoanThreadPage({
 		core<SlotOptions>(`/v1/loans/${encodeURIComponent(id)}/slots`),
 	]);
 	const handoff = handoffRes.status === 200 ? handoffRes.body.handoff : null;
+	// A time both sides agreed: the loan is not waiting on words any more.
+	const meetingSet = handoff?.status === "agreed";
 	const slots =
 		slotsRes.status === 200
 			? slotsRes.body
@@ -203,7 +205,9 @@ export default async function LoanThreadPage({
 								<span
 									className={`badge${loan.status === "accepted" || loan.status === "active" ? " badge-ok" : ""}${timer?.overdue ? " badge-warn" : ""}`}
 								>
-									{t.loanStatus(loan.status)}
+									{loan.status === "accepted" && meetingSet
+										? t.acceptedMeetingSet
+										: t.loanStatus(loan.status)}
 								</span>
 								{timer ? <span> · {timer.text}</span> : null}
 							</>
@@ -245,7 +249,9 @@ export default async function LoanThreadPage({
 
 			<section className="chat-log">
 				{timeline.length === 0 && !cutOff ? (
-					<p className="bubble-system bubble">{t.noMessages}</p>
+					<p className="bubble-system bubble">
+						{meetingSet ? t.noMessagesAgreed : t.noMessages}
+					</p>
 				) : null}
 				{timeline.map((entry) => {
 					const day = dayFormat.format(entry.at * 1000);
