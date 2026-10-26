@@ -21,10 +21,9 @@ const dictionary = {
 		installApp: "Add to home screen",
 		installIos:
 			"Tap the share button at the bottom of Safari, then \u201cAdd to Home Screen\u201d.",
-		checkJunk:
-			"If it is not there in a minute, look in your junk or spam folder. The first one often lands there.",
+		checkJunk: "Not there in a minute? Look in junk or spam.",
 		saveContact: "Save the library as a contact",
-		saveContactWhy: "so the next one does not.",
+		saveContactWhy: "so the next one reaches your inbox.",
 		cookieNote:
 			"We keep a little on your device — what signs you in, and small preferences like the language you read in. No tracking, no analytics, no advertising, and nothing about you is sold or handed on.",
 		firstBook: "Add one book you are happy to lend.",
@@ -252,15 +251,10 @@ const dictionary = {
 		email: "Email",
 		sendLink: "Send me a sign-in link",
 		linkSentTitle: "Check your email",
-		linkSent:
-			"If the address belongs to a member, a sign-in email is on its way. Use it within 15 minutes, either way:",
-		linkSentTapLink:
-			"Tap the link in the email. You are signed in wherever it opens.",
-		linkSentTypeCode:
-			"Or, if it opens in another browser or app than this one, type the email's eight-digit code here.",
+		linkSent: "A sign-in link is on its way. Tap it within 15 minutes.",
 		linkFailed: "That link did not work. Ask for a new one.",
-		signInCodeLabel: "Code from the email",
-		signInCodeSubmit: "Sign in with the code",
+		signInCodeLabel: "Opened it somewhere else? Type its code here",
+		signInCodeSubmit: "Sign in",
 		sendNewLink: "Send a new link, or to another address",
 		signInCodeFailed:
 			"That code did not work. Check the newest email, or ask for a new link.",
@@ -820,10 +814,9 @@ const dictionary = {
 		menu: "תפריט",
 		installApp: "הוספה למסך הבית",
 		installIos: "בספארי: כפתור השיתוף למטה, ואז \u201cהוספה למסך הבית\u201d.",
-		checkJunk:
-			"אם הוא לא הגיע תוך דקה, חפשו בתיקיית הספאם. הראשון נוחת שם לא פעם.",
+		checkJunk: "לא הגיע תוך דקה? חפשו בספאם.",
 		saveContact: "שמירת הספרייה באנשי הקשר",
-		saveContactWhy: "כדי שהבא כבר לא ינחת שם.",
+		saveContactWhy: "כדי שהבא יגיע לתיבה.",
 		cookieNote:
 			"אנחנו שומרים אצלכם מעט — מה שמחבר אתכם, והעדפות קטנות כמו השפה שבה אתם קוראים. בלי מעקב, בלי אנליטיקס, בלי פרסום, ושום דבר עליכם לא נמכר ולא מועבר הלאה.",
 		firstBook: "הוסיפו ספר אחד שאתם שמחים להשאיל.",
@@ -1042,14 +1035,10 @@ const dictionary = {
 		email: "אימייל",
 		sendLink: "שלחו לי קישור כניסה",
 		linkSentTitle: "בדקו את האימייל",
-		linkSent:
-			"אם הכתובת שייכת לחבר/ה בספרייה, אימייל כניסה כבר בדרך. השתמשו בו תוך 15 דקות, באחת משתי הדרכים:",
-		linkSentTapLink: "לחצו על הקישור באימייל. תיכנסו בכל מקום שבו הוא נפתח.",
-		linkSentTypeCode:
-			"או, אם הוא נפתח בדפדפן או באפליקציה אחרים, הקלידו כאן את הקוד בן שמונה הספרות מהאימייל.",
+		linkSent: "קישור כניסה בדרך אליכם. לחצו עליו תוך 15 דקות.",
 		linkFailed: "הקישור לא עבד. בקשו קישור חדש.",
-		signInCodeLabel: "הקוד מהאימייל",
-		signInCodeSubmit: "כניסה עם הקוד",
+		signInCodeLabel: "נפתח במקום אחר? הקלידו כאן את הקוד",
+		signInCodeSubmit: "כניסה",
 		sendNewLink: "שליחת קישור חדש, או לכתובת אחרת",
 		signInCodeFailed: "הקוד לא עבד. בדקו את האימייל האחרון, או בקשו קישור חדש.",
 		finishSignIn: "נגיעה אחת כדי לסיים את הכניסה במכשיר הזה.",
