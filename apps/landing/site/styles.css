@@ -707,12 +707,12 @@ code {
 	white-space: nowrap;
 }
 
-/* The closing note: no ratings, on purpose. One soft band, the glyph beside it. */
+/* No ratings, on purpose: the last word on trust between neighbours. One
+   soft band, the glyph beside it. */
 main > section.welcome {
 	display: flex;
 	gap: 1.25rem;
 	align-items: flex-start;
-	margin-block-end: 4rem;
 	padding: 2rem var(--gutter);
 	background: var(--accent-soft);
 	border-radius: var(--radius);
@@ -743,7 +743,6 @@ main > section.welcome {
 @media (min-width: 64rem) {
 	main > section.welcome {
 		padding: 3rem;
-		margin-block-end: 6rem;
 	}
 }
 
