@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CORE, OWNER, asMember, forgetFilters } from "./library.ts";
+import { BORROWER, CORE, OWNER, asMember, forgetFilters } from "./library.ts";
 
 /**
  * A book kept for later, from its page, on a page of its own. The signed-in
@@ -57,5 +57,26 @@ test.describe("the wishlist", () => {
 		await expect(
 			page.locator("#listing .tile", { hasText: title }),
 		).toHaveCount(0);
+	});
+
+	test("is not offered on a book of your own", async ({ page, request }) => {
+		const mine = await asMember(request, BORROWER.id, "/v1/copies", {
+			manual: { title: `Mine ${Date.now()}`, authors: ["A. Stub"] },
+		});
+		try {
+			const work = (
+				await asMember(request, BORROWER.id, `/v1/copies/${mine.body.id}`)
+			).body.work.id;
+			await page.goto(`/works/${work}`);
+			await expect(page.locator(".choose-row")).toHaveCount(1);
+			await expect(page.locator('form[action="/api/me/wishlist"]')).toHaveCount(
+				0,
+			);
+		} finally {
+			await request.fetch(`${CORE}/v1/copies/${mine.body.id}`, {
+				method: "DELETE",
+				headers: { "X-Member-Id": BORROWER.id },
+			});
+		}
 	});
 });
