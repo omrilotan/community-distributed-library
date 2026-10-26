@@ -34,8 +34,7 @@ const dictionary = {
 		setupAreaHint:
 			"Roughly where you live, so neighbours see how far a book is. Not your address.",
 		setupPlaceTitle: "Where you meet",
-		setupPlaceHint:
-			"Usually your home address. Only the person you hand a book to sees it, and only once you both agree a time.",
+		setupPlaceHint: "Usually your home address.",
 		setupTimesTitle: "When you can meet",
 		setupTimesHint:
 			"Tick the times that usually suit you. Arranging a handoff then takes a tap.",
@@ -827,8 +826,7 @@ const dictionary = {
 		setupAreaHint:
 			"בערך איפה אתם גרים, כדי שהשכנים יראו כמה רחוק הספר. לא הכתובת.",
 		setupPlaceTitle: "איפה נפגשים",
-		setupPlaceHint:
-			"בדרך כלל כתובת הבית. רק מי שמקבלים מכם ספר רואים אותה, ורק אחרי שקבעתם מועד.",
+		setupPlaceHint: "בדרך כלל כתובת הבית.",
 		setupTimesTitle: "מתי אפשר להיפגש",
 		setupTimesHint:
 			"סמנו את הזמנים שבדרך כלל נוחים לכם, ותיאום מסירה יהיה בלחיצה.",
