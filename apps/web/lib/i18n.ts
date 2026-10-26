@@ -495,6 +495,9 @@ const dictionary = {
 		messages: "Messages",
 		noSuchLoan: "No such loan.",
 		noMessages: "No messages yet. Say when and where suits you.",
+		// Once the time is agreed there is nothing left to settle in words.
+		noMessagesAgreed: "No messages yet. Write here if anything changes.",
+		acceptedMeetingSet: "accepted — meeting set",
 		writeMessage: "Write a message",
 		send: "Send",
 		theModerators: "The moderators",
@@ -1266,6 +1269,8 @@ const dictionary = {
 		messages: "הודעות",
 		noSuchLoan: "אין השאלה כזו.",
 		noMessages: "אין עדיין הודעות. כתבו מתי ואיפה נוח לכם.",
+		noMessagesAgreed: "אין עדיין הודעות. כתבו כאן אם משהו משתנה.",
+		acceptedMeetingSet: "אושר — המפגש נקבע",
 		writeMessage: "כתבו הודעה",
 		send: "שליחה",
 		theModerators: "המודרטורים",
