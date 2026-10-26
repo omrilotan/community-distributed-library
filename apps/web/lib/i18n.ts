@@ -148,6 +148,8 @@ const dictionary = {
 		tagsLegend: "Tags (they describe the book, so every copy shares them)",
 		tagsSaved: "Tags saved.",
 		editTags: "Edit tags",
+		// Heading over an owner's tools on a book's page; a moderator's is "admin".
+		extrasTags: "Tags",
 		lendLimit: "Books out at once, at most",
 		lendLimitAny: "no limit",
 		lendLimitHint:
@@ -939,6 +941,7 @@ const dictionary = {
 		tagsLegend: "תגיות (הן מתארות את הספר, וכל העותקים חולקים אותן)",
 		tagsSaved: "התגיות נשמרו.",
 		editTags: "עריכת תגיות",
+		extrasTags: "תגיות",
 		lendLimit: "כמה ספרים מושאלים במקביל, לכל היותר",
 		lendLimitAny: "ללא הגבלה",
 		lendLimitHint:

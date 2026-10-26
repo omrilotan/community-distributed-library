@@ -1028,11 +1028,64 @@ button.tile:active {
 	}
 }
 
-/* Housekeeping: quieter than the rest of the page. */
+/* Housekeeping, under a heading of its own: one row per tool, each opening
+   in place, so the end of the page reads as a list rather than loose links. */
 .book-extras {
 	margin-block-start: 2.5rem;
-	padding-block-start: 1rem;
+}
+
+.extras-list {
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.extras-list > .tag-edit {
+	margin: 0;
+}
+
+.extras-list > .tag-edit + .tag-edit {
 	border-block-start: 1px solid var(--line);
+}
+
+.extras-list > .tag-edit > summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.8rem 0.9rem;
+	color: var(--ink);
+	list-style: none;
+}
+
+.extras-list > .tag-edit > summary::-webkit-details-marker {
+	display: none;
+}
+
+/* A chevron at the row's end: down while shut, up while open. */
+.extras-list > .tag-edit > summary::after {
+	content: "";
+	flex: none;
+	inline-size: 0.45rem;
+	block-size: 0.45rem;
+	margin-block-start: -0.2rem;
+	border-inline-end: 2px solid var(--muted);
+	border-block-end: 2px solid var(--muted);
+	transform: rotate(45deg);
+	transition: transform 0.15s;
+}
+
+.extras-list > .tag-edit[open] > summary::after {
+	margin-block-start: 0.2rem;
+	transform: rotate(-135deg);
+}
+
+.extras-list > .tag-edit > :not(summary) {
+	margin-inline: 0.9rem;
+}
+
+.extras-list > .tag-edit[open] {
+	padding-block-end: 0.9rem;
 }
 
 /* The grid column sizes this, but cap it anyway: a cover outside the grid
@@ -2298,9 +2351,14 @@ button.toggle:hover {
 	font-weight: 600;
 }
 
-.choose-row p {
+.choose-row p,
+.choose-row .thing-facts {
 	margin-block: 0.35rem 0;
 	font-size: 0.875rem;
+}
+
+.choose-row dd {
+	margin: 0;
 }
 
 /* Two records of one book, side by side */
