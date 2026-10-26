@@ -51,8 +51,8 @@ export async function signIn(
 	await page.goto(debugUrl);
 	// Opening the link spends nothing; the button does.
 	await page.locator('form[action="/api/auth/exchange"] button').click();
-	// Members land on the books (filters and all); a new one on /start.
-	await page.waitForURL(/\/(start)?(\?.*)?$/);
+	// Members land on the books (filters and all); a new one in setup.
+	await page.waitForURL(/\/(start\/setup)?(\?.*)?$/);
 }
 
 /** A live loan with a thread, so there is a message box to look at. */

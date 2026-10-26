@@ -2567,44 +2567,10 @@ button.toggle:hover {
 	font-weight: 600;
 }
 
-/* First run: what this is, in three steps */
+/* A line said a little louder than the rest, such as a welcome. */
 .lede {
 	font-size: 1.0625rem;
 	color: var(--muted);
-}
-
-.steps {
-	list-style: none;
-	padding: 0;
-	margin-block: 1.5rem;
-	display: grid;
-	gap: 1rem;
-}
-
-.steps li {
-	display: grid;
-	grid-template-columns: 2rem 1fr;
-	gap: 0.75rem;
-	align-items: start;
-}
-
-.steps-number {
-	inline-size: 2rem;
-	block-size: 2rem;
-	display: grid;
-	place-items: center;
-	border-radius: 999px;
-	background: var(--accent-soft);
-	color: var(--accent);
-	font-weight: 700;
-}
-
-.steps p {
-	margin-block: 0.15rem 0;
-}
-
-.start-go {
-	margin-block-start: 1.5rem;
 }
 
 .cookie-note {
@@ -3183,25 +3149,6 @@ input.tag-quick-add[type="text"] {
 
 .push-toggle .actions {
 	margin-block: 0 0.75rem;
-}
-
-/* The start page: how it works in three lines, then the setup's steps. */
-.start-how {
-	list-style: none;
-	padding: 0;
-	margin: 0 0 2rem;
-	display: grid;
-	gap: 0.35rem;
-}
-
-.start-shot {
-	display: block;
-	inline-size: 100%;
-	max-inline-size: 16rem;
-	block-size: auto;
-	margin-block-start: 0.75rem;
-	border: 1px solid var(--line);
-	border-radius: var(--radius);
 }
 
 /* A new member's setup: which step of how many, as words and a bar. */
