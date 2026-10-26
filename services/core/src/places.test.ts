@@ -1,7 +1,14 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { as, SAM } from "../test/api.ts";
-import { looksLikePostcode, tidyPostcode } from "./places.ts";
+import {
+	areaName,
+	looksLikePostcode,
+	placeAt,
+	regionOf,
+	suggestPlaces,
+	tidyPostcode,
+} from "./places.ts";
 
 const API = "https://api.postcodes.io";
 
@@ -171,5 +178,80 @@ describe("postcodes.io being down", () => {
 		expect(
 			(await as(SAM).patch("/v1/me", { area: { label: "Hampstead" } })).status,
 		).toBe(204);
+	});
+});
+
+/** Which service is asked, by where the library is. */
+describe("a library in the United States", () => {
+	const BROOKLYN = { lat: 40.6782, lng: -73.9442 };
+
+	/** Every outside call, answered by host; anything unexpected fails. */
+	function hosts(answers: Record<string, () => Response>) {
+		const asked: string[] = [];
+		vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+			const url = new Request(input, init).url;
+			const host = new URL(url).host;
+			asked.push(url);
+			const answer = answers[host];
+			if (!answer) throw new Error(`unexpected call to ${host}`);
+			return answer();
+		});
+		return asked;
+	}
+
+	it("is told from one in Britain, and from one elsewhere", () => {
+		expect(regionOf({ lat: 51.5916, lng: -0.166 })).toBe("gb");
+		expect(regionOf(BROOKLYN)).toBe("us");
+		expect(regionOf({ lat: 31.8167, lng: 35.1958 })).toBe(null);
+	});
+
+	it("finds a ZIP code, named by the ZIP, its town beside it", async () => {
+		const asked = hosts({
+			"api.zippopotam.us": () =>
+				Response.json({
+					"post code": "11215",
+					places: [
+						{
+							"place name": "Brooklyn",
+							latitude: "40.6669",
+							longitude: "-73.9828",
+							"state abbreviation": "NY",
+						},
+					],
+				}),
+		});
+		const places = await suggestPlaces(env, undefined, BROOKLYN, "11215-1234");
+		expect(places).toEqual([
+			{ name: "11215", lat: 40.6669, lng: -73.9828, detail: "Brooklyn, NY" },
+		]);
+		expect(asked).toEqual(["https://api.zippopotam.us/us/11215"]);
+	});
+
+	it("keeps a ZIP+4 to its ZIP, as a postcode to its district", () => {
+		expect(areaName("11215-1234")).toBe("11215");
+		expect(areaName("112151234")).toBe("11215");
+		expect(areaName("N3 3SS")).toBe("N3");
+		expect(areaName("Park Slope")).toBe("Park Slope");
+	});
+
+	it("asks nobody for a place name typed in", async () => {
+		const asked = hosts({});
+		expect(await suggestPlaces(env, undefined, BROOKLYN, "Park Slope")).toEqual(
+			[],
+		);
+		expect(asked).toEqual([]);
+	});
+
+	it("names a point from OpenStreetMap, without asking postcodes.io", async () => {
+		const asked = hosts({
+			"nominatim.openstreetmap.org": () =>
+				Response.json({
+					address: { suburb: "Park Slope", city_district: "Brooklyn" },
+				}),
+		});
+		expect(await placeAt(env, undefined, { lat: 40.672, lng: -73.977 })).toBe(
+			"Park Slope",
+		);
+		expect(asked).toHaveLength(1);
 	});
 });
