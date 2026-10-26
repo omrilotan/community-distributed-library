@@ -448,11 +448,12 @@ main > section {
 	margin: 0;
 }
 
-/* A phone's outline: round corners and a hairline, a soft green shadow. */
+/* A phone's outline: barely rounded corners and a hairline, a soft green
+   shadow. */
 .screens img {
 	inline-size: 100%;
 	aspect-ratio: 540 / 1210;
-	border-radius: 1.5rem;
+	border-radius: 0.375rem;
 	border: 1px solid var(--line-strong);
 	background: var(--surface);
 	box-shadow: 0 1.5rem 2.5rem -1.5rem
