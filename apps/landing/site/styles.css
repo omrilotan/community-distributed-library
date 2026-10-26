@@ -685,6 +685,31 @@ main > section {
 	}
 }
 
+/* A look inside: the words, and beside them the library on a home screen. */
+.look-intro {
+	display: grid;
+	gap: 2rem;
+	margin-block-end: 2.5rem;
+}
+
+.look-intro .open-intro {
+	margin-block-end: 0;
+}
+
+.look-home {
+	inline-size: 100%;
+	block-size: auto;
+	border-radius: var(--radius);
+}
+
+@media (min-width: 64rem) {
+	.look-intro {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		align-items: center;
+		gap: 4rem;
+	}
+}
+
 /* Open source: the invitation to run one, then the three ways the skills help. */
 .open-intro {
 	max-inline-size: var(--measure);
