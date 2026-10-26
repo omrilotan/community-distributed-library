@@ -8,8 +8,17 @@ import { distanceM, snapArea } from "./geo.ts";
  * browser. UK only, like the library; a community elsewhere brings another
  * provider behind the same three functions. Answers are cached for a month,
  * since neither place names nor postcodes move.
+ *
+ * Naming a point ("Use my location") also asks OpenStreetMap's Nominatim
+ * where postcodes.io has nothing, so a point anywhere gets a name. One
+ * lookup per tap, cached, which its usage policy allows; it forbids
+ * suggestions as you type, so the suggestions stay with postcodes.io.
  */
 const API = "https://api.postcodes.io";
+const NOMINATIM = "https://nominatim.openstreetmap.org";
+/** Nominatim asks every caller to say who it is. */
+const AGENT =
+	"community-distributed-library (https://community-distributed-library.com)";
 const MONTH = 30 * 24 * 60 * 60;
 /** Further than this from the library, a match is somewhere else of the same name. */
 const REACH_M = 40_000;
@@ -191,12 +200,40 @@ export async function placeAt(
 	point: Point,
 ): Promise<string | null> {
 	const snapped = snapArea(point);
-	const key = `place:at:${snapped.lat.toFixed(4)},${snapped.lng.toFixed(4)}`;
+	// "at2": a point outside the UK was cached nameless before Nominatim.
+	const key = `place:at2:${snapped.lat.toFixed(4)},${snapped.lng.toFixed(4)}`;
 	return lookup(env, ctx, key, null as string | null, async () => {
 		const found = await ask<
 			{ admin_ward: string | null; outcode: string | null }[]
 		>(`/postcodes?lon=${snapped.lng}&lat=${snapped.lat}&limit=1&radius=1000`);
 		const first = found?.[0];
-		return first?.admin_ward ?? first?.outcode ?? null;
+		return first?.admin_ward ?? first?.outcode ?? (await nominatimAt(snapped));
 	});
+}
+
+/**
+ * The neighbourhood around a point, from OpenStreetMap: the suburb where
+ * there is one (Ramot, in Jerusalem), else the next size up. Only the
+ * rounded point goes. A failure throws, so nothing empty is cached.
+ */
+async function nominatimAt(point: Point): Promise<string | null> {
+	const response = await fetch(
+		`${NOMINATIM}/reverse?format=jsonv2&zoom=14&lat=${point.lat}&lon=${point.lng}`,
+		{ headers: { accept: "application/json", "user-agent": AGENT } },
+	);
+	if (!response.ok) throw new Error(`nominatim ${response.status}`);
+	const { address } = (await response.json()) as {
+		address?: Record<string, string>;
+	};
+	if (!address) return null;
+	return (
+		address.suburb ??
+		address.neighbourhood ??
+		address.quarter ??
+		address.city_district ??
+		address.village ??
+		address.town ??
+		address.city ??
+		null
+	);
 }
