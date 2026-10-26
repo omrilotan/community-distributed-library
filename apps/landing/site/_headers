@@ -4,6 +4,11 @@
   Cache-Control: public, max-age=31536000, immutable
 /styles/*
   Cache-Control: public, max-age=31536000, immutable
+# Live, the pages go out as bare text/html; name the charset in the header too.
+/
+  Content-Type: text/html; charset=utf-8
+/assistants
+  Content-Type: text/html; charset=utf-8
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
