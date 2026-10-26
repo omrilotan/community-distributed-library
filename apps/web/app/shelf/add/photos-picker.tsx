@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { Plus } from "@phosphor-icons/react/dist/ssr/Plus";
+import { X } from "@phosphor-icons/react/dist/ssr/X";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr/ArrowCounterClockwise";
+import { MagnifyingGlassMinus } from "@phosphor-icons/react/dist/ssr/MagnifyingGlassMinus";
+import { MagnifyingGlassPlus } from "@phosphor-icons/react/dist/ssr/MagnifyingGlassPlus";
 import {
 	MAX_ZOOM,
 	clamp,
@@ -22,7 +26,7 @@ export interface PhotosPickerLabels {
 	zoom: string;
 	hint: string;
 	main: string;
-	/** Under a photo the thing already has: keep it (the box ticked). */
+	/** On a photo the thing already has and the owner took out: put it back. */
 	keep: string;
 	/** Moving a photo one place towards the first, and away from it. */
 	earlier: string;
@@ -59,19 +63,27 @@ export function PhotosPicker({
 	name?: string;
 	/**
 	 * The photos the thing already has, on its own page: shown first in the
-	 * same row, each with a box to keep it (sent as `keep`, in order).
+	 * same row, each sent as `keep` while it stays. One taken out is dimmed
+	 * where it was, so it can be put back.
 	 */
 	kept?: string[];
 }) {
 	// Every photo in the order shown: those the thing has, then new ones,
 	// moved about as the owner likes. The first is the main photo.
 	const [slots, setSlots] = useState<Slot[]>(() =>
-		kept.map((url) => ({ kind: "kept", key: `kept:${url}`, url })),
+		kept.map((url) => ({
+			kind: "kept",
+			key: `kept:${url}`,
+			url,
+			dropped: false,
+		})),
 	);
 	const fileRef = useRef<HTMLInputElement>(null);
 	const renders = useRef(new Map<number, Render>());
 	const next = useRef(0);
 	const added = slots.filter((slot) => slot.kind === "new");
+	// The photos that will be saved; one taken out makes room for another.
+	const live = slots.filter((slot) => slot.kind === "new" || !slot.dropped);
 
 	// On submit, replace the hidden input's files with the rendered squares.
 	useEffect(() => {
@@ -103,7 +115,7 @@ export function PhotosPicker({
 	}, [added]);
 
 	async function add(files: FileList | null) {
-		const room = max - slots.length;
+		const room = max - live.length;
 		const chosen = Array.from(files ?? []).slice(0, Math.max(0, room));
 		const fresh = await Promise.all(
 			chosen.map(async (file): Promise<Slot> => {
@@ -119,7 +131,16 @@ export function PhotosPicker({
 				};
 			}),
 		);
-		setSlots((current) => [...current, ...fresh].slice(0, max));
+		setSlots((current) => [...current, ...fresh]);
+	}
+
+	/** Take a photo the thing has out of the row, or put it back. */
+	function drop(key: string, dropped: boolean) {
+		setSlots((current) =>
+			current.map((slot) =>
+				slot.kind === "kept" && slot.key === key ? { ...slot, dropped } : slot,
+			),
+		);
 	}
 
 	function remove(id: number) {
@@ -146,12 +167,14 @@ export function PhotosPicker({
 	// Which photo goes where: a kept one by its address, a new one by its
 	// place among the files sent, split by spaces (a form turns line breaks
 	// into CRLF; an address has no spaces). The server keeps this order.
-	const order = slots
+	const order = live
 		.map((slot) =>
 			slot.kind === "kept" ? `kept:${slot.url}` : `new:${added.indexOf(slot)}`,
 		)
 		.join(" ");
-	const left = max - slots.length;
+	const left = max - live.length;
+	// The first photo that stays is the thing's picture everywhere.
+	const main = live[0]?.key;
 	return (
 		<div className="photos-picker">
 			{/* Submitted field: filled with the squares on submit, never with the chosen files. */}
@@ -165,76 +188,107 @@ export function PhotosPicker({
 			/>
 			<input type="hidden" name="order" value={order} />
 			<ol className="photos-slots">
-				{slots.map((slot, index) => (
-					<li key={slot.key}>
-						{slot.kind === "kept" ? (
-							<>
-								<img alt="" src={slot.url} className="picker-square" />
-								<label className="check">
-									<input
-										type="checkbox"
-										name="keep"
-										value={slot.url}
-										defaultChecked
+				{slots.map((slot, index) => {
+					const out = slot.kind === "kept" && slot.dropped;
+					// What acts on the photo, laid over it: which is the main one,
+					// take it out (or put it back), move it a place either way.
+					const overlay = (
+						<>
+							{slot.key === main ? (
+								<span className="badge photos-main">{labels.main}</span>
+							) : null}
+							{out ? (
+								<button
+									type="button"
+									className="photos-undo"
+									disabled={left === 0}
+									onClick={() => drop(slot.key, false)}
+								>
+									<ArrowCounterClockwise
+										size={16}
+										weight="bold"
+										aria-hidden="true"
 									/>
-									{index === 0 ? labels.main : labels.keep}
-								</label>
-							</>
-						) : (
-							<>
+									{labels.keep}
+								</button>
+							) : (
+								<button
+									type="button"
+									className="photos-act photos-remove"
+									aria-label={labels.remove}
+									title={labels.remove}
+									onClick={() =>
+										slot.kind === "kept"
+											? drop(slot.key, true)
+											: remove(slot.id)
+									}
+								>
+									<X size={16} weight="bold" aria-hidden="true" />
+								</button>
+							)}
+							{slots.length > 1 && !out ? (
+								<div className="photos-move">
+									{/* Only the moves there are: none earlier for the first. */}
+									{index > 0 ? (
+										<button
+											type="button"
+											className="photos-act"
+											aria-label={labels.earlier}
+											title={labels.earlier}
+											onClick={() => move(index, -1)}
+										>
+											<CaretLeft
+												className="icon-directional"
+												size={16}
+												weight="bold"
+												aria-hidden="true"
+											/>
+										</button>
+									) : (
+										<span />
+									)}
+									{index < slots.length - 1 ? (
+										<button
+											type="button"
+											className="photos-act"
+											aria-label={labels.later}
+											title={labels.later}
+											onClick={() => move(index, 1)}
+										>
+											<CaretRight
+												className="icon-directional"
+												size={16}
+												weight="bold"
+												aria-hidden="true"
+											/>
+										</button>
+									) : null}
+								</div>
+							) : null}
+						</>
+					);
+					return (
+						<li key={slot.key} className={out ? "photos-out" : undefined}>
+							{slot.kind === "kept" ? (
+								<div className="photos-frame">
+									<img alt="" src={slot.url} className="picker-square" />
+									{out ? null : (
+										<input type="hidden" name="keep" value={slot.url} />
+									)}
+									{overlay}
+								</div>
+							) : (
 								<Square
 									image={slot.image}
 									labels={labels}
 									register={(render) => renders.current.set(slot.id, render)}
-								/>
-								<div className="photos-slot-foot">
-									{index === 0 ? (
-										<span className="badge">{labels.main}</span>
-									) : null}
-									<button
-										type="button"
-										className="link"
-										onClick={() => remove(slot.id)}
-									>
-										{labels.remove}
-									</button>
-								</div>
-							</>
-						)}
-						{slots.length > 1 ? (
-							<div className="photos-move">
-								<button
-									type="button"
-									className="quiet"
-									aria-label={labels.earlier}
-									title={labels.earlier}
-									disabled={index === 0}
-									onClick={() => move(index, -1)}
 								>
-									<CaretLeft
-										className="icon-directional"
-										size={18}
-										aria-hidden="true"
-									/>
-								</button>
-								<button
-									type="button"
-									className="quiet"
-									aria-label={labels.later}
-									title={labels.later}
-									disabled={index === slots.length - 1}
-									onClick={() => move(index, 1)}
-								>
-									<CaretRight
-										className="icon-directional"
-										size={18}
-										aria-hidden="true"
-									/>
-								</button>
-							</div>
-						) : null}
-					</li>
-				))}
+									{overlay}
+								</Square>
+							)}
+						</li>
+					);
+				})}
 				{/* The way to add more sits where the next photo would go. */}
 				{left > 0 ? (
 					<li>
@@ -268,7 +322,7 @@ export function PhotosPicker({
 
 /** A photo in the row: one the thing already has, or one just chosen. */
 type Slot =
-	| { kind: "kept"; key: string; url: string }
+	| { kind: "kept"; key: string; url: string; dropped: boolean }
 	| { kind: "new"; key: string; id: number; image: ImageBitmap };
 
 /** One photo in its square: drag to move it, zoom out to see it whole. */
@@ -276,10 +330,13 @@ function Square({
 	image,
 	labels,
 	register,
+	children,
 }: {
 	image: ImageBitmap;
 	labels: PhotosPickerLabels;
 	register: (render: Render) => void;
+	/** What is laid over the photo: its badge and buttons. */
+	children: React.ReactNode;
 }) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [frame, setFrame] = useState<Size>({ width: 0, height: 0 });
@@ -348,57 +405,61 @@ function Square({
 
 	return (
 		<>
-			<canvas
-				ref={canvasRef}
-				className="picker-frame picker-square"
-				aria-label={labels.hint}
-				// The arrow keys place it as a drag does.
-				tabIndex={0}
-				onKeyDown={(event) => {
-					if (!view) return;
-					const next = nudged(
-						view,
-						event.key,
-						event.shiftKey,
-						image,
-						frame,
-						true,
-					);
-					if (!next) return;
-					event.preventDefault();
-					setView(next);
-				}}
-				onPointerDown={(event) => {
-					if (!view) return;
-					event.currentTarget.setPointerCapture(event.pointerId);
-					drag.current = { x: event.clientX, y: event.clientY, view };
-				}}
-				onPointerMove={(event) => {
-					const start = drag.current;
-					if (!start) return;
-					setView(
-						clamp(
-							{
-								zoom: start.view.zoom,
-								offsetX: start.view.offsetX + (event.clientX - start.x),
-								offsetY: start.view.offsetY + (event.clientY - start.y),
-							},
+			<div className="photos-frame">
+				<canvas
+					ref={canvasRef}
+					className="picker-frame picker-square"
+					aria-label={labels.hint}
+					// The arrow keys place it as a drag does.
+					tabIndex={0}
+					onKeyDown={(event) => {
+						if (!view) return;
+						const next = nudged(
+							view,
+							event.key,
+							event.shiftKey,
 							image,
 							frame,
 							true,
-						),
-					);
-				}}
-				onPointerUp={() => {
-					drag.current = null;
-				}}
-				onPointerCancel={() => {
-					drag.current = null;
-				}}
-			/>
+						);
+						if (!next) return;
+						event.preventDefault();
+						setView(next);
+					}}
+					onPointerDown={(event) => {
+						if (!view) return;
+						event.currentTarget.setPointerCapture(event.pointerId);
+						drag.current = { x: event.clientX, y: event.clientY, view };
+					}}
+					onPointerMove={(event) => {
+						const start = drag.current;
+						if (!start) return;
+						setView(
+							clamp(
+								{
+									zoom: start.view.zoom,
+									offsetX: start.view.offsetX + (event.clientX - start.x),
+									offsetY: start.view.offsetY + (event.clientY - start.y),
+								},
+								image,
+								frame,
+								true,
+							),
+						);
+					}}
+					onPointerUp={() => {
+						drag.current = null;
+					}}
+					onPointerCancel={() => {
+						drag.current = null;
+					}}
+				/>
+				{children}
+			</div>
 			{view ? (
 				<label className="photos-zoom">
-					{labels.zoom}
+					<span className="sr-only">{labels.zoom}</span>
+					<MagnifyingGlassMinus size={16} aria-hidden="true" />
 					{/* A whole-number scale over the zoom range: a fractional minimum
 					    (0.952…) on the input itself fails the form's own check on
 					    Save. No name, so it is never sent. */}
@@ -424,6 +485,7 @@ function Square({
 							)
 						}
 					/>
+					<MagnifyingGlassPlus size={16} aria-hidden="true" />
 				</label>
 			) : null}
 		</>

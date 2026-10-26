@@ -206,16 +206,30 @@ test.describe("a library of things", () => {
 		await expect(page.locator("html")).toHaveAttribute("data-form-guard", "on");
 		const slots = page.locator(".photos-slots > li:has(.photos-move)");
 		await expect(slots).toHaveCount(3);
+		// Only the moves there are: the first goes no earlier.
 		await expect(
 			slots.first().getByRole("button", { name: "Move earlier" }),
-		).toBeDisabled();
+		).toHaveCount(0);
 		await slots.nth(2).getByRole("button", { name: "Move earlier" }).click();
 		await slots.nth(1).getByRole("button", { name: "Move earlier" }).click();
 		await expect(slots.first().locator("img")).toHaveAttribute(
 			"src",
 			before[2]!,
 		);
-		await expect(slots.first().locator("label")).toHaveText("Main photo");
+		await expect(slots.first().locator(".badge")).toHaveText("Main photo");
+		// One taken out stays where it was, dimmed, until it is put back; out,
+		// it makes room for another.
+		const status = page.locator(".photos-picker [role=status]");
+		await expect(status).toHaveText("One more photo fits.");
+		await slots.nth(2).getByRole("button", { name: "Remove" }).click();
+		await expect(page.locator(".photos-out")).toHaveCount(1);
+		await expect(status).toHaveText("Up to 2 more.");
+		await page
+			.locator(".photos-out")
+			.getByRole("button", { name: "Keep" })
+			.click();
+		await expect(page.locator(".photos-out")).toHaveCount(0);
+		await slots.nth(2).getByRole("button", { name: "Remove" }).click();
 		await page
 			.locator(`form[action='/api/copies/${mine.id}'] button[type=submit]`)
 			.click();
@@ -225,7 +239,7 @@ test.describe("a library of things", () => {
 			BORROWER.id,
 			`/v1/copies/${mine.id}`,
 		);
-		expect(moved.body.photos).toEqual([before[2], before[0], before[1]]);
+		expect(moved.body.photos).toEqual([before[2], before[0]]);
 
 		await page.request.fetch(`${CORE}/v1/copies/${mine.id}`, {
 			method: "DELETE",

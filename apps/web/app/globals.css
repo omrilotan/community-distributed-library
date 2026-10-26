@@ -3366,9 +3366,12 @@ input.tag-quick-add[type="text"] {
 	gap: 0.75rem;
 }
 
+/* One column, the li's own width: sized to its content, a canvas drawn
+   once at a wider width would hold the column open past its neighbours. */
 .photos-slots li {
 	display: grid;
-	gap: 0.25rem;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.5rem;
 	align-content: start;
 }
 
@@ -3380,28 +3383,82 @@ input.tag-quick-add[type="text"] {
 	background: var(--line);
 }
 
-.photos-slot-foot {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-	justify-content: space-between;
+/* A photo with what acts on it laid over it: "Main photo" at the top's
+   start, take it out at the top's end, a place either way along the bottom.
+   Every control is the same small round button on a dark scrim, so it reads
+   on a dark photo and on the white around one that is not square. */
+.photos-frame {
+	position: relative;
 }
 
-/* Moving a photo one place either way: two small buttons under it. */
+.photos-frame > .picker-square {
+	display: block;
+}
+
+.photos-main {
+	position: absolute;
+	inset-block-start: 0.4rem;
+	inset-inline-start: 0.4rem;
+	background: var(--accent);
+	color: var(--accent-ink);
+	pointer-events: none;
+}
+
+button.photos-act {
+	display: grid;
+	place-items: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	min-block-size: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: rgb(0 0 0 / 0.6);
+	color: #fff;
+}
+
+button.photos-act:hover {
+	background: rgb(0 0 0 / 0.8);
+}
+
+.photos-remove {
+	position: absolute;
+	inset-block-start: 0.4rem;
+	inset-inline-end: 0.4rem;
+}
+
 .photos-move {
+	position: absolute;
+	inset-inline: 0.4rem;
+	inset-block-end: 0.4rem;
 	display: flex;
-	gap: 0.5rem;
+	justify-content: space-between;
+	/* The photo under it still drags between the two buttons. */
+	pointer-events: none;
 }
 
-.photos-move button {
-	flex: 1;
-	justify-content: center;
-	padding-block: 0.35rem;
-	min-block-size: 2.25rem;
+.photos-move > * {
+	pointer-events: auto;
 }
 
-.photos-move button:disabled {
-	opacity: 0.35;
+/* Taken out: dimmed where it was, with the way to put it back on it. */
+.photos-out .picker-square {
+	opacity: 0.3;
+}
+
+.photos-undo {
+	position: absolute;
+	inset: 50% auto auto 50%;
+	translate: -50% -50%;
+	margin: 0;
+	padding: 0.35rem 0.75rem;
+	font-size: 0.875rem;
+	white-space: nowrap;
+}
+
+.photos-undo:disabled {
+	opacity: 0.5;
 	cursor: default;
 }
 
@@ -3425,12 +3482,25 @@ input.tag-quick-add[type="text"] {
 	font-size: 1.0625rem;
 }
 
+/* Zoom, under a new photo: one slim slider between a smaller and a larger
+   glass, no words. */
 .photos-zoom {
-	font-size: 0.8125rem;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0;
+	color: var(--muted);
+}
+
+.photos-zoom svg {
+	flex: none;
 }
 
 .photos-zoom input {
-	inline-size: 100%;
+	flex: 1;
+	min-inline-size: 0;
+	margin: 0;
+	accent-color: var(--accent);
 }
 
 .photos-kept {
@@ -3484,6 +3554,7 @@ html[data-library="things"] .book-cover img {
 /* "Add photos", the size of a photo, where the next one goes. */
 .photos-add {
 	position: relative;
+	margin: 0;
 	display: grid;
 	place-content: center;
 	justify-items: center;
@@ -3498,7 +3569,7 @@ html[data-library="things"] .book-cover img {
 }
 
 .photos-add:hover,
-.photos-add:focus-within {
+.photos-add:has(input:focus-visible) {
 	border-color: var(--accent);
 }
 
@@ -3509,7 +3580,8 @@ html[data-library="things"] .book-cover img {
 	opacity: 0;
 }
 
-.photos-add:focus-within {
+/* A ring for the keyboard only: a click leaves none behind. */
+.photos-add:has(input:focus-visible) {
 	outline: 2px solid var(--accent);
 	outline-offset: 2px;
 }
