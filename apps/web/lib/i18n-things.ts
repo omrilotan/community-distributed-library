@@ -14,8 +14,7 @@ export const thingWords = {
 			"A shed full of things? An assistant can list them for you.",
 		setupAreaHint:
 			"Roughly where you live, so neighbours see how far a thing is. Not your address.",
-		setupPlaceHint:
-			"Usually your home address. Only the person you hand something to sees it, and only once you both agree a time.",
+		setupPlaceHint: "Usually your home address.",
 		setupBookTitle: "Your first thing",
 		editBook: "Correct this item's details",
 		editBookHint: "Moderators only. This changes the item's name and photo.",
@@ -132,8 +131,7 @@ export const thingWords = {
 		startAssistantShort: "מחסן מלא? עוזר יכול לרשום הכול בשבילכם.",
 		setupAreaHint:
 			"בערך איפה אתם גרים, כדי שהשכנים יראו כמה רחוק הפריט. לא הכתובת.",
-		setupPlaceHint:
-			"בדרך כלל כתובת הבית. רק מי שמקבלים מכם משהו רואים אותה, ורק אחרי שקבעתם מועד.",
+		setupPlaceHint: "בדרך כלל כתובת הבית.",
 		setupBookTitle: "הפריט הראשון",
 		editBook: "תיקון פרטי הפריט",
 		editBookHint: "למודרטורים בלבד. השינוי משנה את השם והתמונה של הפריט.",
