@@ -42,17 +42,13 @@ export default async function LoginPage({
 			    asking for a link that never comes. */}
 			{sent ? null : <p className="muted">{t.landingInvite}</p>}
 			{sent ? (
-				// What to do now, in the order people need it: the link if it opens
-				// here, the code if it opens anywhere else.
+				// What to do now, in one line: tap the link. The code below is for
+				// the email opening somewhere else, and says so itself.
 				<div className="callout">
 					<p>
 						<strong>{t.linkSentTitle}</strong>
 					</p>
 					<p>{t.linkSent}</p>
-					<ol className="sign-in-ways">
-						<li>{t.linkSentTapLink}</li>
-						<li>{t.linkSentTypeCode}</li>
-					</ol>
 				</div>
 			) : null}
 			{dev === "unknown_email" ? (
@@ -138,10 +134,15 @@ export default async function LoginPage({
 					<button type="submit">{t.sendLink}</button>
 				</form>
 			)}
-			<p className="muted">
-				{t.termsHint} <a href="/terms">{t.terms}</a>
-			</p>
-			<p className="muted cookie-note">{t.cookieNote}</p>
+			{/* Agreed to before the link was asked for; not said again after. */}
+			{sent ? null : (
+				<>
+					<p className="muted">
+						{t.termsHint} <a href="/terms">{t.terms}</a>
+					</p>
+					<p className="muted cookie-note">{t.cookieNote}</p>
+				</>
+			)}
 		</main>
 	);
 }
