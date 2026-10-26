@@ -17,7 +17,7 @@ import { Stats } from "../stats.tsx";
 import { core } from "../../lib/core.ts";
 import { strings, type Locale } from "../../lib/i18n.ts";
 import { requireSession, signedOut } from "../../lib/session.ts";
-import { AreaPicker } from "../area-picker.tsx";
+import { AreaPicker, MEMBER_REACH_M } from "../area-picker.tsx";
 import { Callout } from "../ui.tsx";
 import { UnsavedGuard } from "../unsaved-guard.tsx";
 import { dateFormat } from "../../lib/dates.ts";
@@ -127,12 +127,15 @@ export default async function SettingsPage({
 				) : (
 					<AreaPicker
 						centre={body.community.centre}
+						reach={MEMBER_REACH_M}
 						initial={body.area ?? null}
 						labels={{
 							area: t.areaLabel,
 							areaHint: t.areaLabelHint,
 							locate: t.locate,
 							located: t.located,
+							locatedNoName: t.locatedNoName,
+							locatedFar: t.locatedFar,
 							locateFailed: t.locateFailed,
 							mapHint: t.mapHint,
 							mapMore: t.mapMore,

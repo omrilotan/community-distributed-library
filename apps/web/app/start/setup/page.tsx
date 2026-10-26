@@ -6,7 +6,7 @@ import { getMe } from "../../../lib/profile.ts";
 import { libraryWords } from "../../../lib/library.ts";
 import { strings, type Locale } from "../../../lib/i18n.ts";
 import { requireSession, signedOut } from "../../../lib/session.ts";
-import { AreaPicker } from "../../area-picker.tsx";
+import { AreaPicker, MEMBER_REACH_M } from "../../area-picker.tsx";
 import { Callout } from "../../ui.tsx";
 import { WeekGrid } from "../../settings/availability.tsx";
 import { SetupProgress } from "../setup-progress.tsx";
@@ -77,12 +77,15 @@ export default async function SetupPage({
 					{compact ? null : (
 						<AreaPicker
 							centre={body.community.centre}
+							reach={MEMBER_REACH_M}
 							initial={body.area ?? null}
 							labels={{
 								area: t.areaLabel,
 								areaHint: t.areaLabelHint,
 								locate: t.locate,
 								located: t.located,
+								locatedNoName: t.locatedNoName,
+								locatedFar: t.locatedFar,
 								locateFailed: t.locateFailed,
 								mapHint: t.mapHint,
 								mapMore: t.mapMore,
