@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("the about page says the software is open and links to it", async ({
+test("the about page names the project's home, says the software is open and links to it", async ({
 	page,
 }) => {
 	await page.goto("/about?lang=en");
@@ -8,6 +8,9 @@ test("the about page says the software is open and links to it", async ({
 	await expect(open.getByRole("heading")).toHaveText(
 		"Open source, and everyone's",
 	);
+	await expect(
+		open.getByRole("link", { name: "community-distributed-library.com" }),
+	).toHaveAttribute("href", "https://community-distributed-library.com");
 	await expect(
 		open.getByRole("link", { name: "The code on GitHub" }),
 	).toHaveAttribute(
