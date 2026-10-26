@@ -746,6 +746,51 @@ main > section.welcome {
 	}
 }
 
+/* Moderators: who they are on one side, what they do on the other, each
+   duty under a hairline. No glyphs; these are people, not features. */
+.keepers {
+	display: grid;
+	gap: 2rem;
+}
+
+.keepers-intro p {
+	font-size: 1.125rem;
+	max-inline-size: var(--measure);
+	margin-block-start: 1rem;
+}
+
+.keepers-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 1.5rem;
+}
+
+.keepers-list li {
+	padding-block-start: 1.25rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.keepers-list h3 {
+	font-size: 1.125rem;
+	color: var(--accent);
+	margin-block-end: 0.25rem;
+}
+
+.keepers-list p {
+	color: var(--muted);
+	max-inline-size: 34rem;
+}
+
+@media (min-width: 64rem) {
+	.keepers {
+		grid-template-columns: 5fr 7fr;
+		gap: 5rem;
+		align-items: start;
+	}
+}
+
 footer {
 	display: flex;
 	flex-wrap: wrap;
