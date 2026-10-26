@@ -57,13 +57,13 @@ export function clearedSignInCookies(): string[] {
 }
 
 /**
- * Signed in, by link or by code. A new member gets the explanation first;
+ * Signed in, by link or by code. A new member goes straight into setup;
  * anyone else goes back where they were sent to sign in from (an assistant's
  * consent screen, say), or to the books.
  */
 export function signedIn(session: Session, back: string | null): Response {
 	const headers = new Headers({
-		location: session.isNew ? "/start" : (back ?? "/"),
+		location: session.isNew ? "/start/setup" : (back ?? "/"),
 	});
 	headers.append("set-cookie", sessionCookie(session.token, session.expiresAt));
 	for (const cookie of clearedSignInCookies())

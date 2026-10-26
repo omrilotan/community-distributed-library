@@ -10,7 +10,6 @@
 export const thingWords = {
 	en: {
 		firstBook: "Add one thing you are happy to lend.",
-		startLede: "Neighbours lending each other the things they already own.",
 		startAssistantShort:
 			"A shed full of things? An assistant can list them for you.",
 		setupAreaHint:
@@ -130,7 +129,6 @@ export const thingWords = {
 	},
 	he: {
 		firstBook: "הוסיפו פריט אחד שאתם שמחים להשאיל.",
-		startLede: "שכנים משאילים זה לזה דברים שכבר יש להם.",
 		startAssistantShort: "מחסן מלא? עוזר יכול לרשום הכול בשבילכם.",
 		setupAreaHint:
 			"בערך איפה אתם גרים, כדי שהשכנים יראו כמה רחוק הפריט. לא הכתובת.",
@@ -286,17 +284,6 @@ export function thingHelpers(locale: "en" | "he") {
 			he
 				? `${copies} ${plural(copies, "פריט", "פריטים")} בקהילה · ${waiting} ${plural(waiting, "ממתין/ה", "ממתינים")}`
 				: `${copies} ${plural(copies, "item", "items")} in the community · ${waiting} waiting`,
-		startHow: (he
-			? [
-					["רושמים פריטים", "הם נשארים אצלכם."],
-					["מבקשים משכנים", "כל דבר בסביבה."],
-					["נפגשים ומעבירים", "במועד ששניכם בחרתם."],
-				]
-			: [
-					["List your things", "They stay with you."],
-					["Ask a neighbour", "For anything nearby."],
-					["Meet and hand over", "At a time you both picked."],
-				]) as [string, string][],
 		booksTotal: (n: number) =>
 			he
 				? n === 1

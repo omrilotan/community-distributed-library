@@ -28,8 +28,6 @@ const dictionary = {
 		cookieNote:
 			"We keep a little on your device — what signs you in, and small preferences like the language you read in. No tracking, no analytics, no advertising, and nothing about you is sold or handed on.",
 		firstBook: "Add one book you are happy to lend.",
-		startLede: "Neighbours lending each other the books they already own.",
-		startSetupTitle: "Three short steps to set up",
 		startAssistantShort: "A pile of books? An assistant can list them for you.",
 		setupNext: "Next",
 		setupLater: "Later",
@@ -43,7 +41,6 @@ const dictionary = {
 		setupTimesHint:
 			"Tick the times that usually suit you. Arranging a handoff then takes a tap.",
 		setupBookTitle: "Your first book",
-		startContinue: "Let's start",
 		editBook: "Correct this book's details",
 		editBookHint:
 			"Moderators only. This changes the book for everyone who has a copy of it.",
@@ -830,8 +827,6 @@ const dictionary = {
 		cookieNote:
 			"אנחנו שומרים אצלכם מעט — מה שמחבר אתכם, והעדפות קטנות כמו השפה שבה אתם קוראים. בלי מעקב, בלי אנליטיקס, בלי פרסום, ושום דבר עליכם לא נמכר ולא מועבר הלאה.",
 		firstBook: "הוסיפו ספר אחד שאתם שמחים להשאיל.",
-		startLede: "שכנים משאילים זה לזה ספרים שכבר יש להם.",
-		startSetupTitle: "שלושה צעדים קצרים להתחלה",
 		startAssistantShort: "ערימת ספרים? עוזר יכול לרשום אותה בשבילכם.",
 		setupNext: "הבא",
 		setupLater: "אחר כך",
@@ -845,7 +840,6 @@ const dictionary = {
 		setupTimesHint:
 			"סמנו את הזמנים שבדרך כלל נוחים לכם, ותיאום מסירה יהיה בלחיצה.",
 		setupBookTitle: "הספר הראשון",
-		startContinue: "בואו נתחיל",
 		editBook: "תיקון פרטי הספר",
 		editBookHint: "למודרטורים בלבד. השינוי משפיע על כל מי שיש לו עותק.",
 		statsTitle: "מספרים",
@@ -1884,17 +1878,6 @@ function helpers(locale: Locale) {
 				? `עוד לא צוין מקום מפגש. שאלו את \u2068${name}\u2069 בהודעות.`
 				: `\u2068${name}\u2069 has not said where to meet yet. Ask in the messages.`,
 		/** How it works, in three lines. */
-		startHow: (he
-			? [
-					["רושמים ספרים", "הם נשארים אצלכם."],
-					["מבקשים משכנים", "כל ספר בסביבה."],
-					["נפגשים ומחליפים", "במועד ששניכם בחרתם."],
-				]
-			: [
-					["List your books", "They stay on your shelf."],
-					["Ask a neighbour", "For any book nearby."],
-					["Meet and swap", "At a time you both picked."],
-				]) as [string, string][],
 		setupStepOf: (n: number, of: number) =>
 			he ? `שלב ${n} מתוך ${of}` : `Step ${n} of ${of}`,
 		withinKm: (km: number) => (he ? `עד ${km} ק״מ` : `Up to ${km} km`),
