@@ -175,9 +175,24 @@ export default async function WorkPageView({
 		timeStyle: "short",
 	});
 	const cover = editions.find((edition) => edition.coverUrl)?.coverUrl ?? null;
+	// A thing with no photo goes without: its square is too small for its
+	// name, which is written out beside it anyway. A book keeps its plain
+	// cover, tall enough to carry the title.
+	const showCover = Boolean(cover) || kind.authors;
 	// What the page offers follows the view the moderator chose.
 	const isModerator = moderates(await shownRole(me));
 	const edition = editions[0];
+	const facts = [
+		edition?.publisher,
+		edition?.publishedYear,
+		edition?.pageCount ? t.pages(edition.pageCount) : null,
+		edition?.isbn13 ? `${t.isbn} ${edition.isbn13}` : null,
+	]
+		.filter(Boolean)
+		.join(" · ");
+	// Nobody wants what is on their own shelf. One already kept stays, so it
+	// can be let go.
+	const offerWish = wished || !ownCopy;
 
 	// A thing has up to four photos; the first is already its picture.
 	const gallery =
@@ -190,39 +205,34 @@ export default async function WorkPageView({
 			{og}
 			{/* Only what names the book sits beside the cover; on a phone there
 			    is no room for anything else next to it. */}
-			<header className="book-head">
-				<div className="book-cover" style={coverTransition(work.id)}>
-					{cover ? (
-						<img alt="" src={cover} fetchPriority="high" />
-					) : (
-						<PlainCover title={work.title} size="book" />
-					)}
-				</div>
+			<header className={showCover ? "book-head" : "book-head no-cover"}>
+				{showCover ? (
+					<div className="book-cover" style={coverTransition(work.id)}>
+						{cover ? (
+							<img alt="" src={cover} fetchPriority="high" />
+						) : (
+							<PlainCover title={work.title} size="book" />
+						)}
+					</div>
+				) : null}
 				<div>
 					<h1>
 						<bdi>{work.title}</bdi>
 					</h1>
-					<p>
-						{/* An author is the most likely next search. */}
-						{work.authors.map((author, index) => (
-							<span key={author}>
-								{index ? ", " : ""}
-								<a href={`/?q=${encodeURIComponent(author)}`}>
-									<bdi>{author}</bdi>
-								</a>
-							</span>
-						))}
-					</p>
-					<p className="muted">
-						{[
-							edition?.publisher,
-							edition?.publishedYear,
-							edition?.pageCount ? t.pages(edition.pageCount) : null,
-							edition?.isbn13 ? `${t.isbn} ${edition.isbn13}` : null,
-						]
-							.filter(Boolean)
-							.join(" · ")}
-					</p>
+					{work.authors.length ? (
+						<p>
+							{/* An author is the most likely next search. */}
+							{work.authors.map((author, index) => (
+								<span key={author}>
+									{index ? ", " : ""}
+									<a href={`/?q=${encodeURIComponent(author)}`}>
+										<bdi>{author}</bdi>
+									</a>
+								</span>
+							))}
+						</p>
+					) : null}
+					{facts ? <p className="muted">{facts}</p> : null}
 					{work.note ? (
 						<p className="book-note">
 							<bdi>{work.note}</bdi>
@@ -305,8 +315,9 @@ export default async function WorkPageView({
 			{/* The chooser: scan who has it, open the one you want, ask. */}
 			<ol className="choose">
 				{copies.map((copy) => {
+					// How far your own copy is from you says nothing.
 					const distance =
-						copy.owner.area.distanceM !== null
+						!copy.mine && copy.owner.area.distanceM !== null
 							? formatDistance(locale, copy.owner.area.distanceM)
 							: null;
 					const where = [
@@ -343,17 +354,11 @@ export default async function WorkPageView({
 						</>
 					);
 					// Small community: knowing whose copy it is matters, and so
-					// does what else they have.
-					const theirShelf = (
+					// does what else they have. Your own shelf is a tab away.
+					const theirShelf = copy.mine ? null : (
 						<p className="muted">
-							<a
-								href={
-									copy.mine
-										? "/shelf"
-										: `/?owner=${encodeURIComponent(copy.owner.id)}`
-								}
-							>
-								{copy.mine ? t.shelf : t.otherBooksFrom(copy.owner.displayName)}
+							<a href={`/?owner=${encodeURIComponent(copy.owner.id)}`}>
+								{t.otherBooksFrom(copy.owner.displayName)}
 							</a>
 						</p>
 					);
@@ -383,8 +388,10 @@ export default async function WorkPageView({
 								{detail}
 								{theirShelf}
 								{copy.mine ? (
-									<p className="muted">
-										<a href={`/shelf/${copy.id}`}>{t.manageCopy}</a>
+									<p>
+										<a className="btn quiet" href={`/shelf/${copy.id}`}>
+											{t.manageCopy}
+										</a>
 									</p>
 								) : copy.myLoanId ? (
 									<p>
@@ -518,141 +525,158 @@ export default async function WorkPageView({
 					failed: t.requestFailed,
 				}}
 			/>
-			<div className="book-marks">
-				<form action="/api/me/wishlist" method="post" data-async="">
-					<input type="hidden" name="workId" value={work.id} />
-					<input type="hidden" name="wished" value={wished ? "0" : "1"} />
-					<button type="submit" className="toggle" aria-pressed={wished}>
-						<BookmarkSimple
-							size={16}
-							weight={wished ? "fill" : "bold"}
-							aria-hidden="true"
-						/>
-						{t.wishlist}
-					</button>
-				</form>
-				{kind.readMarks ? (
-					<form action="/api/me/read" method="post" data-async="">
-						<input type="hidden" name="workId" value={work.id} />
-						<input type="hidden" name="read" value={read ? "0" : "1"} />
-						<button type="submit" className="toggle" aria-pressed={read}>
-							<Check size={16} weight="bold" aria-hidden="true" />
-							{t.markRead}
-						</button>
-					</form>
-				) : null}
-			</div>
+			{offerWish || kind.readMarks ? (
+				<div className="book-marks">
+					{offerWish ? (
+						<form action="/api/me/wishlist" method="post" data-async="">
+							<input type="hidden" name="workId" value={work.id} />
+							<input type="hidden" name="wished" value={wished ? "0" : "1"} />
+							<button type="submit" className="toggle" aria-pressed={wished}>
+								<BookmarkSimple
+									size={16}
+									weight={wished ? "fill" : "bold"}
+									aria-hidden="true"
+								/>
+								{t.wishlist}
+							</button>
+						</form>
+					) : null}
+					{kind.readMarks ? (
+						<form action="/api/me/read" method="post" data-async="">
+							<input type="hidden" name="workId" value={work.id} />
+							<input type="hidden" name="read" value={read ? "0" : "1"} />
+							<button type="submit" className="toggle" aria-pressed={read}>
+								<Check size={16} weight="bold" aria-hidden="true" />
+								{t.markRead}
+							</button>
+						</form>
+					) : null}
+				</div>
+			) : null}
 
 			{/* Housekeeping, after the reason anyone came to this page: only
-			    for an owner or a moderator. */}
-			{copies.some((copy) => copy.mine) || isModerator ? (
-				<section className="book-extras">
-					{/* An owner tags their own book; a moderator may tag any. */}
-					{copies.some((copy) => copy.mine) || isModerator ? (
-						<details className="tag-edit">
-							<summary className="muted">{t.editTags}</summary>
-							<form action={`/api/works/${work.id}/tags`} method="post">
-								<input type="hidden" name="back" value={`/works/${work.id}`} />
-								<TagPicker
-									vocab={vocab}
-									locale={locale}
-									selected={work.tags}
-									legend={t.tagsLegend}
-								/>
-								<button type="submit" className="secondary">
-									{t.save}
-								</button>
-							</form>
-						</details>
-					) : null}
+			    for an owner or a moderator, under a heading of its own. */}
+			{ownCopy || isModerator ? (
+				<section className="book-extras" aria-labelledby="book-extras">
+					<h2 id="book-extras">{isModerator ? t.admin : t.extrasTags}</h2>
+					<div className="extras-list">
+						{/* An owner tags their own book; a moderator may tag any. */}
+						{ownCopy || isModerator ? (
+							<details className="tag-edit">
+								<summary className="muted">{t.editTags}</summary>
+								<form action={`/api/works/${work.id}/tags`} method="post">
+									<input
+										type="hidden"
+										name="back"
+										value={`/works/${work.id}`}
+									/>
+									<TagPicker
+										vocab={vocab}
+										locale={locale}
+										selected={work.tags}
+										legend={t.tagsLegend}
+									/>
+									<button type="submit" className="secondary">
+										{t.save}
+									</button>
+								</form>
+							</details>
+						) : null}
 
-					{copies.some((copy) => copy.mine) ? (
-						<SuggestTag
-							vocab={vocab}
-							locale={locale}
-							workId={work.id}
-							back={`/works/${work.id}`}
-							labels={{
-								summary: t.suggestTag,
-								hint: t.suggestTagHint,
-								label: t.suggestTagLabel,
-								value: t.suggestTagValue,
-								newLabel: t.suggestNewLabel,
-								newLabelName: t.suggestNewLabelName,
-								send: t.suggestSend,
-							}}
-						/>
-					) : null}
+						{ownCopy ? (
+							<SuggestTag
+								vocab={vocab}
+								locale={locale}
+								workId={work.id}
+								back={`/works/${work.id}`}
+								labels={{
+									summary: t.suggestTag,
+									hint: t.suggestTagHint,
+									label: t.suggestTagLabel,
+									value: t.suggestTagValue,
+									newLabel: t.suggestNewLabel,
+									newLabelName: t.suggestNewLabelName,
+									send: t.suggestSend,
+								}}
+							/>
+						) : null}
 
-					{isModerator ? (
-						<details className="tag-edit">
-							<summary className="muted">{t.editBook}</summary>
-							<form
-								action={`/api/works/${work.id}/details`}
-								method="post"
-								encType="multipart/form-data"
-							>
-								<input type="hidden" name="back" value={`/works/${work.id}`} />
-								<label htmlFor="work-title">{t.title}</label>
-								<input
-									id="work-title"
-									name="title"
-									maxLength={200}
-									type="text"
-									dir="auto"
-									required
-									defaultValue={work.title}
-								/>
-								{kind.authors ? (
-									<>
-										<label htmlFor="work-authors">{t.authors}</label>
-										<input
-											id="work-authors"
-											name="authors"
-											type="text"
-											dir="auto"
-											defaultValue={work.authors.join(", ")}
-										/>
-									</>
-								) : null}
-								<label htmlFor="work-note">{t.workNote}</label>
-								<textarea
-									id="work-note"
-									name="note"
-									dir="auto"
-									rows={3}
-									maxLength={500}
-									placeholder={t.workNoteHint}
-									defaultValue={work.note ?? noteFromCopy ?? ""}
-									aria-describedby={noteFromCopy ? "work-note-from" : undefined}
-								/>
-								{noteFromCopy ? (
-									<p className="muted" id="work-note-from">
-										{t.workNoteFromCopy}
-									</p>
-								) : null}
-								{/* The cover belongs to the edition, so it is only
+						{isModerator ? (
+							<details className="tag-edit">
+								<summary className="muted">{t.editBook}</summary>
+								<form
+									action={`/api/works/${work.id}/details`}
+									method="post"
+									encType="multipart/form-data"
+								>
+									<input
+										type="hidden"
+										name="back"
+										value={`/works/${work.id}`}
+									/>
+									<label htmlFor="work-title">{t.title}</label>
+									<input
+										id="work-title"
+										name="title"
+										maxLength={200}
+										type="text"
+										dir="auto"
+										required
+										defaultValue={work.title}
+									/>
+									{kind.authors ? (
+										<>
+											<label htmlFor="work-authors">{t.authors}</label>
+											<input
+												id="work-authors"
+												name="authors"
+												type="text"
+												dir="auto"
+												defaultValue={work.authors.join(", ")}
+											/>
+										</>
+									) : null}
+									<label htmlFor="work-note">{t.workNote}</label>
+									<textarea
+										id="work-note"
+										name="note"
+										dir="auto"
+										rows={3}
+										maxLength={500}
+										placeholder={t.workNoteHint}
+										defaultValue={work.note ?? noteFromCopy ?? ""}
+										aria-describedby={
+											noteFromCopy ? "work-note-from" : undefined
+										}
+									/>
+									{noteFromCopy ? (
+										<p className="muted" id="work-note-from">
+											{t.workNoteFromCopy}
+										</p>
+									) : null}
+									{/* The cover belongs to the edition, so it is only
 							    replaceable while there is one to belong to. */}
-								{editions.length === 1 ? (
-									<>
-										<label htmlFor="work-cover">{t.replaceCover}</label>
-										<input
-											id="work-cover"
-											name="cover"
-											type="file"
-											accept="image/jpeg,image/png,image/webp"
-										/>
-									</>
-								) : (
-									<p className="muted">{t.editEditionsFirst}</p>
-								)}
-								<p className="muted">{t.editBookHint}</p>
-								<button type="submit" className="secondary">
-									{t.save}
-								</button>
-							</form>
-						</details>
-					) : null}
+									{editions.length === 1 ? (
+										<>
+											<label htmlFor="work-cover">{t.replaceCover}</label>
+											<input
+												id="work-cover"
+												name="cover"
+												type="file"
+												accept="image/jpeg,image/png,image/webp"
+											/>
+										</>
+									) : (
+										<p className="muted">{t.editEditionsFirst}</p>
+									)}
+									<p className="muted">{t.editBookHint}</p>
+									<button type="submit" className="secondary">
+										{t.save}
+									</button>
+								</form>
+							</details>
+						) : null}
+					</div>
 				</section>
 			) : null}
 		</main>
