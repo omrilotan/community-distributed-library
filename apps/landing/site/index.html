@@ -123,6 +123,7 @@
 			<nav aria-label="Sections">
 				<a href="#shared">What gets shared</a>
 				<a href="#how">How it works</a>
+				<a href="#look">A look inside</a>
 				<a href="#open">Start one</a>
 			</nav>
 		</header>
@@ -232,6 +233,130 @@
 								code. Bringing it back works the same way.
 							</p>
 						</div>
+					</li>
+				</ol>
+			</section>
+
+			<section class="look" id="look">
+				<div class="open-intro">
+					<h2>A look inside</h2>
+					<p>
+						It runs in the browser of the phone you already have, with nothing
+						to install. These are the screens of a library of things, from
+						finding a sewing machine to handing over a badminton set.
+					</p>
+				</div>
+				<!-- Focusable: on a phone the row scrolls sideways, and the keyboard
+				     scrolls it too. -->
+				<ol
+					class="screens"
+					tabindex="0"
+					aria-label="Five screens, from browsing to handing over"
+				>
+					<li>
+						<figure>
+							<picture>
+								<source srcset="/images/screen-browse.webp" type="image/webp" />
+								<img
+									src="/images/screen-browse.jpg"
+									width="540"
+									height="1210"
+									alt="The library's front page on a phone: a search box, category chips and a grid of photos, a sewing machine, a board game and two bikes, each marked available with its owner and distance"
+									loading="lazy"
+								/>
+							</picture>
+							<figcaption>
+								<h3>Browse what is near</h3>
+								<p>
+									Photos, how far away each one is, and what is free right now.
+								</p>
+							</figcaption>
+						</figure>
+					</li>
+					<li>
+						<figure>
+							<picture>
+								<source srcset="/images/screen-ask.webp" type="image/webp" />
+								<img
+									src="/images/screen-ask.jpg"
+									width="540"
+									height="1210"
+									alt="A sewing machine's page: its owner 700 metres away, its brand and condition, a Borrow button and a map of the area"
+									loading="lazy"
+								/>
+							</picture>
+							<figcaption>
+								<h3>Ask for it</h3>
+								<p>
+									See who has it and roughly where, then ask, with a note for
+									the owner if you like.
+								</p>
+							</figcaption>
+						</figure>
+					</li>
+					<li>
+						<figure>
+							<picture>
+								<source srcset="/images/screen-answer.webp" type="image/webp" />
+								<img
+									src="/images/screen-answer.jpg"
+									width="540"
+									height="1210"
+									alt="The Loans page, with a request for a badminton set waiting for an answer and buttons to accept or decline it"
+									loading="lazy"
+								/>
+							</picture>
+							<figcaption>
+								<h3>Hear back</h3>
+								<p>
+									The owner finds the request under Loans and says yes or no.
+								</p>
+							</figcaption>
+						</figure>
+					</li>
+					<li>
+						<figure>
+							<picture>
+								<source srcset="/images/screen-time.webp" type="image/webp" />
+								<img
+									src="/images/screen-time.jpg"
+									width="540"
+									height="1210"
+									alt="A grid of the next two weeks in mornings, afternoons and evenings, with the slots both neighbours are free shaded green"
+									loading="lazy"
+								/>
+							</picture>
+							<figcaption>
+								<h3>Pick a time</h3>
+								<p>
+									Both calendars side by side: the green slots suit you both.
+								</p>
+							</figcaption>
+						</figure>
+					</li>
+					<li>
+						<figure>
+							<picture>
+								<source
+									srcset="/images/screen-handoff.webp"
+									type="image/webp"
+								/>
+								<img
+									src="/images/screen-handoff.jpg"
+									width="540"
+									height="1210"
+									alt="The loan's page with the handoff agreed for Tuesday evening, a six-letter handoff code and a button to mark it handed over"
+									loading="lazy"
+								/>
+							</picture>
+							<figcaption>
+								<h3>Meet and confirm</h3>
+								<p>
+									At the door the owner reads out a code, and the borrower types
+									it in.
+								</p>
+							</figcaption>
+						</figure>
 					</li>
 				</ol>
 			</section>

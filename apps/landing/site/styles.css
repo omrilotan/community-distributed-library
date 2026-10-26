@@ -420,6 +420,89 @@ main > section {
 	color: var(--muted);
 }
 
+/* A look inside: five phone screens in the order a loan goes, each captioned
+   and numbered. A strip to swipe on a phone; on a wide screen one row that
+   steps up and down, so it reads as a sequence rather than a grid. */
+.screens {
+	list-style: none;
+	margin: 0 calc(-1 * var(--gutter));
+	padding: 0.5rem var(--gutter) 1.5rem;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: min(15rem, 70vw);
+	gap: 1.25rem;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scroll-padding-inline: var(--gutter);
+	scrollbar-width: thin;
+	scrollbar-color: var(--line-strong) transparent;
+	counter-reset: screen;
+}
+
+.screens li {
+	scroll-snap-align: start;
+	counter-increment: screen;
+}
+
+.screens figure {
+	margin: 0;
+}
+
+/* A phone's outline: round corners and a hairline, a soft green shadow. */
+.screens img {
+	inline-size: 100%;
+	aspect-ratio: 540 / 1210;
+	border-radius: 1.5rem;
+	border: 1px solid var(--line-strong);
+	background: var(--surface);
+	box-shadow: 0 1.5rem 2.5rem -1.5rem
+		color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.screens figcaption {
+	margin-block-start: 1.25rem;
+}
+
+.screens h3 {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: 1.125rem;
+	margin-block-end: 0.35rem;
+}
+
+.screens h3::before {
+	content: counter(screen);
+	display: grid;
+	place-items: center;
+	flex: none;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	border-radius: 50%;
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: 0.9375rem;
+}
+
+.screens p {
+	color: var(--muted);
+	font-size: 0.9375rem;
+}
+
+@media (min-width: 64rem) {
+	.screens {
+		grid-auto-flow: row;
+		grid-template-columns: repeat(5, 1fr);
+		margin-inline: 0;
+		padding-inline: 0;
+		overflow: visible;
+	}
+
+	.screens li:nth-child(even) {
+		margin-block-start: 3rem;
+	}
+}
+
 /* The assistant guide (assistants.html): an introduction with no photo, then
    numbered steps, each a phone screen beside its words. */
 .guide-intro {
