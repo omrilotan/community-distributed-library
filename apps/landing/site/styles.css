@@ -321,26 +321,35 @@ main > section {
 	margin-block-end: auto;
 }
 
+/* The picture fills what the caption leaves; the caption sits on a solid
+   strip below it, so nothing in the photo hides behind the words. */
 .tile.photo {
-	position: relative;
 	display: grid;
+	grid-template-rows: 1fr auto;
 }
 
-.tile.photo img,
-.tile.photo .tile-text {
-	grid-area: 1 / 1;
+/* Here the picture is the frame, not just a wrapper. */
+.tile.photo picture {
+	display: block;
+	position: relative;
+	min-block-size: 12rem;
 }
 
 .tile.photo img {
+	position: absolute;
+	inset: 0;
 	inline-size: 100%;
 	block-size: 100%;
 	object-fit: cover;
-	min-block-size: 16rem;
 }
 
-/* The caption sits on a solid strip, not over the picture. */
+@media (min-width: 48rem) {
+	.tile.photo picture {
+		min-block-size: 20rem;
+	}
+}
+
 .tile.photo .tile-text {
-	align-self: end;
 	background: var(--surface);
 	padding: 1.25rem 1.5rem;
 	border-block-start: 1px solid var(--line);
