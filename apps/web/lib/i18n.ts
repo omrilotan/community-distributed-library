@@ -232,7 +232,7 @@ const dictionary = {
 		photosAdd: "Add photos",
 		photosRemove: "Remove",
 		photosHint:
-			"Drag a photo, or move it with the arrow keys, to place it in its square. Zoom out to fit it whole; white fills the rest of the square.",
+			"Drag a photo, or use the arrow keys, to place it in its square. Zoom out to show it whole.",
 		photosMain: "Main photo",
 		photosKeep: "Keep",
 		photosEarlier: "Move earlier",
@@ -1022,7 +1022,7 @@ const dictionary = {
 		photosAdd: "הוספת תמונות",
 		photosRemove: "הסרה",
 		photosHint:
-			"גררו תמונה, או הזיזו אותה במקשי החצים, כדי למקם אותה בריבוע. הקטינו כדי שתיכנס כולה; לבן ממלא את שאר הריבוע.",
+			"גררו תמונה, או השתמשו במקשי החצים, כדי למקם אותה בריבוע. הקטינו כדי להציג אותה כולה.",
 		photosMain: "תמונה ראשית",
 		photosKeep: "להשאיר",
 		photosEarlier: "להזיז מקום אחד קדימה",
