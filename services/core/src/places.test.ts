@@ -77,6 +77,31 @@ describe("places", () => {
 		const { body } = await as(SAM).get("/v1/places/at?lat=51.6131&lng=-0.1771");
 		expect(body.name).toBe("West Finchley");
 	});
+
+	it("name a point outside the UK from OpenStreetMap, saying who asks", async () => {
+		const asked: Request[] = [];
+		const real = globalThis.fetch;
+		vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+			const request = new Request(input, init);
+			if (request.url.startsWith(API))
+				return Response.json({ status: 200, result: null });
+			if (request.url.startsWith("https://nominatim.openstreetmap.org/")) {
+				asked.push(request);
+				return Response.json({
+					address: { road: "Golda Meir", suburb: "Ramot", city: "Jerusalem" },
+				});
+			}
+			return real(input, init);
+		});
+		const { body } = await as(SAM).get("/v1/places/at?lat=31.8167&lng=35.1958");
+		expect(body.name).toBe("Ramot");
+		expect(asked).toHaveLength(1);
+		expect(asked[0]!.headers.get("user-agent")).toContain(
+			"community-distributed-library",
+		);
+		// Rounded, not where the phone is.
+		expect(asked[0]!.url).not.toContain("lat=31.8167&");
+	});
 });
 
 describe("an area saved by name alone", () => {
