@@ -97,13 +97,21 @@ export default async function AboutPage() {
 	const open = he
 		? {
 				title: "קוד פתוח, של כולם",
-				body: "התוכנה שמפעילה את הספרייה הזו היא קוד פתוח ונמסרה לנחלת הכלל. אין חברה מאחוריה, אין פרסומות ואין מעקב, ואין כאן שום דבר למכור. כל אחד יכול לקרוא את הקוד ולבדוק מה הוא עושה, לשפר אותו, או לפתוח ספרייה לרחוב שלו, ועוזר בינה מלאכותית יכול להקים אותה בשבילו.",
+				home: [
+					"הספרייה הזו היא חלק מ־Community Distributed Library. בית הפרויקט: ",
+					".",
+				],
+				body: "התוכנה של הפרויקט היא קוד פתוח ונמסרה לנחלת הכלל. אין חברה מאחוריה, אין פרסומות ואין מעקב, ואין כאן שום דבר למכור. כל אחד יכול לקרוא את הקוד ולבדוק מה הוא עושה, לשפר אותו, או לפתוח ספרייה לרחוב שלו, ועוזר בינה מלאכותית יכול להקים אותה בשבילו.",
 				code: "הקוד ב־GitHub",
 				start: "לפתוח ספרייה משלכם",
 			}
 		: {
 				title: "Open source, and everyone's",
-				body: "The software behind this library is open source and in the public domain. There is no company behind it, no advertising and no tracking, and nothing here is for sale. Anyone can read the code and check what it does, make it better, or open a library for their own street, and an AI assistant can set it up for them.",
+				home: [
+					"This library is part of Community Distributed Library. The project's home is ",
+					".",
+				],
+				body: "Its software is open source and in the public domain. There is no company behind it, no advertising and no tracking, and nothing here is for sale. Anyone can read the code and check what it does, make it better, or open a library for their own street, and an AI assistant can set it up for them.",
 				code: "The code on GitHub",
 				start: "Start your own library",
 			};
@@ -153,9 +161,16 @@ export default async function AboutPage() {
 				<p>{copy.welcome}</p>
 			</section>
 
-			{/* Whose software this is: nobody's, and so everybody's. */}
+			{/* The project's home, then whose software this is: nobody's, and so everybody's. */}
 			<section className="about-open">
 				<h2>{open.title}</h2>
+				<p>
+					{open.home[0]}
+					<a className="about-home" href={FRONT_DOOR}>
+						{new URL(FRONT_DOOR).host}
+					</a>
+					{open.home[1]}
+				</p>
 				<p>{open.body}</p>
 				<p>
 					<a href={REPOSITORY}>{open.code}</a>

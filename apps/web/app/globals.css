@@ -3295,6 +3295,11 @@ input.tag-quick-add[type="text"] {
 	max-inline-size: 58ch;
 }
 
+/* The project's address breaks whole, never at its hyphens. */
+.about-home {
+	white-space: nowrap;
+}
+
 /* A member's readiness to meet, on their admin page: set is green, not yet
    is a struck-through outline. */
 /* Two small badges that stack when the column is narrow. */
