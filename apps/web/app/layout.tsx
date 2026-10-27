@@ -20,6 +20,7 @@ import { NavLink } from "./nav-link.tsx";
 import { Tabs } from "./tabs.tsx";
 import { Menu } from "./menu.tsx";
 import { ServiceWorker } from "./service-worker.tsx";
+import { PageTools } from "./page-tools.tsx";
 import { FormGuard } from "./form-guard.tsx";
 
 /** Every page's defaults; the title is the library's name in the reader's language. */
@@ -185,6 +186,8 @@ export default async function RootLayout({
 					}}
 				/>
 				<ServiceWorker publicKey={pushKey} />
+				{/* An agent in the browser gets the MCP server's tools (WebMCP). */}
+				{signedIn ? <PageTools /> : null}
 				<FormGuard />
 				<header className="topbar">
 					<div className="topbar-inner">
