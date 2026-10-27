@@ -1,0 +1,21 @@
+{
+  "name": "@cdl/tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "What an assistant can do in a library: one list of tools, offered over MCP and on the library's own pages (WebMCP).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cdl/contracts": "*",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.12"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}
