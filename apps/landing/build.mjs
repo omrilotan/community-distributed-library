@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Copies site/ to dist/ and inlines the icons: every <svg data-icon="name">
 // in a page gets the Phosphor glyph of that name inside it, so each page
-// ships as one HTML file with no icon requests and no script.
+// ships as one HTML file with no icon requests and no script. The sitemap
+// gets its dates.
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
 	cpSync,
@@ -51,4 +53,27 @@ for (const page of readdirSync(site).filter((name) => name.endsWith(".html"))) {
 	);
 	writeFileSync(`${dist}/${page}`, html);
 }
+
+// The sitemap's dates, from each page's last commit, so they are never left
+// behind. A search engine stops trusting dates that are wrong; with no git
+// history to ask (a copy without .git), a page goes without one.
+const changed = (page) => {
+	try {
+		return execFileSync(
+			"git",
+			["log", "-1", "--format=%cs", "--", `site/${page}`],
+			{ cwd: here, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+		).trim();
+	} catch {
+		return "";
+	}
+};
+const sitemap = readFileSync(`${site}/sitemap.xml`, "utf8").replace(
+	/(\s*)<loc>https:\/\/[^/]+\/([^<]*)<\/loc>/g,
+	(loc, indent, path) => {
+		const date = changed(`${path || "index"}.html`);
+		return date ? `${loc}${indent}<lastmod>${date}</lastmod>` : loc;
+	},
+);
+writeFileSync(`${dist}/sitemap.xml`, sitemap);
 console.log("built dist/");
