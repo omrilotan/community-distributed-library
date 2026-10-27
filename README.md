@@ -39,6 +39,7 @@ services/convo/       loan message threads, own D1, deleted 90 days after a loan
 services/metadata/    ISBN lookup (Open Library, then Google Books) and its cache; shared
 services/reports/     where browsers report CSP violations and network errors; shared
 packages/contracts/   Zod schemas, the OpenAPI document, library types
+packages/tools/       what an assistant can do: one list of tools, for MCP and the pages (WebMCP)
 packages/design/      design tokens, logo, principles, frontend conventions
 scripts/              list of libraries, deploy, checks, local dev, pulling a database down
 ```
