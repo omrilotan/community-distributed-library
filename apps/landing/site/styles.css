@@ -592,6 +592,49 @@ main > section {
 	margin-block-start: 3rem;
 }
 
+/* Run your own library (open-a-library.html): the video under its heading,
+   what it says folded beneath it. */
+.film {
+	padding-block-start: 2rem !important;
+}
+
+.film video {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	aspect-ratio: 16 / 9;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.transcript {
+	margin-block-start: 1.25rem;
+	max-inline-size: var(--measure);
+}
+
+.transcript summary {
+	cursor: pointer;
+	color: var(--accent);
+	font-weight: 500;
+}
+
+.transcript p {
+	margin-block-start: 0.75rem;
+	color: var(--muted);
+}
+
+/* Its three short sections sit closer than the front page's. */
+main > section.run {
+	padding-block: 2.5rem;
+}
+
+@media (min-width: 64rem) {
+	main > section.run {
+		padding-block: 3rem;
+	}
+}
+
 /* A full-width breath of green between the mechanics and the reasons. */
 .breather {
 	inline-size: 100%;
