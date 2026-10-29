@@ -1,0 +1,9 @@
+Somewhere on your street, there's a drill you need once a year, and a neighbour who already owns one.
+
+Community Distributed Library turns that street into a lending library. No building, no central stock: everything stays on its owner's shelf until someone asks.
+
+A library lends books or things, and it's invite-only, so members vouch for the neighbours they bring in.
+
+Find what you need, and ask. Once the owner says yes, you pick a time that suits both your weeks.
+
+At the door, a short code confirms the handoff, and the library reminds you before it's due.

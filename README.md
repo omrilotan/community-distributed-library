@@ -32,6 +32,7 @@ over service bindings.
 ```
 apps/web/             the library web app: Next.js App Router on vinext, a PWA, one Worker per library
 apps/landing/         the front page at the bare domain (static)
+apps/video/           the explainer video, landscape and portrait (Remotion); not deployed
 services/core/        system of record and the public /v1 API (Hono, D1)
 services/mcp/         OAuth 2.1 server and MCP tools for AI assistants, calling core's /v1
 services/notify/      email through Cloudflare Email Sending, Web Push (RFC 8291/8292); no storage
