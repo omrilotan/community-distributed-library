@@ -1,0 +1,7 @@
+Or just ask your assistant. Every library has its own MCP server, and its pages speak WebMCP, so Claude, ChatGPT, or an agent in your browser can search and arrange for you, with your yes first.
+
+Under the hood, it's one API. The web app, the assistant, and any script all call the same core. Notify sends email and push, convo keeps each loan's messages, and webhooks tell everything else.
+
+But no tool can confirm a handoff. That only happens in person.
+
+Each library is its own deployment, and the code is public domain. Open one for your street at community-distributed-library dot com.

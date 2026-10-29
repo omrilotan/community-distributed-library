@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["dom", "es2023"],
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
+  "include": ["src", "scripts"]
+}
