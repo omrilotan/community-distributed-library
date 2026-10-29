@@ -2,8 +2,6 @@ Somewhere on your street, there's a drill you need once a year, and a neighbour 
 
 Community Distributed Library turns that street into a lending library. No building, no central stock: everything stays on its owner's shelf until someone asks.
 
-A library lends books or things, and it's invite-only, so members vouch for the neighbours they bring in.
+You can open one for your community. Pick a name, the middle of your neighbourhood, and whether it lends books or things. It runs on a domain you own, in your own Cloudflare account, for five dollars a month, email included.
 
-Find what you need, and ask. Once the owner says yes, you pick a time that suits both your weeks.
-
-At the door, a short code confirms the handoff, and the library reminds you before it's due.
+No programming needed. Open the code in Claude Code and type "open a library". It walks you through the one key it needs, builds the library, and makes you its first admin.

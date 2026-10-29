@@ -1,13 +1,14 @@
 import { AbsoluteFill, Html5Audio, Sequence, staticFile } from "remotion";
 import { Captions } from "./Captions.tsx";
-import { Assistant } from "./scenes/Assistant.tsx";
-import { End, InPerson } from "./scenes/End.tsx";
-import { Flow } from "./scenes/Flow.tsx";
-import { Handoff } from "./scenes/Handoff.tsx";
-import { Kinds } from "./scenes/Kinds.tsx";
+import { Code } from "./scenes/Code.tsx";
+import { End } from "./scenes/End.tsx";
+import { Moderate } from "./scenes/Moderate.tsx";
+import { Open } from "./scenes/Open.tsx";
+import { Runs } from "./scenes/Runs.tsx";
+import { Setup } from "./scenes/Setup.tsx";
 import { Street } from "./scenes/Street.tsx";
-import { System } from "./scenes/System.tsx";
 import { Title } from "./scenes/Title.tsx";
+import { Vouch } from "./scenes/Vouch.tsx";
 import { FPS, LEAD, TAIL, font, palette, type Shape } from "./theme.ts";
 import { cue, frameAt, narrationMs } from "./timing.ts";
 import { FADE, ShapeContext } from "./ui.tsx";
@@ -21,13 +22,13 @@ export const length = frameAt(narrationMs) + Math.round(TAIL * FPS);
 const scenes = [
 	{ Scene: Street, at: 0 },
 	{ Scene: Title, at: cue("Community Distributed Library turns") },
-	{ Scene: Kinds, at: cue("A library lends") },
-	{ Scene: Flow, at: cue("Find what you need") },
-	{ Scene: Handoff, at: cue("At the door") },
-	{ Scene: Assistant, at: cue("Or just ask") },
-	{ Scene: System, at: cue("Under the hood") },
-	{ Scene: InPerson, at: cue("That only happens") },
-	{ Scene: End, at: cue("Each library") },
+	{ Scene: Open, at: cue("You can open one") },
+	{ Scene: Code, at: cue("No programming") },
+	{ Scene: Setup, at: cue("Give it a description") },
+	{ Scene: Vouch, at: cue("It's invite-only") },
+	{ Scene: Runs, at: cue("From there") },
+	{ Scene: Moderate, at: cue("Ask a neighbour") },
+	{ Scene: End, at: cue("No money") + 8 },
 ];
 
 export function Explainer({ shape }: { shape: Shape }) {
