@@ -10,6 +10,7 @@
 
 ## Links
 
+- [Run your own library](https://community-distributed-library.com/open-a-library): a one-minute video, what opening a library takes (a domain on Cloudflare, the Workers Paid plan, about twenty minutes), and the two ways to do it
 - [Connect your assistant](https://community-distributed-library.com/assistants): adding a library's MCP server to Claude, ChatGPT or another assistant, signing in, and choosing what it may do
 - [Source code](https://github.com/omrilotan/community-distributed-library): the repository
 - [Self-hosting guide](https://github.com/omrilotan/community-distributed-library/blob/main/docs/self-hosting.md): how to open a library
