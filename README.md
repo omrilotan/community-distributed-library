@@ -5,6 +5,11 @@ item stays on its owner's shelf until someone asks for it. The library is the sh
 catalogue, requests, handoff times picked from both people's week, a record of who holds what, and
 reminders.
 
+https://github.com/user-attachments/assets/e9172665-5d60-4f19-84c0-8964d6a620a8
+
+A minute on what a library is and how to open one for your street; more on
+[Run your own library](https://community-distributed-library.com/open-a-library).
+
 What you can do next:
 
 - **Run a library** for your street. Follow [docs/self-hosting.md](docs/self-hosting.md), or open
