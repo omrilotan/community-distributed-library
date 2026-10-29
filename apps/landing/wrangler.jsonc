@@ -2,9 +2,13 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "cdl-landing",
   "compatibility_date": "2026-08-22",
-  // Static files only: no Worker code runs. build.mjs writes dist/.
+  // Static files, which build.mjs writes to dist/. Code runs only for
+  // /video/*, to answer the byte ranges a video player asks for (worker.js).
+  "main": "worker.js",
   "assets": {
     "directory": "dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/video/*"],
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
   },
