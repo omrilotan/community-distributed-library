@@ -60,11 +60,18 @@ test("saves every field with the one button", async ({ page }) => {
 		),
 	).toHaveCount(1);
 	await page.locator("#lendLimit").fill("97");
+	// Empty, it shows the library's length in its place.
+	await expect(page.locator("#loanDays")).toHaveAttribute(
+		"placeholder",
+		new RegExp(`^${before.community.loanDays}\\b`),
+	);
+	await page.locator("#loanDays").fill("17");
 	await page.locator("#meetingPlace").fill("By the blue gate");
 	await page.locator("#meetingNote").fill("Knock, don't ring");
 	await page.locator(".profile-save").click();
 	await expect(page).toHaveURL(/\/settings\?saved=1/);
 	expect((await me()).body.lendLimit).toBe(97);
+	expect((await me()).body.loanDays).toBe(17);
 	expect((await me()).body.displayName).toBe(before.displayName);
 	const met = await asMember(page.request, BORROWER.id, "/v1/me/availability");
 	expect(met.body.meetingPlace).toBe("By the blue gate");
@@ -73,7 +80,10 @@ test("saves every field with the one button", async ({ page }) => {
 	await page.request.fetch(`${CORE}/v1/me`, {
 		method: "PATCH",
 		headers: { "X-Member-Id": BORROWER.id },
-		data: { lendLimit: before.lendLimit ?? null },
+		data: {
+			lendLimit: before.lendLimit ?? null,
+			loanDays: before.loanDays ?? null,
+		},
 	});
 	await page.request.put(`${CORE}/v1/me/availability`, {
 		headers: { "X-Member-Id": BORROWER.id },

@@ -149,6 +149,11 @@ const dictionary = {
 		lendLimitAny: "no limit",
 		lendLimitHint:
 			"While you are at your limit your books stay in the catalogue, marked as fully lent out, and nobody can request another.",
+		loanDaysMine: "Lend my books for (days)",
+		loanDaysMineHint:
+			"How long a loan of one of your books lasts. A book can still set its own, on its page.",
+		loanDaysLibrary: "{n} (the library's default)",
+		loanDaysYours: "{n} (your default)",
 		awayUntil: "Away until",
 		awayBadge: "owner away",
 		awayHint:
@@ -648,7 +653,6 @@ const dictionary = {
 		lendingPaused: "Paused — keep it listed, do not lend for now",
 		lendingReference: "Reference only — show it, never lend it",
 		loanDays: "Loan length (days)",
-		loanDaysDefault: "community default",
 		replaceCover: "Replace the cover",
 		removeHeading: "Remove",
 		removeFromShelf: "Remove this book from my shelf",
@@ -941,6 +945,11 @@ const dictionary = {
 		lendLimitAny: "ללא הגבלה",
 		lendLimitHint:
 			"כשמגיעים למכסה הספרים שלכם נשארים בקטלוג ומסומנים כמושאלים במלואם, ואי אפשר לבקש עוד אחד.",
+		loanDaysMine: "משך השאלה של הספרים שלי (ימים)",
+		loanDaysMineHint:
+			"כמה זמן נמשכת השאלה של ספר שלכם. כל ספר עדיין יכול לקבוע משך משלו, בדף שלו.",
+		loanDaysLibrary: "{n} (ברירת המחדל של הספרייה)",
+		loanDaysYours: "{n} (ברירת המחדל שלכם)",
 		awayUntil: "בחופשה עד",
 		awayBadge: "הבעלים בחופשה",
 		awayHint:
@@ -1415,7 +1424,6 @@ const dictionary = {
 		lendingPaused: "מושהה — נשאר ברשימה, לא מושאל כרגע",
 		lendingReference: "לעיון בלבד — מוצג, לא מושאל",
 		loanDays: "משך השאלה (ימים)",
-		loanDaysDefault: "ברירת המחדל של הקהילה",
 		replaceCover: "החלפת כריכה",
 		removeHeading: "הסרה",
 		removeFromShelf: "הסרת הספר מהמדף שלי",

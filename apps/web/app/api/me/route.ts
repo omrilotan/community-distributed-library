@@ -10,6 +10,8 @@ export async function POST(request: Request): Promise<Response> {
 	const locale = String(form.get("locale") ?? "en");
 	const limitRaw = String(form.get("lendLimit") ?? "").trim();
 	const lendLimit = limitRaw ? Number(limitRaw) : null;
+	const daysRaw = String(form.get("loanDays") ?? "").trim();
+	const loanDays = daysRaw ? Number(daysRaw) : null;
 	// A date in the browser's own format; store the end of that day, so "back
 	// on the 5th" means the 5th is a day at home.
 	const awayRaw = String(form.get("awayUntil") ?? "").trim();
@@ -40,6 +42,8 @@ export async function POST(request: Request): Promise<Response> {
 			displayName: String(form.get("displayName") ?? "").trim(),
 			locale,
 			lendLimit: Number.isFinite(lendLimit) && lendLimit ? lendLimit : null,
+			// Empty goes back to the library's length.
+			loanDays: Number.isFinite(loanDays) && loanDays ? loanDays : null,
 			// An empty field is a member who is back.
 			awayUntil: awayUntil && awayUntil > Date.now() / 1000 ? awayUntil : null,
 			...(label ? { area: { label, ...point } } : {}),
