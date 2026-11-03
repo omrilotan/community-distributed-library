@@ -364,11 +364,12 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 	];
 	if (agreed.direction === "out") {
 		const copy = await c.env.DB.prepare(
-			`SELECT c.id, c.loan_days, co.loan_days AS community_days,
+			`SELECT c.id, coalesce(c.loan_days, o.loan_days) AS loan_days, co.loan_days AS community_days,
 			        (SELECT p.id FROM loans p WHERE p.copy_id = c.id AND p.status = 'active'
 			            AND p.of_set = 0 AND p.id != l.id) AS previous
 			   FROM loans l
-			   JOIN copies c ON c.id = l.copy_id JOIN communities co ON co.id = l.community_id WHERE l.id = ?`,
+			   JOIN copies c ON c.id = l.copy_id JOIN members o ON o.id = c.owner_id
+			   JOIN communities co ON co.id = l.community_id WHERE l.id = ?`,
 		)
 			.bind(loanId)
 			.first<{

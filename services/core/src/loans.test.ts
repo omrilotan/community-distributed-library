@@ -57,6 +57,37 @@ describe("loan lifecycle", () => {
 		});
 	});
 
+	it("lasts the copy's own length, else its owner's, else the library's", async () => {
+		const days = async () => {
+			const id = await activeLoan(SAM, DANA, COPY_B);
+			const loan = (await env.DB.prepare(
+				"SELECT started_at, due_at FROM loans WHERE id = ?",
+			)
+				.bind(id)
+				.first<{ started_at: number; due_at: number }>())!;
+			await as(DANA).post(`/v1/loans/${id}/returned`);
+			return (loan.due_at - loan.started_at) / 86_400;
+		};
+		const me = async () => (await as(DANA).get("/v1/me")).body;
+
+		const library = (await me()).community.loanDays;
+		expect((await me()).loanDays).toBeNull();
+		expect(await days()).toBe(library);
+
+		expect(
+			(await as(DANA).patch("/v1/me", { loanDays: library + 9 })).status,
+		).toBe(204);
+		expect((await me()).loanDays).toBe(library + 9);
+		expect(await days()).toBe(library + 9);
+
+		await as(DANA).patch(`/v1/copies/${COPY_B}`, { loanDays: 5 });
+		expect(await days()).toBe(5);
+
+		// Null goes back to the library's.
+		await as(DANA).patch("/v1/me", { loanDays: null });
+		expect((await me()).loanDays).toBeNull();
+	});
+
 	it("only one pending request per copy; a second borrower gets 409", async () => {
 		expect((await as(SAM).post("/v1/loans", { copyId: COPY_B })).status).toBe(
 			201,

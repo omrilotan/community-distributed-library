@@ -416,11 +416,12 @@ loans.post("/v1/loans/:id/handed", async (c) => {
 	const id = c.req.param("id");
 
 	const loan = await c.env.DB.prepare(
-		`SELECT l.copy_id, l.borrower_id, c.loan_days, co.loan_days AS community_days,
+		`SELECT l.copy_id, l.borrower_id, coalesce(c.loan_days, o.loan_days) AS loan_days, co.loan_days AS community_days,
 		        (SELECT p.id FROM loans p WHERE p.copy_id = l.copy_id AND p.status = 'active'
 		            AND p.of_set = 0 AND p.id != l.id) AS previous
 		   FROM loans l
 		   JOIN copies c ON c.id = l.copy_id
+		   JOIN members o ON o.id = c.owner_id
 		   JOIN communities co ON co.id = l.community_id
 		  WHERE l.id = ? AND (l.borrower_id = ? OR l.lender_id = ? OR l.relay_from = ?) AND l.status = 'accepted'`,
 	)

@@ -31,6 +31,9 @@ export const thingWords = {
 		lendLimit: "Things out at once, at most",
 		lendLimitHint:
 			"While you are at your limit your things stay listed, marked as fully lent out, and nobody can ask for another.",
+		loanDaysMine: "Lend my things for (days)",
+		loanDaysMineHint:
+			"How long a loan of one of your things lasts. A thing can still set its own, on its page.",
 		awayHint:
 			"Going away? Give the day you are back. Your things stay listed, marked as away, and nobody can ask for them until then.",
 		awayNowHint:
@@ -149,6 +152,9 @@ export const thingWords = {
 		lendLimit: "כמה פריטים מושאלים במקביל, לכל היותר",
 		lendLimitHint:
 			"כשמגיעים למכסה הפריטים שלכם נשארים ברשימה ומסומנים כמושאלים במלואם, ואי אפשר לבקש עוד אחד.",
+		loanDaysMine: "משך השאלה של הפריטים שלי (ימים)",
+		loanDaysMineHint:
+			"כמה זמן נמשכת השאלה של פריט שלכם. כל פריט עדיין יכול לקבוע משך משלו, בדף שלו.",
 		awayHint:
 			"נוסעים? כתבו את היום שבו אתם חוזרים. הפריטים נשארים ברשימה, מסומנים כלא זמינים, ואי אפשר לבקש אותם עד אז.",
 		awayNowHint:

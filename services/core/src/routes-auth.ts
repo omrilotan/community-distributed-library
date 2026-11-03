@@ -334,8 +334,8 @@ auth.get("/v1/me", async (c) => {
 	const [row, unread] = await Promise.all([
 		c.env.DB.prepare(
 			`SELECT m.email, m.display_name, m.locale, m.area_label, m.area_lat, m.area_lng, m.browse_prefs,
-		        m.lend_limit, m.away_until, ms.role,
-		        co.name AS community_name, co.centre_lat, co.centre_lng, co.radius_m, co.compact,
+		        m.lend_limit, m.loan_days, m.away_until, ms.role,
+		        co.name AS community_name, co.loan_days AS community_loan_days, co.centre_lat, co.centre_lng, co.radius_m, co.compact,
 		        (SELECT count(*) FROM loans l WHERE l.lender_id = m.id AND l.status = 'requested')
 		        + (SELECT count(*) FROM handoffs h JOIN loans l2 ON l2.id = h.loan_id
 		            WHERE h.status = 'proposed' AND h.proposed_by != m.id
@@ -379,6 +379,7 @@ auth.get("/v1/me", async (c) => {
 				area_lng: number | null;
 				role: "member" | "moderator" | "admin";
 				lend_limit: number | null;
+				loan_days: number | null;
 				away_until: number | null;
 				browse_prefs: string | null;
 				attention: number;
@@ -388,6 +389,7 @@ auth.get("/v1/me", async (c) => {
 				centre_lng: number;
 				radius_m: number;
 				compact: number;
+				community_loan_days: number;
 			}>(),
 		unreadByLoan(c.env, member.id),
 	]);
@@ -408,9 +410,11 @@ auth.get("/v1/me", async (c) => {
 			centre: { lat: row.centre_lat, lng: row.centre_lng },
 			radiusM: row.radius_m,
 			compact: row.compact === 1,
+			loanDays: row.community_loan_days,
 		},
 		role: row.role,
 		lendLimit: row.lend_limit,
+		loanDays: row.loan_days,
 		// Yesterday's holiday is over; only a date still ahead counts.
 		awayUntil: row.away_until && row.away_until > now() ? row.away_until : null,
 		moderation: row.moderation,
@@ -427,10 +431,18 @@ auth.patch("/v1/me", async (c) => {
 
 	const parsed = UpdateMe.safeParse(await c.req.json().catch(() => null));
 	if (!parsed.success) return json(c, problem(422, "Invalid profile"));
-	const { displayName, locale, area, lendLimit, awayUntil, browsePrefs } =
-		parsed.data;
-	// An assistant may set the lending limit and the time away; a name, a
-	// language, an area and how the shelves look are the member's, on the site.
+	const {
+		displayName,
+		locale,
+		area,
+		lendLimit,
+		loanDays,
+		awayUntil,
+		browsePrefs,
+	} = parsed.data;
+	// An assistant may set the lending limit, the loan length and the time
+	// away; a name, a language, an area and how the shelves look are the
+	// member's, on the site.
 	if (!member.session) {
 		if (
 			displayName !== undefined ||
@@ -476,6 +488,8 @@ auth.patch("/v1/me", async (c) => {
 		   area_lng = COALESCE(?, area_lng),
 		   -- Explicit null lifts the limit, so this one is not COALESCEd away.
 		   lend_limit = CASE WHEN ? THEN ? ELSE lend_limit END,
+		   -- And null goes back to the library's loan length.
+		   loan_days = CASE WHEN ? THEN ? ELSE loan_days END,
 		   -- Same for coming back early.
 		   away_until = CASE WHEN ? THEN ? ELSE away_until END,
 		   browse_prefs = CASE WHEN ? THEN ? ELSE browse_prefs END
@@ -489,6 +503,8 @@ auth.patch("/v1/me", async (c) => {
 			snapped?.lng ?? null,
 			lendLimit === undefined ? 0 : 1,
 			lendLimit ?? null,
+			loanDays === undefined ? 0 : 1,
+			loanDays ?? null,
 			awayUntil === undefined ? 0 : 1,
 			awayUntil ?? null,
 			browsePrefs === undefined ? 0 : 1,

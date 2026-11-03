@@ -31,8 +31,8 @@ export const generateMetadata = titled((t) => t.profile);
  * First sign-in, and the place to change it later: a name and a rough area.
  * The area is required — distance is what makes the storefront useful.
  * Then, in order: when and where you meet, away until, invitations,
- * notifications, how many out at once and the language, one Save for all of
- * it, and the rest.
+ * notifications, how many out at once, for how long and the language, one
+ * Save for all of it, and the rest.
  */
 export default async function SettingsPage({
 	searchParams,
@@ -248,6 +248,24 @@ export default async function SettingsPage({
 					placeholder={t.lendLimitAny}
 				/>
 				<p className="muted">{t.lendLimitHint}</p>
+
+				{/* Empty is the library's length, shown in its place. */}
+				<label htmlFor="loanDays">{t.loanDaysMine}</label>
+				<input
+					id="loanDays"
+					name="loanDays"
+					form="profile"
+					type="number"
+					inputMode="numeric"
+					min="1"
+					max="90"
+					defaultValue={body.loanDays ?? ""}
+					placeholder={t.loanDaysLibrary.replace(
+						"{n}",
+						String(body.community.loanDays),
+					)}
+				/>
+				<p className="muted">{t.loanDaysMineHint}</p>
 
 				{/* The library's languages only: a library in one has no choice
 				    to offer, and its emails come in that one. */}

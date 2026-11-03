@@ -61,10 +61,17 @@ export const Me = z.object({
 		radiusM: z.number().int(),
 		/** Everyone lives close by: no area asked for, no map, no distances. */
 		compact: z.boolean().default(false),
+		/** How many days a loan lasts here when neither copy nor owner says. */
+		loanDays: z.number().int().positive().default(21),
 	}),
 	role: z.enum(["member", "moderator", "admin"]),
 	/** How many books this member will have out at once; null is no limit. */
 	lendLimit: z.number().int().positive().nullable().default(null),
+	/**
+	 * How many days their books are lent for, unless a copy says otherwise;
+	 * null is the library's length.
+	 */
+	loanDays: z.number().int().positive().nullable().default(null),
 	/**
 	 * Away until this day, in unix seconds; null means here. Books stay listed
 	 * and stay unrequestable until then.
@@ -83,6 +90,8 @@ export const UpdateMe = z.object({
 	locale: Locale.optional(),
 	/** Books out at once, at most. Null lifts the limit. */
 	lendLimit: z.number().int().positive().max(999).nullable().optional(),
+	/** Days a loan of their books lasts. Null goes back to the library's. */
+	loanDays: z.number().int().positive().max(90).nullable().optional(),
 	/**
 	 * Go away until this day, or come back early with null. A day far enough
 	 * ahead to be a holiday and near enough to be one: a year at most.
