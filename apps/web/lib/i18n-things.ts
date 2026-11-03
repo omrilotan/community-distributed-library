@@ -113,6 +113,7 @@ export const thingWords = {
 		onTheShelves: "In the library near you",
 		guestShelves: "In the library",
 		allBooks: "Everything",
+		moreShown: "Showing {shown} of {total} things",
 		wishlist: "Want to borrow",
 		wishlistTab: "Saved",
 		wishlistEmptyHint:
@@ -226,6 +227,7 @@ export const thingWords = {
 		onTheShelves: "בספרייה לידכם",
 		guestShelves: "בספרייה",
 		allBooks: "הכול",
+		moreShown: "מוצגים {shown} מתוך {total} פריטים",
 		wishlist: "רוצה לשאול",
 		wishlistTab: "שמורים",
 		wishlistEmptyHint:

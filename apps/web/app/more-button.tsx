@@ -8,26 +8,40 @@ import { useState } from "react";
  * with it, only the next slice is fetched and spliced into the grid, and the
  * URL is rewritten to describe everything now on screen — so coming back from
  * a book still shows the books you had uncovered.
+ *
+ * Above it, how far down the list the member has come, in words and as a
+ * bar; on it, how many the next press brings, and when they are the last.
  */
 export function MoreButton({
 	query,
 	shown,
+	total,
 	pageSize,
 	most,
-	label,
-	loading,
+	locale,
+	labels,
 }: {
 	/** The query without paging: the search, the tags. */
 	query: Record<string, string>;
 	/** How many entries the page is showing now. */
 	shown: number;
+	/** How many there are in all. */
+	total: number;
 	pageSize: number;
 	/** The longest list one page draws. */
 	most: number;
-	label: string;
-	loading: string;
+	locale: string;
+	/** `{shown}`, `{total}` and `{n}` are filled in here, as More adds to the list. */
+	labels: {
+		shown: string;
+		next: string;
+		last: string;
+		lastOne: string;
+		loading: string;
+	};
 }) {
 	const [at, setAt] = useState(shown);
+	const [all, setAll] = useState(total);
 	const [ended, setEnded] = useState(false);
 	const [busy, setBusy] = useState(false);
 	const [failed, setFailed] = useState(false);
@@ -48,11 +62,33 @@ export function MoreButton({
 	const next =
 		at + pageSize <= most ? longer : url({ offset: at, limit: pageSize });
 
+	const number = new Intl.NumberFormat(locale);
+	// There is always at least one more while this shows, whatever a count
+	// taken a moment ago says.
+	const left = Math.max(all - at, 1);
+	const seen = Math.min(at, all);
+	const action =
+		left > pageSize
+			? labels.next.replace("{n}", number.format(pageSize))
+			: left === 1
+				? labels.lastOne
+				: labels.last.replace("{n}", number.format(left));
+	const done = (seen / Math.max(all, 1)) * 100;
+
 	return (
-		<p className="more">
+		<div className="more">
+			<p className="more-shown" aria-live="polite">
+				{labels.shown
+					.replace("{shown}", number.format(seen))
+					.replace("{total}", number.format(all))}
+			</p>
+			<div className="more-bar" aria-hidden="true">
+				<span style={{ inlineSize: `${done}%` }} />
+			</div>
 			<a
 				className="btn secondary"
 				data-more
+				data-total={all}
 				href={next}
 				aria-busy={busy || undefined}
 				onClick={async (event) => {
@@ -80,7 +116,10 @@ export function MoreButton({
 						// walk back through every time somebody pressed More.
 						history.replaceState(null, "", longer);
 						setAt(at + pageSize);
-						setEnded(!page.querySelector("[data-more]"));
+						const after = page.querySelector<HTMLElement>("[data-more]");
+						// The count as of this slice, in case books came or went.
+						if (after) setAll(Number(after.dataset.total) || all);
+						setEnded(!after);
 					} catch {
 						setFailed(true);
 					} finally {
@@ -88,8 +127,8 @@ export function MoreButton({
 					}
 				}}
 			>
-				{busy ? loading : label}
+				{busy ? labels.loading : action}
 			</a>
-		</p>
+		</div>
 	);
 }
