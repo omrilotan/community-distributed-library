@@ -8,12 +8,12 @@ VALUES
 -- What it says about itself.
 UPDATE communities SET texts = json_object(
 	'en', json_object(
-		'tagline', 'Neighbours lending each other the books already on their shelves. Hebrew and English, no money, no fines.',
+		'tagline', 'Neighbours lending each other the books already on their shelves.',
 		'about', 'Our Street Library belongs to the families on a few streets. You join by invitation from a member, and you only ever see your own community''s books.'
 	),
 	'he', json_object(
 		'name', 'הספרייה של הרחוב שלנו',
-		'tagline', 'שכנים משאילים זה לזה את הספרים שכבר עומדים אצלם על המדף. בעברית ובאנגלית, בלי כסף ובלי קנסות.',
+		'tagline', 'שכנים משאילים זה לזה את הספרים שכבר עומדים אצלם על המדף.',
 		'about', 'הספרייה של הרחוב שלנו שייכת למשפחות שגרות בכמה רחובות. מצטרפים בהזמנה מחבר קיים, וכל אחד רואה רק את הספרים של הקהילה שלו.'
 	)
 ) WHERE id = '01J0COMMUNITY0000000FINCH';
