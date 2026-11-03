@@ -209,10 +209,17 @@ export async function GuestShelves({
 				<MoreButton
 					query={query}
 					shown={at + size}
+					total={total}
 					pageSize={PAGE}
 					most={MOST}
-					label={t.more}
-					loading={t.loadingMore}
+					locale={locale}
+					labels={{
+						shown: t.moreShown,
+						next: t.moreNext,
+						last: t.moreLast,
+						lastOne: t.moreLastOne,
+						loading: t.loadingMore,
+					}}
 				/>
 			) : null}
 

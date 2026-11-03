@@ -2311,8 +2311,38 @@ button.toggle:hover {
 }
 
 .more {
-	text-align: center;
-	margin-block-start: 1.5rem;
+	display: grid;
+	justify-items: center;
+	gap: 0.625rem;
+	margin-block-start: 1.75rem;
+}
+
+/* "Showing 24 of 137 books", and the same as a bar */
+.more-shown {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.more-bar {
+	inline-size: min(12rem, 60%);
+	block-size: 0.25rem;
+	border-radius: 999px;
+	background: var(--line);
+	overflow: hidden;
+}
+
+.more-bar > span {
+	display: block;
+	block-size: 100%;
+	border-radius: inherit;
+	background: var(--accent);
+	transition: inline-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.more .btn {
+	margin-block-start: 0.25rem;
 }
 
 /* Steward: approving a tag suggestion */
