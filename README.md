@@ -157,7 +157,7 @@ Member tools: `my_profile`, `search_catalogue`, `browse_shelves`, `get_work`, `l
 `set_item_tags`, `request_loan`, `respond_to_request`, `cancel_loan`, `extend_loan`, `nudge`,
 `list_my_loans`, `get_loan_messages`, `post_loan_message`, `join_waitlist`, `leave_waitlist`,
 `my_waitlist`, `propose_tag`, `my_tag_proposals`, `report_problem`, `invite_neighbour`,
-`my_invites`, `set_lend_limit`.
+`my_invites`, `set_lend_limit`, `set_loan_length`.
 
 Moderators also get `edit_item`, `set_item_cover`, `upload_item_cover`, `remove_item_cover`,
 `add_tag`, `edit_tag`, `remove_tag`, `rename_tag_group`.
