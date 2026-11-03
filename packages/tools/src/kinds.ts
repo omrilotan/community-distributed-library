@@ -24,6 +24,7 @@ export const KINDS: Record<string, { kind: Kind; destructive?: boolean }> = {
 	get_loan_messages: { kind: "read" },
 
 	set_lend_limit: { kind: "own" },
+	set_loan_length: { kind: "own" },
 	add_copy: { kind: "own" },
 	set_cover: { kind: "own" },
 	upload_cover: { kind: "own" },

@@ -129,5 +129,17 @@ describe("the assistant in a library of things", () => {
 			path: "/v1/me",
 			body: { lendLimit: 3 },
 		});
+		await use("set_loan_length", { days: 10 });
+		expect(asked.at(-1)).toEqual({
+			method: "PATCH",
+			path: "/v1/me",
+			body: { loanDays: 10 },
+		});
+		await use("set_loan_length", {});
+		expect(asked.at(-1)).toEqual({
+			method: "PATCH",
+			path: "/v1/me",
+			body: { loanDays: null },
+		});
 	});
 });

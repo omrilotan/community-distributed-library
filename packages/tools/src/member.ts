@@ -196,6 +196,17 @@ export function memberTools(type: LibraryType): Tool[] {
 		),
 
 		tool(
+			"set_loan_length",
+			say(
+				"How many days a loan of my books lasts, unless a book sets its own (update_copy). Omit the number to go back to the library's length, which my_profile shows.",
+				"How many days a loan of my things lasts, unless a thing sets its own (update_copy). Omit the number to go back to the library's length, which my_profile shows.",
+			),
+			{ days: z.number().int().positive().max(90).optional() },
+			({ days }, { call }) =>
+				call("/v1/me", { method: "PATCH", body: { loanDays: days ?? null } }),
+		),
+
+		tool(
 			"get_work",
 			kind.isbn
 				? "A book page: editions and every copy nearby with its owner and whether I can request it."

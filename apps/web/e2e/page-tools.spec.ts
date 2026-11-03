@@ -117,6 +117,16 @@ test("changes what the member asked to change, and nothing more", async ({
 	expect(
 		(await asMember(request, BORROWER.id, "/v1/me")).body.lendLimit,
 	).toBeNull();
+	expect(await use(page, "set_loan_length", { days: 10 })).not.toMatch(
+		/^Error/,
+	);
+	expect((await asMember(request, BORROWER.id, "/v1/me")).body.loanDays).toBe(
+		10,
+	);
+	await use(page, "set_loan_length", {});
+	expect(
+		(await asMember(request, BORROWER.id, "/v1/me")).body.loanDays,
+	).toBeNull();
 });
 
 test("refuses a call from another site", async ({ page }) => {
