@@ -35,6 +35,23 @@ describe("the MCP host's own pages", () => {
 		}
 	});
 
+	it("hands an agent the server card", async () => {
+		const response = await get("/.well-known/mcp/server-card.json");
+		expect(response.status).toBe(200);
+		expect(response.headers.get("access-control-allow-origin")).toBe("*");
+		const card = (await response.json()) as Record<string, any>;
+		expect(card.name).toBe("org.example/lib");
+		expect(card.serverInfo).toMatchObject({
+			name: "community-distributed-library",
+			title: "Elm Street",
+		});
+		expect(card.transport.endpoint).toBe("https://mcp.lib.example.org/mcp");
+		expect(card.remotes).toEqual([
+			{ type: "streamable-http", url: "https://mcp.lib.example.org/mcp" },
+		]);
+		expect(card.description).toContain("lending library of books");
+	});
+
 	it("keeps crawlers to the discovery files", async () => {
 		const response = await get("/robots.txt");
 		expect(await response.text()).toBe(

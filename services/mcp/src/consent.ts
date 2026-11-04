@@ -1,6 +1,7 @@
 import type { AuthRequest } from "@cloudflare/workers-oauth-provider";
 import type { Env } from "./env.ts";
-import { libraryName } from "./library.ts";
+import { serverCard } from "./card.ts";
+import { libraryInfo, libraryName } from "./library.ts";
 
 /**
  * The non-API side of the OAuth server: the consent handshake. The screen
@@ -36,6 +37,17 @@ export const consentHandler: ExportedHandler<Env> = {
 					},
 				},
 			);
+		}
+
+		// What an agent can know before connecting (card.ts). The library's own
+		// host serves the same card, asked for over its binding.
+		if (url.pathname === "/.well-known/mcp/server-card.json") {
+			return Response.json(serverCard(env, await libraryInfo(env)), {
+				headers: {
+					"access-control-allow-origin": "*",
+					"cache-control": "public, max-age=3600",
+				},
+			});
 		}
 
 		if (url.pathname === "/authorize") {
