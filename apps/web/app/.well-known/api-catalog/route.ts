@@ -35,6 +35,13 @@ export function GET(): Response {
 						type: "application/json",
 					},
 				],
+				// What the server is before connecting: its MCP Server Card.
+				"service-desc": [
+					{
+						href: `${mcpOrigin}/.well-known/mcp/server-card.json`,
+						type: "application/json",
+					},
+				],
 				"service-doc": [{ href: `${site}/llms.txt`, type: "text/markdown" }],
 			},
 		],

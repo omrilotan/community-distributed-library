@@ -71,6 +71,20 @@ test.describe("agents", () => {
 		);
 	});
 
+	test("find the MCP server's card on the library's own host", async ({
+		request,
+	}) => {
+		const response = await request.get("/.well-known/mcp/server-card.json");
+		expect(response.status()).toBe(200);
+		const card = (await response.json()) as {
+			serverInfo: { name: string; version: string };
+			transport: { type: string; endpoint: string };
+		};
+		expect(card.serverInfo.name).toBe("community-distributed-library");
+		expect(card.transport.type).toBe("streamable-http");
+		expect(card.transport.endpoint).toMatch(/^https?:\/\/[^/]+\/mcp$/);
+	});
+
 	test("can read how to connect in llms.txt", async ({ request }) => {
 		const response = await request.get("/llms.txt");
 		expect(response.status()).toBe(200);
