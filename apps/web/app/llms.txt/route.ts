@@ -23,7 +23,7 @@ The website is for people. If you are an agent acting for a member, use the MCP 
 
 ## Connect
 
-- [MCP server](${mcp}): Streamable HTTP. Authorisation is OAuth 2.1 with PKCE and dynamic client registration; the server advertises itself at /.well-known/oauth-protected-resource. The member signs in and approves your access on a consent screen.
+- [MCP server](${mcp}): Streamable HTTP. Authorisation is OAuth 2.1 with PKCE and dynamic client registration; the server advertises itself at /.well-known/oauth-protected-resource/mcp. The member signs in and approves your access on a consent screen.
 - [REST API](${site}/api/v1/openapi.json): OpenAPI 3.1. Bearer tokens, either from the same OAuth flow or a personal token a member creates at ${site}/connect.
 - [API catalogue](${site}/.well-known/api-catalog): both of the above, as an RFC 9727 linkset.
 
