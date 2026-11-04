@@ -29,7 +29,7 @@ export const consentHandler: ExportedHandler<Env> = {
 		// Nothing on this host is for an index, any more than the library is.
 		if (url.pathname === "/robots.txt") {
 			return new Response(
-				"User-agent: *\nAllow: /.well-known/\nDisallow: /\n",
+				"User-agent: *\nContent-Signal: search=no, ai-input=no, ai-train=no\nAllow: /.well-known/\nDisallow: /\n",
 				{
 					headers: {
 						"content-type": "text/plain; charset=utf-8",
