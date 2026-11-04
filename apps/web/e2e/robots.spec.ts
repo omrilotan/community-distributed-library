@@ -55,11 +55,20 @@ test.describe("agents", () => {
 			"application/linkset+json",
 		);
 		const catalog = (await response.json()) as {
-			linkset: { anchor: string; item?: { href: string }[] }[];
+			linkset: {
+				anchor: string;
+				item?: { href: string }[];
+				"service-meta"?: { href: string }[];
+			}[];
 		};
 		const items = catalog.linkset[0]!.item!.map((item) => item.href);
 		expect(items.some((href) => href.endsWith("/mcp"))).toBe(true);
 		expect(items.some((href) => href.endsWith("/api/v1"))).toBe(true);
+		// RFC 9728: the metadata of the resource /mcp lives at its own path.
+		const mcp = catalog.linkset.find((set) => set.anchor.endsWith("/mcp"))!;
+		expect(mcp["service-meta"]![0]!.href).toMatch(
+			/\/\.well-known\/oauth-protected-resource\/mcp$/,
+		);
 	});
 
 	test("can read how to connect in llms.txt", async ({ request }) => {

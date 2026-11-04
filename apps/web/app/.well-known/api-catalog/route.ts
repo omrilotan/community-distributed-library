@@ -27,10 +27,11 @@ export function GET(): Response {
 			},
 			{
 				anchor: `${mcpOrigin}/mcp`,
-				// The MCP server describes its own authorisation (RFC 9728).
+				// The MCP server describes its own authorisation (RFC 9728), at the
+				// resource's path: the resource is /mcp, not the origin.
 				"service-meta": [
 					{
-						href: `${mcpOrigin}/.well-known/oauth-protected-resource`,
+						href: `${mcpOrigin}/.well-known/oauth-protected-resource/mcp`,
 						type: "application/json",
 					},
 				],
