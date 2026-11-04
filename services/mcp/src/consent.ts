@@ -132,6 +132,15 @@ export const consentHandler: ExportedHandler<Env> = {
 			return Response.redirect(back.href, 302);
 		}
 
+		// A word for a person who opens the host itself. Anything else is not
+		// here: a client or a scanner asking for a file this server does not
+		// have (openid-configuration, an agent card) must not be told it exists.
+		if (url.pathname !== "/") {
+			return new Response("Not found", {
+				status: 404,
+				headers: { "x-robots-tag": "noindex, nofollow" },
+			});
+		}
 		return new Response(
 			`${await libraryName(env)} — MCP server. Connect an MCP client to /mcp; it will ask you to sign in.`,
 			{
