@@ -55,7 +55,7 @@ describe("the MCP host's own pages", () => {
 	it("keeps crawlers to the discovery files", async () => {
 		const response = await get("/robots.txt");
 		expect(await response.text()).toBe(
-			"User-agent: *\nAllow: /.well-known/\nDisallow: /\n",
+			"User-agent: *\nContent-Signal: search=no, ai-input=no, ai-train=no\nAllow: /.well-known/\nDisallow: /\n",
 		);
 	});
 });

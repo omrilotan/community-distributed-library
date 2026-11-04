@@ -1,4 +1,7 @@
+# Content Signals (contentsignals.org): find these pages and answer from
+# them, but do not train on them.
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 
 Sitemap: https://community-distributed-library.com/sitemap.xml

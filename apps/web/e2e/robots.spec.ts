@@ -10,7 +10,9 @@ test.describe("crawlers", () => {
 	test("are kept out of the whole library", async ({ request }) => {
 		const response = await request.get("/robots.txt");
 		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe("User-agent: *\nDisallow: /\n");
+		expect(await response.text()).toBe(
+			"User-agent: *\nContent-Signal: search=no, ai-input=no, ai-train=no\nDisallow: /\n",
+		);
 		expect((await request.get("/sitemap.xml")).status()).toBe(404);
 	});
 
