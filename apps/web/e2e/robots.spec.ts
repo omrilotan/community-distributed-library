@@ -87,6 +87,19 @@ test.describe("agents", () => {
 		expect(card.transport.endpoint).toMatch(/^https?:\/\/[^/]+\/mcp$/);
 	});
 
+	test("are told in auth.md that they cannot register, and how to connect", async ({
+		request,
+	}) => {
+		const response = await request.get("/auth.md");
+		expect(response.status()).toBe(200);
+		expect(response.headers()["content-type"]).toContain("text/markdown");
+		const text = await response.text();
+		expect(text.split("\n")[0]).toMatch(/^# .+ auth\.md$/);
+		expect(text).toContain("Agents cannot register here");
+		expect(text).toMatch(/\/\.well-known\/oauth-protected-resource\/mcp/);
+		expect(text).toContain("`catalogue:read`");
+	});
+
 	test("can read how to connect in llms.txt", async ({ request }) => {
 		const response = await request.get("/llms.txt");
 		expect(response.status()).toBe(200);
