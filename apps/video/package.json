@@ -1,0 +1,26 @@
+{
+  "name": "@cdl/video",
+  "private": true,
+  "type": "module",
+  "description": "The explainer video, landscape and portrait, rendered with Remotion from the narration.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts --port 3100",
+    "voice": "node scripts/voice.ts",
+    "render": "node scripts/render.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@remotion/bundler": "4.0.537",
+    "@remotion/cli": "4.0.537",
+    "@remotion/renderer": "4.0.537",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.537"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

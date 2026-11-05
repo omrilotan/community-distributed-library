@@ -2311,8 +2311,38 @@ button.toggle:hover {
 }
 
 .more {
-	text-align: center;
-	margin-block-start: 1.5rem;
+	display: grid;
+	justify-items: center;
+	gap: 0.625rem;
+	margin-block-start: 1.75rem;
+}
+
+/* "Showing 24 of 137 books", and the same as a bar */
+.more-shown {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.more-bar {
+	inline-size: min(12rem, 60%);
+	block-size: 0.25rem;
+	border-radius: 999px;
+	background: var(--line);
+	overflow: hidden;
+}
+
+.more-bar > span {
+	display: block;
+	block-size: 100%;
+	border-radius: inherit;
+	background: var(--accent);
+	transition: inline-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.more .btn {
+	margin-block-start: 0.25rem;
 }
 
 /* Steward: approving a tag suggestion */
@@ -2567,44 +2597,10 @@ button.toggle:hover {
 	font-weight: 600;
 }
 
-/* First run: what this is, in three steps */
+/* A line said a little louder than the rest, such as a welcome. */
 .lede {
 	font-size: 1.0625rem;
 	color: var(--muted);
-}
-
-.steps {
-	list-style: none;
-	padding: 0;
-	margin-block: 1.5rem;
-	display: grid;
-	gap: 1rem;
-}
-
-.steps li {
-	display: grid;
-	grid-template-columns: 2rem 1fr;
-	gap: 0.75rem;
-	align-items: start;
-}
-
-.steps-number {
-	inline-size: 2rem;
-	block-size: 2rem;
-	display: grid;
-	place-items: center;
-	border-radius: 999px;
-	background: var(--accent-soft);
-	color: var(--accent);
-	font-weight: 700;
-}
-
-.steps p {
-	margin-block: 0.15rem 0;
-}
-
-.start-go {
-	margin-block-start: 1.5rem;
 }
 
 .cookie-note {
@@ -3150,16 +3146,8 @@ input.tag-quick-add[type="text"] {
 	color: var(--accent-ink);
 }
 
-/* After asking for a sign-in link: the two ways in, numbered, a line apart,
-   then the code's own field with room before the junk warning. */
-.sign-in-ways {
-	display: grid;
-	gap: 0.5rem;
-	margin: 0;
-	padding-inline-start: 1.25rem;
-	list-style: decimal;
-}
-
+/* After asking for a sign-in link: the code's own field, with room before
+   the junk warning. */
 .sign-in-code {
 	margin-block-end: 1.5rem;
 }
@@ -3183,25 +3171,6 @@ input.tag-quick-add[type="text"] {
 
 .push-toggle .actions {
 	margin-block: 0 0.75rem;
-}
-
-/* The start page: how it works in three lines, then the setup's steps. */
-.start-how {
-	list-style: none;
-	padding: 0;
-	margin: 0 0 2rem;
-	display: grid;
-	gap: 0.35rem;
-}
-
-.start-shot {
-	display: block;
-	inline-size: 100%;
-	max-inline-size: 16rem;
-	block-size: auto;
-	margin-block-start: 0.75rem;
-	border: 1px solid var(--line);
-	border-radius: var(--radius);
 }
 
 /* A new member's setup: which step of how many, as words and a bar. */

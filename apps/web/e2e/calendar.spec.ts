@@ -49,3 +49,39 @@ test("offers a proposed handoff to Google and to every other calendar", async ({
 
 	await putItBack(request, loan);
 });
+
+/** Once the time is agreed, the loan stops asking when and where. */
+test("a loan with an agreed time no longer asks to arrange it", async ({
+	page,
+	request,
+}) => {
+	const loan = await aLoanInProgress(request);
+	await asMember(request, OWNER.id, `/v1/loans/${loan.loanId}/accept`, {});
+	const day = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+	await asMember(
+		request,
+		BORROWER.id,
+		`/v1/loans/${loan.loanId}/handoff/propose`,
+		{ day, period: "evening" },
+	);
+	const agreed = await asMember(
+		request,
+		OWNER.id,
+		`/v1/loans/${loan.loanId}/handoff/confirm`,
+		{},
+	);
+	expect(agreed.status).toBeLessThan(300);
+
+	await page.goto(`/loans/${loan.loanId}`);
+	await expect(page.locator(".chat-head .badge")).toHaveText(
+		"accepted — meeting set",
+	);
+	await expect(page.locator(".chat-log")).toContainText(
+		"No messages yet. Write here if anything changes.",
+	);
+	await expect(page.locator(".chat-log")).not.toContainText(
+		"Say when and where",
+	);
+
+	await putItBack(request, loan);
+});

@@ -21,15 +21,12 @@ const dictionary = {
 		installApp: "Add to home screen",
 		installIos:
 			"Tap the share button at the bottom of Safari, then \u201cAdd to Home Screen\u201d.",
-		checkJunk:
-			"If it is not there in a minute, look in your junk or spam folder. The first one often lands there.",
+		checkJunk: "Not there in a minute? Look in junk or spam.",
 		saveContact: "Save the library as a contact",
-		saveContactWhy: "so the next one does not.",
+		saveContactWhy: "so the next one reaches your inbox.",
 		cookieNote:
 			"We keep a little on your device — what signs you in, and small preferences like the language you read in. No tracking, no analytics, no advertising, and nothing about you is sold or handed on.",
 		firstBook: "Add one book you are happy to lend.",
-		startLede: "Neighbours lending each other the books they already own.",
-		startSetupTitle: "Three short steps to set up",
 		startAssistantShort: "A pile of books? An assistant can list them for you.",
 		setupNext: "Next",
 		setupLater: "Later",
@@ -37,13 +34,11 @@ const dictionary = {
 		setupAreaHint:
 			"Roughly where you live, so neighbours see how far a book is. Not your address.",
 		setupPlaceTitle: "Where you meet",
-		setupPlaceHint:
-			"Usually your home address. Only the person you hand a book to sees it, and only once you both agree a time.",
+		setupPlaceHint: "Usually your home address.",
 		setupTimesTitle: "When you can meet",
 		setupTimesHint:
 			"Tick the times that usually suit you. Arranging a handoff then takes a tap.",
 		setupBookTitle: "Your first book",
-		startContinue: "Let's start",
 		editBook: "Correct this book's details",
 		editBookHint:
 			"Moderators only. This changes the book for everyone who has a copy of it.",
@@ -154,6 +149,11 @@ const dictionary = {
 		lendLimitAny: "no limit",
 		lendLimitHint:
 			"While you are at your limit your books stay in the catalogue, marked as fully lent out, and nobody can request another.",
+		loanDaysMine: "Lend my books for (days)",
+		loanDaysMineHint:
+			"How long a loan of one of your books lasts. A book can still set its own, on its page.",
+		loanDaysLibrary: "{n} (the library's default)",
+		loanDaysYours: "{n} (your default)",
 		awayUntil: "Away until",
 		awayBadge: "owner away",
 		awayHint:
@@ -255,15 +255,10 @@ const dictionary = {
 		email: "Email",
 		sendLink: "Send me a sign-in link",
 		linkSentTitle: "Check your email",
-		linkSent:
-			"If the address belongs to a member, a sign-in email is on its way. Use it within 15 minutes, either way:",
-		linkSentTapLink:
-			"Tap the link in the email. You are signed in wherever it opens.",
-		linkSentTypeCode:
-			"Or, if it opens in another browser or app than this one, type the email's eight-digit code here.",
+		linkSent: "A sign-in link is on its way. Tap it within 15 minutes.",
 		linkFailed: "That link did not work. Ask for a new one.",
-		signInCodeLabel: "Code from the email",
-		signInCodeSubmit: "Sign in with the code",
+		signInCodeLabel: "Opened it somewhere else? Type its code here",
+		signInCodeSubmit: "Sign in",
 		sendNewLink: "Send a new link, or to another address",
 		signInCodeFailed:
 			"That code did not work. Check the newest email, or ask for a new link.",
@@ -284,6 +279,9 @@ const dictionary = {
 		mapMore: "Not on the list? Place yourself on the map",
 		located: "Got it — stored roughly, not exactly.",
 		locateFailed: "Could not get a location. Type your neighbourhood instead.",
+		locatedNoName: "Got it. Now type your neighbourhood's name.",
+		locatedFar:
+			"That is far from this library, so it was not used. Type your neighbourhood instead.",
 		language: "Language",
 		editEditionsFirst:
 			"This book has more than one edition, so its cover cannot be replaced here. Merge them first.",
@@ -495,6 +493,9 @@ const dictionary = {
 		messages: "Messages",
 		noSuchLoan: "No such loan.",
 		noMessages: "No messages yet. Say when and where suits you.",
+		// Once the time is agreed there is nothing left to settle in words.
+		noMessagesAgreed: "No messages yet. Write here if anything changes.",
+		acceptedMeetingSet: "accepted — meeting set",
 		writeMessage: "Write a message",
 		send: "Send",
 		theModerators: "The moderators",
@@ -652,7 +653,6 @@ const dictionary = {
 		lendingPaused: "Paused — keep it listed, do not lend for now",
 		lendingReference: "Reference only — show it, never lend it",
 		loanDays: "Loan length (days)",
-		loanDaysDefault: "community default",
 		replaceCover: "Replace the cover",
 		removeHeading: "Remove",
 		removeFromShelf: "Remove this book from my shelf",
@@ -778,7 +778,11 @@ const dictionary = {
 		filterDistance: "Distance",
 		anyDistance: "Any",
 		nothingYet: "Nothing to borrow yet. Add a book to get things moving.",
-		more: "More",
+		// Under the list: how far down it is, and what More brings next.
+		moreShown: "Showing {shown} of {total} books",
+		moreNext: "Show {n} more",
+		moreLast: "Show the last {n}",
+		moreLastOne: "Show the last one",
 		noSuchBook: "No such book.",
 		copiesNearby: "Copies nearby",
 		noCopies: "Nobody nearby has a lendable copy right now.",
@@ -820,15 +824,12 @@ const dictionary = {
 		menu: "תפריט",
 		installApp: "הוספה למסך הבית",
 		installIos: "בספארי: כפתור השיתוף למטה, ואז \u201cהוספה למסך הבית\u201d.",
-		checkJunk:
-			"אם הוא לא הגיע תוך דקה, חפשו בתיקיית הספאם. הראשון נוחת שם לא פעם.",
+		checkJunk: "לא הגיע תוך דקה? חפשו בספאם.",
 		saveContact: "שמירת הספרייה באנשי הקשר",
-		saveContactWhy: "כדי שהבא כבר לא ינחת שם.",
+		saveContactWhy: "כדי שהבא יגיע לתיבה.",
 		cookieNote:
 			"אנחנו שומרים אצלכם מעט — מה שמחבר אתכם, והעדפות קטנות כמו השפה שבה אתם קוראים. בלי מעקב, בלי אנליטיקס, בלי פרסום, ושום דבר עליכם לא נמכר ולא מועבר הלאה.",
 		firstBook: "הוסיפו ספר אחד שאתם שמחים להשאיל.",
-		startLede: "שכנים משאילים זה לזה ספרים שכבר יש להם.",
-		startSetupTitle: "שלושה צעדים קצרים להתחלה",
 		startAssistantShort: "ערימת ספרים? עוזר יכול לרשום אותה בשבילכם.",
 		setupNext: "הבא",
 		setupLater: "אחר כך",
@@ -836,13 +837,11 @@ const dictionary = {
 		setupAreaHint:
 			"בערך איפה אתם גרים, כדי שהשכנים יראו כמה רחוק הספר. לא הכתובת.",
 		setupPlaceTitle: "איפה נפגשים",
-		setupPlaceHint:
-			"בדרך כלל כתובת הבית. רק מי שמקבלים מכם ספר רואים אותה, ורק אחרי שקבעתם מועד.",
+		setupPlaceHint: "בדרך כלל כתובת הבית.",
 		setupTimesTitle: "מתי אפשר להיפגש",
 		setupTimesHint:
 			"סמנו את הזמנים שבדרך כלל נוחים לכם, ותיאום מסירה יהיה בלחיצה.",
 		setupBookTitle: "הספר הראשון",
-		startContinue: "בואו נתחיל",
 		editBook: "תיקון פרטי הספר",
 		editBookHint: "למודרטורים בלבד. השינוי משפיע על כל מי שיש לו עותק.",
 		statsTitle: "מספרים",
@@ -946,6 +945,11 @@ const dictionary = {
 		lendLimitAny: "ללא הגבלה",
 		lendLimitHint:
 			"כשמגיעים למכסה הספרים שלכם נשארים בקטלוג ומסומנים כמושאלים במלואם, ואי אפשר לבקש עוד אחד.",
+		loanDaysMine: "משך השאלה של הספרים שלי (ימים)",
+		loanDaysMineHint:
+			"כמה זמן נמשכת השאלה של ספר שלכם. כל ספר עדיין יכול לקבוע משך משלו, בדף שלו.",
+		loanDaysLibrary: "{n} (ברירת המחדל של הספרייה)",
+		loanDaysYours: "{n} (ברירת המחדל שלכם)",
 		awayUntil: "בחופשה עד",
 		awayBadge: "הבעלים בחופשה",
 		awayHint:
@@ -1045,14 +1049,10 @@ const dictionary = {
 		email: "אימייל",
 		sendLink: "שלחו לי קישור כניסה",
 		linkSentTitle: "בדקו את האימייל",
-		linkSent:
-			"אם הכתובת שייכת לחבר/ה בספרייה, אימייל כניסה כבר בדרך. השתמשו בו תוך 15 דקות, באחת משתי הדרכים:",
-		linkSentTapLink: "לחצו על הקישור באימייל. תיכנסו בכל מקום שבו הוא נפתח.",
-		linkSentTypeCode:
-			"או, אם הוא נפתח בדפדפן או באפליקציה אחרים, הקלידו כאן את הקוד בן שמונה הספרות מהאימייל.",
+		linkSent: "קישור כניסה בדרך אליכם. לחצו עליו תוך 15 דקות.",
 		linkFailed: "הקישור לא עבד. בקשו קישור חדש.",
-		signInCodeLabel: "הקוד מהאימייל",
-		signInCodeSubmit: "כניסה עם הקוד",
+		signInCodeLabel: "נפתח במקום אחר? הקלידו כאן את הקוד",
+		signInCodeSubmit: "כניסה",
 		sendNewLink: "שליחת קישור חדש, או לכתובת אחרת",
 		signInCodeFailed: "הקוד לא עבד. בדקו את האימייל האחרון, או בקשו קישור חדש.",
 		finishSignIn: "נגיעה אחת כדי לסיים את הכניסה במכשיר הזה.",
@@ -1069,6 +1069,8 @@ const dictionary = {
 		mapMore: "לא ברשימה? סמנו את עצמכם על המפה",
 		located: "התקבל — נשמר בקירוב, לא במדויק.",
 		locateFailed: "לא הצלחנו לקבל מיקום. כתבו את השכונה במקום.",
+		locatedNoName: "התקבל. עכשיו כתבו את שם השכונה.",
+		locatedFar: "המיקום רחוק מהספרייה, ולכן לא נשמר. כתבו את השכונה במקום.",
 		language: "שפה",
 		editEditionsFirst:
 			"לספר הזה יש יותר ממהדורה אחת, ולכן אי אפשר להחליף כאן את הכריכה. מזגו אותן קודם.",
@@ -1266,6 +1268,8 @@ const dictionary = {
 		messages: "הודעות",
 		noSuchLoan: "אין השאלה כזו.",
 		noMessages: "אין עדיין הודעות. כתבו מתי ואיפה נוח לכם.",
+		noMessagesAgreed: "אין עדיין הודעות. כתבו כאן אם משהו משתנה.",
+		acceptedMeetingSet: "אושר — המפגש נקבע",
 		writeMessage: "כתבו הודעה",
 		send: "שליחה",
 		theModerators: "המודרטורים",
@@ -1420,7 +1424,6 @@ const dictionary = {
 		lendingPaused: "מושהה — נשאר ברשימה, לא מושאל כרגע",
 		lendingReference: "לעיון בלבד — מוצג, לא מושאל",
 		loanDays: "משך השאלה (ימים)",
-		loanDaysDefault: "ברירת המחדל של הקהילה",
 		replaceCover: "החלפת כריכה",
 		removeHeading: "הסרה",
 		removeFromShelf: "הסרת הספר מהמדף שלי",
@@ -1543,7 +1546,10 @@ const dictionary = {
 		filterDistance: "מרחק",
 		anyDistance: "הכול",
 		nothingYet: "אין עדיין מה לשאול. הוסיפו ספר כדי להתחיל.",
-		more: "עוד",
+		moreShown: "מוצגים {shown} מתוך {total} ספרים",
+		moreNext: "הצג {n} נוספים",
+		moreLast: "הצג {n} האחרונים",
+		moreLastOne: "הצג את האחרון",
 		noSuchBook: "אין ספר כזה.",
 		copiesNearby: "עותקים בסביבה",
 		noCopies: "לאף אחד בסביבה אין כרגע עותק להשאלה.",
@@ -1879,17 +1885,6 @@ function helpers(locale: Locale) {
 				? `עוד לא צוין מקום מפגש. שאלו את \u2068${name}\u2069 בהודעות.`
 				: `\u2068${name}\u2069 has not said where to meet yet. Ask in the messages.`,
 		/** How it works, in three lines. */
-		startHow: (he
-			? [
-					["רושמים ספרים", "הם נשארים אצלכם."],
-					["מבקשים משכנים", "כל ספר בסביבה."],
-					["נפגשים ומחליפים", "במועד ששניכם בחרתם."],
-				]
-			: [
-					["List your books", "They stay on your shelf."],
-					["Ask a neighbour", "For any book nearby."],
-					["Meet and swap", "At a time you both picked."],
-				]) as [string, string][],
 		setupStepOf: (n: number, of: number) =>
 			he ? `שלב ${n} מתוך ${of}` : `Step ${n} of ${of}`,
 		withinKm: (km: number) => (he ? `עד ${km} ק״מ` : `Up to ${km} km`),

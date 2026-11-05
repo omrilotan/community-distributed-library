@@ -1,6 +1,7 @@
 import type { AuthRequest } from "@cloudflare/workers-oauth-provider";
 import type { Env } from "./env.ts";
-import { libraryName } from "./library.ts";
+import { serverCard } from "./card.ts";
+import { libraryInfo, libraryName } from "./library.ts";
 
 /**
  * The non-API side of the OAuth server: the consent handshake. The screen
@@ -28,7 +29,7 @@ export const consentHandler: ExportedHandler<Env> = {
 		// Nothing on this host is for an index, any more than the library is.
 		if (url.pathname === "/robots.txt") {
 			return new Response(
-				"User-agent: *\nAllow: /.well-known/\nDisallow: /\n",
+				"User-agent: *\nContent-Signal: search=no, ai-input=no, ai-train=no\nAllow: /.well-known/\nDisallow: /\n",
 				{
 					headers: {
 						"content-type": "text/plain; charset=utf-8",
@@ -36,6 +37,17 @@ export const consentHandler: ExportedHandler<Env> = {
 					},
 				},
 			);
+		}
+
+		// What an agent can know before connecting (card.ts). The library's own
+		// host serves the same card, asked for over its binding.
+		if (url.pathname === "/.well-known/mcp/server-card.json") {
+			return Response.json(serverCard(env, await libraryInfo(env)), {
+				headers: {
+					"access-control-allow-origin": "*",
+					"cache-control": "public, max-age=3600",
+				},
+			});
 		}
 
 		if (url.pathname === "/authorize") {
@@ -132,6 +144,15 @@ export const consentHandler: ExportedHandler<Env> = {
 			return Response.redirect(back.href, 302);
 		}
 
+		// A word for a person who opens the host itself. Anything else is not
+		// here: a client or a scanner asking for a file this server does not
+		// have (openid-configuration, an agent card) must not be told it exists.
+		if (url.pathname !== "/") {
+			return new Response("Not found", {
+				status: 404,
+				headers: { "x-robots-tag": "noindex, nofollow" },
+			});
+		}
 		return new Response(
 			`${await libraryName(env)} — MCP server. Connect an MCP client to /mcp; it will ask you to sign in.`,
 			{

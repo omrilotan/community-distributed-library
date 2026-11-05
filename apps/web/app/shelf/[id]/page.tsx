@@ -25,7 +25,7 @@ export default async function ManageCopyPage({
 	params: Promise<{ id: string }>;
 	searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-	await requireProfile();
+	const me = await requireProfile();
 	const { id } = await params;
 	const { saved, error } = await searchParams;
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
@@ -248,7 +248,11 @@ export default async function ManageCopyPage({
 						min={1}
 						max={90}
 						defaultValue={copy.loanDays ?? ""}
-						placeholder={t.loanDaysDefault}
+						// Empty: the owner's own length, else the library's.
+						placeholder={(me.loanDays
+							? t.loanDaysYours
+							: t.loanDaysLibrary
+						).replace("{n}", String(me.loanDays ?? me.community.loanDays))}
 					/>
 
 					<input type="hidden" name="workId" value={copy.work.id} />

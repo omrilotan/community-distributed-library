@@ -10,7 +10,9 @@ test.describe("crawlers", () => {
 	test("are kept out of the whole library", async ({ request }) => {
 		const response = await request.get("/robots.txt");
 		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe("User-agent: *\nDisallow: /\n");
+		expect(await response.text()).toBe(
+			"User-agent: *\nContent-Signal: search=no, ai-input=no, ai-train=no\nDisallow: /\n",
+		);
 		expect((await request.get("/sitemap.xml")).status()).toBe(404);
 	});
 
@@ -55,11 +57,47 @@ test.describe("agents", () => {
 			"application/linkset+json",
 		);
 		const catalog = (await response.json()) as {
-			linkset: { anchor: string; item?: { href: string }[] }[];
+			linkset: {
+				anchor: string;
+				item?: { href: string }[];
+				"service-meta"?: { href: string }[];
+			}[];
 		};
 		const items = catalog.linkset[0]!.item!.map((item) => item.href);
 		expect(items.some((href) => href.endsWith("/mcp"))).toBe(true);
 		expect(items.some((href) => href.endsWith("/api/v1"))).toBe(true);
+		// RFC 9728: the metadata of the resource /mcp lives at its own path.
+		const mcp = catalog.linkset.find((set) => set.anchor.endsWith("/mcp"))!;
+		expect(mcp["service-meta"]![0]!.href).toMatch(
+			/\/\.well-known\/oauth-protected-resource\/mcp$/,
+		);
+	});
+
+	test("find the MCP server's card on the library's own host", async ({
+		request,
+	}) => {
+		const response = await request.get("/.well-known/mcp/server-card.json");
+		expect(response.status()).toBe(200);
+		const card = (await response.json()) as {
+			serverInfo: { name: string; version: string };
+			transport: { type: string; endpoint: string };
+		};
+		expect(card.serverInfo.name).toBe("community-distributed-library");
+		expect(card.transport.type).toBe("streamable-http");
+		expect(card.transport.endpoint).toMatch(/^https?:\/\/[^/]+\/mcp$/);
+	});
+
+	test("are told in auth.md that they cannot register, and how to connect", async ({
+		request,
+	}) => {
+		const response = await request.get("/auth.md");
+		expect(response.status()).toBe(200);
+		expect(response.headers()["content-type"]).toContain("text/markdown");
+		const text = await response.text();
+		expect(text.split("\n")[0]).toMatch(/^# .+ auth\.md$/);
+		expect(text).toContain("Agents cannot register here");
+		expect(text).toMatch(/\/\.well-known\/oauth-protected-resource\/mcp/);
+		expect(text).toContain("`catalogue:read`");
 	});
 
 	test("can read how to connect in llms.txt", async ({ request }) => {

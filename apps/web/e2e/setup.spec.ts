@@ -115,4 +115,47 @@ test.describe("first setup's area", () => {
 		// Named by core from the point; which name depends on the ward.
 		await expect(page.locator("#areaLabel")).not.toHaveValue("");
 	});
+
+	test("asks for the name when the location has none", async ({
+		page,
+		context,
+	}) => {
+		await context.grantPermissions(["geolocation"]);
+		await context.setGeolocation({ latitude: 51.6131, longitude: -0.1771 });
+		// Somewhere the place names do not cover answers with no name.
+		await page.route("**/api/places/at?*", (route) =>
+			route.fulfill({ json: { name: null } }),
+		);
+		await page.goto("/start/setup");
+		await expect(page.locator('.menu a[href*="back="]')).toHaveCount(1);
+		await page.locator("#areaLabel").fill("");
+		await page
+			.locator(".field-with-button")
+			.getByRole("button", { name: "Use my location" })
+			.click();
+		await expect(page.locator(".area-picker [role=status]")).toHaveText(
+			"Got it. Now type your neighbourhood's name.",
+		);
+		await expect(page.locator("#areaLabel")).toBeFocused();
+	});
+
+	test("does not keep a location far from the library", async ({
+		page,
+		context,
+	}) => {
+		await context.grantPermissions(["geolocation"]);
+		// A phone in Jerusalem, a library in London.
+		await context.setGeolocation({ latitude: 31.7683, longitude: 35.2137 });
+		await page.goto("/start/setup");
+		await expect(page.locator('.menu a[href*="back="]')).toHaveCount(1);
+		await page.locator("#areaLabel").fill("");
+		await page
+			.locator(".field-with-button")
+			.getByRole("button", { name: "Use my location" })
+			.click();
+		await expect(page.locator(".area-picker [role=status]")).toHaveText(
+			"That is far from this library, so it was not used. Type your neighbourhood instead.",
+		);
+		await expect(page.locator('input[name="lat"]')).toHaveValue("");
+	});
 });

@@ -5,6 +5,11 @@ item stays on its owner's shelf until someone asks for it. The library is the sh
 catalogue, requests, handoff times picked from both people's week, a record of who holds what, and
 reminders.
 
+https://github.com/user-attachments/assets/e9172665-5d60-4f19-84c0-8964d6a620a8
+
+A minute on what a library is and how to open one for your street; more on
+[Run your own library](https://community-distributed-library.com/open-a-library).
+
 What you can do next:
 
 - **Run a library** for your street. Follow [docs/self-hosting.md](docs/self-hosting.md), or open
@@ -32,6 +37,7 @@ over service bindings.
 ```
 apps/web/             the library web app: Next.js App Router on vinext, a PWA, one Worker per library
 apps/landing/         the front page at the bare domain (static)
+apps/video/           the explainer video, landscape and portrait (Remotion); not deployed
 services/core/        system of record and the public /v1 API (Hono, D1)
 services/mcp/         OAuth 2.1 server and MCP tools for AI assistants, calling core's /v1
 services/notify/      email through Cloudflare Email Sending, Web Push (RFC 8291/8292); no storage
@@ -39,6 +45,7 @@ services/convo/       loan message threads, own D1, deleted 90 days after a loan
 services/metadata/    ISBN lookup (Open Library, then Google Books) and its cache; shared
 services/reports/     where browsers report CSP violations and network errors; shared
 packages/contracts/   Zod schemas, the OpenAPI document, library types
+packages/tools/       what an assistant can do: one list of tools, for MCP and the pages (WebMCP)
 packages/design/      design tokens, logo, principles, frontend conventions
 scripts/              list of libraries, deploy, checks, local dev, pulling a database down
 ```
@@ -150,7 +157,7 @@ Member tools: `my_profile`, `search_catalogue`, `browse_shelves`, `get_work`, `l
 `set_item_tags`, `request_loan`, `respond_to_request`, `cancel_loan`, `extend_loan`, `nudge`,
 `list_my_loans`, `get_loan_messages`, `post_loan_message`, `join_waitlist`, `leave_waitlist`,
 `my_waitlist`, `propose_tag`, `my_tag_proposals`, `report_problem`, `invite_neighbour`,
-`my_invites`, `set_lend_limit`.
+`my_invites`, `set_lend_limit`, `set_loan_length`.
 
 Moderators also get `edit_item`, `set_item_cover`, `upload_item_cover`, `remove_item_cover`,
 `add_tag`, `edit_tag`, `remove_tag`, `rename_tag_group`.

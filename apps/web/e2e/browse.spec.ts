@@ -15,6 +15,31 @@ test.describe("browsing further down the shelves", () => {
 		expect(total).toBeGreaterThanOrEqual(await tiles(page).count());
 	});
 
+	test("says how far down the list you are, and what More brings", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await hydrated(page);
+		const said = await page.locator(".listing-total").innerText();
+		const total = Number(said.match(/\d+/)?.[0]);
+		const first = await tiles(page).count();
+		const shown = page.locator(".more-shown");
+		await expect(shown).toContainText(String(first));
+		await expect(shown).toContainText(String(total));
+		// A page more, or the few that are left.
+		await expect(page.locator("[data-more]")).toContainText(
+			String(Math.min(first, total - first)),
+		);
+
+		await page.locator("[data-more]").click();
+		await expect(tiles(page)).toHaveCount(Math.min(first * 2, total));
+		if (total > first * 2) {
+			await expect(shown).toContainText(String(first * 2));
+		} else {
+			await expect(page.locator(".more")).toHaveCount(0);
+		}
+	});
+
 	test("keeps the extra books when you come back from one", async ({
 		page,
 	}) => {

@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import type { Availability } from "@cdl/contracts";
 import { core } from "../../../lib/core.ts";
 import { getMe } from "../../../lib/profile.ts";
+import { libraryWords } from "../../../lib/library.ts";
 import { strings, type Locale } from "../../../lib/i18n.ts";
 import { requireSession, signedOut } from "../../../lib/session.ts";
-import { AreaPicker } from "../../area-picker.tsx";
+import { AreaPicker, MEMBER_REACH_M } from "../../area-picker.tsx";
 import { Callout } from "../../ui.tsx";
 import { WeekGrid } from "../../settings/availability.tsx";
 import { SetupProgress } from "../setup-progress.tsx";
@@ -42,9 +43,15 @@ export default async function SetupPage({
 			? availability.body
 			: { slots: [], meetingPlace: null };
 	const next = `/start/setup?step=${step + 1}`;
+	// The whole welcome: one line, over the first step.
+	const community =
+		step === 1
+			? (await libraryWords(locale)).name || body.community.name
+			: null;
 
 	return (
 		<main className="narrow setup" style={{ maxInlineSize: "34rem" }}>
+			{community ? <p className="lede">{t.startTitle(community)}</p> : null}
 			<SetupProgress step={step} t={t} />
 			{error ? (
 				<Callout tone="warn">
@@ -70,12 +77,15 @@ export default async function SetupPage({
 					{compact ? null : (
 						<AreaPicker
 							centre={body.community.centre}
+							reach={MEMBER_REACH_M}
 							initial={body.area ?? null}
 							labels={{
 								area: t.areaLabel,
 								areaHint: t.areaLabelHint,
 								locate: t.locate,
 								located: t.located,
+								locatedNoName: t.locatedNoName,
+								locatedFar: t.locatedFar,
 								locateFailed: t.locateFailed,
 								mapHint: t.mapHint,
 								mapMore: t.mapMore,

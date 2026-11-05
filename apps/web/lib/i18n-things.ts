@@ -10,13 +10,11 @@
 export const thingWords = {
 	en: {
 		firstBook: "Add one thing you are happy to lend.",
-		startLede: "Neighbours lending each other the things they already own.",
 		startAssistantShort:
 			"A shed full of things? An assistant can list them for you.",
 		setupAreaHint:
 			"Roughly where you live, so neighbours see how far a thing is. Not your address.",
-		setupPlaceHint:
-			"Usually your home address. Only the person you hand something to sees it, and only once you both agree a time.",
+		setupPlaceHint: "Usually your home address.",
 		setupBookTitle: "Your first thing",
 		editBook: "Correct this item's details",
 		editBookHint: "Moderators only. This changes the item's name and photo.",
@@ -33,6 +31,9 @@ export const thingWords = {
 		lendLimit: "Things out at once, at most",
 		lendLimitHint:
 			"While you are at your limit your things stay listed, marked as fully lent out, and nobody can ask for another.",
+		loanDaysMine: "Lend my things for (days)",
+		loanDaysMineHint:
+			"How long a loan of one of your things lasts. A thing can still set its own, on its page.",
 		awayHint:
 			"Going away? Give the day you are back. Your things stay listed, marked as away, and nobody can ask for them until then.",
 		awayNowHint:
@@ -115,6 +116,7 @@ export const thingWords = {
 		onTheShelves: "In the library near you",
 		guestShelves: "In the library",
 		allBooks: "Everything",
+		moreShown: "Showing {shown} of {total} things",
 		wishlist: "Want to borrow",
 		wishlistTab: "Saved",
 		wishlistEmptyHint:
@@ -130,12 +132,10 @@ export const thingWords = {
 	},
 	he: {
 		firstBook: "הוסיפו פריט אחד שאתם שמחים להשאיל.",
-		startLede: "שכנים משאילים זה לזה דברים שכבר יש להם.",
 		startAssistantShort: "מחסן מלא? עוזר יכול לרשום הכול בשבילכם.",
 		setupAreaHint:
 			"בערך איפה אתם גרים, כדי שהשכנים יראו כמה רחוק הפריט. לא הכתובת.",
-		setupPlaceHint:
-			"בדרך כלל כתובת הבית. רק מי שמקבלים מכם משהו רואים אותה, ורק אחרי שקבעתם מועד.",
+		setupPlaceHint: "בדרך כלל כתובת הבית.",
 		setupBookTitle: "הפריט הראשון",
 		editBook: "תיקון פרטי הפריט",
 		editBookHint: "למודרטורים בלבד. השינוי משנה את השם והתמונה של הפריט.",
@@ -152,6 +152,9 @@ export const thingWords = {
 		lendLimit: "כמה פריטים מושאלים במקביל, לכל היותר",
 		lendLimitHint:
 			"כשמגיעים למכסה הפריטים שלכם נשארים ברשימה ומסומנים כמושאלים במלואם, ואי אפשר לבקש עוד אחד.",
+		loanDaysMine: "משך השאלה של הפריטים שלי (ימים)",
+		loanDaysMineHint:
+			"כמה זמן נמשכת השאלה של פריט שלכם. כל פריט עדיין יכול לקבוע משך משלו, בדף שלו.",
 		awayHint:
 			"נוסעים? כתבו את היום שבו אתם חוזרים. הפריטים נשארים ברשימה, מסומנים כלא זמינים, ואי אפשר לבקש אותם עד אז.",
 		awayNowHint:
@@ -230,6 +233,7 @@ export const thingWords = {
 		onTheShelves: "בספרייה לידכם",
 		guestShelves: "בספרייה",
 		allBooks: "הכול",
+		moreShown: "מוצגים {shown} מתוך {total} פריטים",
 		wishlist: "רוצה לשאול",
 		wishlistTab: "שמורים",
 		wishlistEmptyHint:
@@ -286,17 +290,6 @@ export function thingHelpers(locale: "en" | "he") {
 			he
 				? `${copies} ${plural(copies, "פריט", "פריטים")} בקהילה · ${waiting} ${plural(waiting, "ממתין/ה", "ממתינים")}`
 				: `${copies} ${plural(copies, "item", "items")} in the community · ${waiting} waiting`,
-		startHow: (he
-			? [
-					["רושמים פריטים", "הם נשארים אצלכם."],
-					["מבקשים משכנים", "כל דבר בסביבה."],
-					["נפגשים ומעבירים", "במועד ששניכם בחרתם."],
-				]
-			: [
-					["List your things", "They stay with you."],
-					["Ask a neighbour", "For anything nearby."],
-					["Meet and hand over", "At a time you both picked."],
-				]) as [string, string][],
 		booksTotal: (n: number) =>
 			he
 				? n === 1
