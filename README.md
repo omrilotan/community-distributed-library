@@ -1,7 +1,8 @@
 # Community Distributed Library
 
-Neighbours lend each other what they already own. There is no building and no central stock: each
-item stays on its owner's shelf until someone asks for it. The library is the shared part: a
+A community distributed library is a decentralized sharing network: neighbours lend each other
+what they already own. Items stay in the homes of their owners, with no building and no central
+stock, until someone asks for one. The library is the shared part: a
 catalogue, requests, handoff times picked from both people's week, a record of who holds what, and
 reminders.
 

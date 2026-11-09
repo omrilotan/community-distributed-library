@@ -1,6 +1,6 @@
 # Community Distributed Library
 
-> Free, open-source software for a neighbourhood lending library. Neighbours list the books or things they are happy to lend (tools, board games, camping gear), ask each other for them, agree a time, and meet to hand them over. No money changes hands. Libraries are invite-only.
+> Free, open-source software for a community distributed library: a decentralized sharing network where neighbours lend what they already own directly to one another. Items stay in the homes of their owners; there is no central building or stock. Neighbours list the books or things they are happy to lend (tools, board games, camping gear), ask each other for them, agree a time, and meet to hand them over. No money changes hands. Libraries are invite-only.
 
 - Every library is its own deployment, with its own members, data and rules. There is no central service.
 - Every library comes with its own MCP server, so an AI assistant such as Claude or ChatGPT can search, list, ask, lend and arrange handoffs for a member, with the permissions the member grants.
