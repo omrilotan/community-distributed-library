@@ -47,6 +47,10 @@ export async function POST(request: Request): Promise<Response> {
 			// An empty field is a member who is back.
 			awayUntil: awayUntil && awayUntil > Date.now() / 1000 ? awayUntil : null,
 			...(label ? { area: { label, ...point } } : {}),
+			// A box left unticked sends nothing: the marker says it was there.
+			...(form.has("suggestShelfShown")
+				? { suggestShelf: form.get("suggestShelf") === "1" }
+				: {}),
 		}),
 	});
 

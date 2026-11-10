@@ -473,6 +473,14 @@ const dictionary = {
 		yours: "yours",
 		markHanded: "Mark as handed over",
 		markReturned: "Mark as returned",
+		moreHint:
+			"You are meeting anyway. Ask now, and if they say yes it comes to the same handoff.",
+		moreAsk: "Ask for this too",
+		moreNotNow: "Not now",
+		moreAsked: "Asked. If they say yes, it comes along to the same handoff.",
+		suggestShelf: "Show borrowers what else I lend",
+		suggestShelfHint:
+			"When someone is about to collect from you, they see a few more of yours they might like, so one meeting can cover several.",
 		reportWhich: "About",
 		nudge: "Nudge",
 		nudgeSent: "Nudge sent.",
@@ -1258,6 +1266,13 @@ const dictionary = {
 		yours: "שלכם",
 		markHanded: "סימון: נמסר",
 		markReturned: "סימון: הוחזר",
+		moreHint: "ממילא נפגשים. אפשר לבקש עכשיו, ואם יאשרו, זה יצטרף לאותה מסירה.",
+		moreAsk: "לבקש גם את זה",
+		moreNotNow: "לא עכשיו",
+		moreAsked: "הבקשה נשלחה. אם יאשרו, זה יצטרף לאותה מסירה.",
+		suggestShelf: "להראות לשואלים מה עוד אני משאיל/ה",
+		suggestShelfHint:
+			"כשמישהו עומד לאסוף מכם, יוצגו לו עוד כמה דברים שלכם שאולי יעניינו אותו, כדי שפגישה אחת תספיק לכמה.",
 		reportWhich: "לגבי",
 		nudge: "תזכורת",
 		nudgeSent: "התזכורת נשלחה.",
@@ -1738,6 +1753,12 @@ function helpers(locale: Locale) {
 			he ? `סימון: כל ה־${n} נמסרו` : `Mark all ${n} as handed over`,
 		markAllReturned: (n: number) =>
 			he ? `סימון: כל ה־${n} הוחזרו` : `Mark all ${n} as returned`,
+		moreAll: (name: string) =>
+			he
+				? `כל מה ש\u2068${name}\u2069 משאילים`
+				: `Everything \u2068${name}\u2069 lends`,
+		moreFrom: (name: string) =>
+			he ? `עוד אצל \u2068${name}\u2069` : `\u2068${name}\u2069 also lends`,
 		howManyAsk: (free: number) =>
 			he ? `כמה (עד ${free})` : `How many (up to ${free})`,
 		reportRelayHint: (owner: string) =>

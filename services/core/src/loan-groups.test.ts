@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { as, COPY_A, COPY_B, DANA, NOA, SAM } from "../test/api.ts";
+import { as, COPY_A, COPY_B, DANA, NOA, SAM, WORK } from "../test/api.ts";
 
 const COPY_C = "01J0KPYC00000000000000000C";
 
@@ -139,5 +139,41 @@ describe("loans between the same two people", () => {
 			(await as(SAM).post(`/v1/loans/${a}/handed`, { also: [theirs] })).status,
 		).toBe(204);
 		expect((await loan(theirs)).status).toBe("requested");
+	});
+});
+
+describe("what else the owner has", () => {
+	it("shows the borrower's wishes first, and not what they asked for", async () => {
+		await thirdCopy();
+		await env.DB.prepare(
+			"INSERT INTO wishlist (member_id, work_id, created_at) VALUES (?, ?, 1)",
+		)
+			.bind(SAM, WORK)
+			.run();
+		const [a] = await accepted(COPY_A);
+		const more = await as(SAM).get(`/v1/loans/${a}/more`);
+		expect(more.status).toBe(200);
+		expect(more.body.owner.id).toBe(DANA);
+		const ids = (list: { id: string }[]) => list.map((copy) => copy.id);
+		expect(ids(more.body.wished).sort()).toEqual([COPY_B, COPY_C].sort());
+		expect(ids(more.body.more)).toEqual([]);
+		expect(ids(more.body.wished)).not.toContain(COPY_A);
+	});
+
+	it("is the borrower's to see, and the owner's to turn off", async () => {
+		const [a] = await accepted(COPY_A);
+		expect((await as(DANA).get(`/v1/loans/${a}/more`)).status).toBe(404);
+		expect((await as(SAM).get(`/v1/loans/${a}/more`)).body.more).toHaveLength(
+			1,
+		);
+
+		expect(
+			(await as(DANA).patch("/v1/me", { suggestShelf: false })).status,
+		).toBe(204);
+		expect((await as(DANA).get("/v1/me")).body.suggestShelf).toBe(false);
+		expect((await as(SAM).get(`/v1/loans/${a}/more`)).body).toMatchObject({
+			wished: [],
+			more: [],
+		});
 	});
 });

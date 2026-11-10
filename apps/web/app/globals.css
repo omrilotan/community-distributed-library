@@ -3785,7 +3785,8 @@ html[data-library="things"] .book-cover img {
 	padding: 0;
 }
 
-.loan-item {
+.loan-item,
+.more-item {
 	display: flex;
 	gap: 0.75rem;
 	align-items: start;
@@ -3793,13 +3794,16 @@ html[data-library="things"] .book-cover img {
 	border-block-start: 1px solid var(--line);
 }
 
-.loan-item > div {
+.loan-item > div,
+.more-item > div {
 	flex: 1;
 	min-inline-size: 0;
 }
 
 .loan-item img,
-.loan-item .thumb {
+.loan-item .thumb,
+.more-item img,
+.more-item .thumb {
 	display: block;
 	inline-size: 2.5rem;
 	aspect-ratio: 5 / 8;
@@ -3820,7 +3824,8 @@ html[data-library="things"] .book-cover img {
 	gap: 0.25rem 0.5rem;
 }
 
-.loan-item .actions button.quiet {
+.loan-item .actions button.quiet,
+.more-item button.quiet {
 	padding: 0.2rem 0.6rem;
 	font-size: 0.8125rem;
 }
@@ -3838,6 +3843,35 @@ html[data-library="things"] .book-cover img {
 	border-block-start: 0;
 }
 
+/* What else the owner lends: under the steps, quieter than them. */
+.more-from {
+	margin-block: 1.5rem 0.5rem;
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.more-from h2 {
+	font-size: 1rem;
+	margin: 0 0 0.25rem;
+}
+
+.more-from h3 {
+	font-size: 0.875rem;
+	margin: 0.75rem 0 0;
+	color: var(--muted);
+	font-weight: 500;
+}
+
+.more-list {
+	list-style: none;
+	margin: 0.25rem 0 0.5rem;
+	padding: 0;
+}
+
+.more-item form {
+	margin-block-start: 0.375rem;
+}
+
 /* On a phone the step for them all takes the card's width; the nudge and
    the way in share the row under it. */
 @media (max-width: 40rem) {
@@ -3852,4 +3886,13 @@ html[data-library="things"] .book-cover img {
 		padding-block: 0.6rem;
 		font-size: 1rem;
 	}
+}
+
+/* Under the suggestions: the owner's whole shelf, and the way to put them off. */
+.more-foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.25rem;
+	align-items: center;
+	margin-block-start: 0.25rem;
 }

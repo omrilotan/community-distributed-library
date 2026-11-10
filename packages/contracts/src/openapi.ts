@@ -31,6 +31,7 @@ import {
 	BrowseRequest,
 	BrowseResponse,
 	LoanStatus,
+	MoreFromOwner,
 	MyLoans,
 	RequestLoan,
 	WishlistResponse,
@@ -591,6 +592,15 @@ export const ROUTES: readonly Route[] = [
 		tag: "Loans",
 		summary: "Gentle reminder to the other party, once a day",
 		access: "loans:write",
+	},
+	{
+		method: "get",
+		path: "/v1/loans/:id/more",
+		tag: "Loans",
+		summary: "What else the person a borrower is meeting has free to lend",
+		access: "loans:read",
+		response: MoreFromOwner,
+		note: "For the borrower only. Empty when the owner turned suggestions off.",
 	},
 	{
 		method: "post",
