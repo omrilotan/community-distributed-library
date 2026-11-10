@@ -638,7 +638,7 @@ main > section.run {
 /* A full-width breath of green between the mechanics and the reasons. */
 .breather {
 	inline-size: 100%;
-	aspect-ratio: 18 / 7;
+	aspect-ratio: 3 / 1;
 	object-fit: cover;
 	border-radius: var(--radius);
 }
