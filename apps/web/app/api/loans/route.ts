@@ -1,4 +1,5 @@
 import { core } from "../../../lib/core.ts";
+import { safePath } from "../../../lib/safe-path.ts";
 
 /** Why core said no, by its problem's title, as the book page words it. */
 const REFUSED: Record<string, string> = {
@@ -23,7 +24,11 @@ export async function POST(request: Request): Promise<Response> {
 			...(quantity > 1 ? { quantity } : {}),
 		}),
 	});
-	const back = `/works/${encodeURIComponent(workId)}`;
+	// Asked for from a loan's page ("also lends"): back there, not the book's.
+	const fromLoan = safePath(form.get("back"), "");
+	const back = fromLoan.startsWith("/loans/")
+		? fromLoan
+		: `/works/${encodeURIComponent(workId)}`;
 	const location =
 		status === 401
 			? "/login"

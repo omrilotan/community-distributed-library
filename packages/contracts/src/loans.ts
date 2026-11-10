@@ -36,6 +36,19 @@ export const AlsoLoans = z.object({
 	also: z.array(Id).max(20).optional(),
 });
 
+/**
+ * More from the person a borrower is about to meet: what is on their shelf
+ * and free, the borrower's own wishes first. Empty when the owner would
+ * rather not have their shelf suggested.
+ */
+export const MoreFromOwner = z.object({
+	owner: z.object({ id: Id, displayName: z.string() }),
+	/** On the borrower's list to read. */
+	wished: z.array(CopyListing),
+	/** The rest: same author first, then newest. */
+	more: z.array(CopyListing),
+});
+
 /** A loan as either party sees it: the counterparty reduced to a name and area label. */
 export const LoanView = z.object({
 	id: Id,
@@ -183,6 +196,7 @@ export const WorkPage = z.object({
 
 export type LoanStatus = z.infer<typeof LoanStatus>;
 export type AlsoLoans = z.infer<typeof AlsoLoans>;
+export type MoreFromOwner = z.infer<typeof MoreFromOwner>;
 export type RequestLoan = z.input<typeof RequestLoan>;
 export type LoanView = z.infer<typeof LoanView>;
 export type MyLoans = z.infer<typeof MyLoans>;

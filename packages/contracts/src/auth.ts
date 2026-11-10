@@ -77,6 +77,11 @@ export const Me = z.object({
 	 * and stay unrequestable until then.
 	 */
 	awayUntil: z.number().int().nullable().default(null),
+	/**
+	 * Whether a borrower meeting them is shown what else is on their shelf.
+	 * On unless they turn it off.
+	 */
+	suggestShelf: z.boolean().default(true),
 	/** Requests to answer and handoffs to confirm: the badge on the loans tab. */
 	attention: z.number().int().nonnegative().default(0),
 	/** For moderators: tag suggestions waiting and reports open. 0 for members. */
@@ -90,6 +95,8 @@ export const UpdateMe = z.object({
 	locale: Locale.optional(),
 	/** Books out at once, at most. Null lifts the limit. */
 	lendLimit: z.number().int().positive().max(999).nullable().optional(),
+	/** Show borrowers what else is on their shelf. */
+	suggestShelf: z.boolean().optional(),
 	/** Days a loan of their books lasts. Null goes back to the library's. */
 	loanDays: z.number().int().positive().max(90).nullable().optional(),
 	/**

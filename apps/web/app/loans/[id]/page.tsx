@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import type {
 	HandoffView,
 	LoanThread,
+	MoreFromOwner,
 	MyLoans,
 	SlotOptions,
 	ThreadMessage,
@@ -23,6 +24,7 @@ import { dateFormat } from "../../../lib/dates.ts";
 import { titled } from "../../../lib/page-title.ts";
 import { groupOf } from "../../../lib/loan-groups.ts";
 import { LoanItem } from "../loan-item.tsx";
+import { MoreFromOwnerSection } from "../more-from-owner.tsx";
 
 export const generateMetadata = titled((t) => t.loans);
 
@@ -42,6 +44,7 @@ export default async function LoanThreadPage({
 		handoff?: string;
 		extended?: string;
 		report?: string;
+		requested?: string;
 	}>;
 }) {
 	const me = await requireProfile();
@@ -52,6 +55,7 @@ export default async function LoanThreadPage({
 		handoff: handoffFlash,
 		extended,
 		report: reportOpen,
+		requested,
 	} = await searchParams;
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
@@ -92,6 +96,17 @@ export default async function LoanThreadPage({
 		)
 	).flatMap((answer) => (answer.status === 200 ? [answer.body] : []));
 	const { viewerId, open } = thread.body;
+	// Meeting the owner anyway: what else they lend, unless put off for now.
+	const hidden = (await cookies()).get("more-hidden")?.value?.split(".") ?? [];
+	const more =
+		group?.side === "borrower" &&
+		loan?.status === "accepted" &&
+		!loan.relayFrom &&
+		!hidden.includes(loan.lender.id)
+			? await core<MoreFromOwner>(
+					`/v1/loans/${encodeURIComponent(id)}/more`,
+				).then((answer) => (answer.status === 200 ? answer.body : null))
+			: null;
 	const participants = Object.assign(
 		{},
 		...otherThreads.map((one) => one.participants),
@@ -267,6 +282,7 @@ export default async function LoanThreadPage({
 					))}
 				</ul>
 			) : null}
+			{requested ? <Callout>{t.moreAsked}</Callout> : null}
 
 			{cutOff && them ? (
 				<section className="suspended-note" aria-labelledby="suspended-title">
@@ -405,6 +421,14 @@ export default async function LoanThreadPage({
 					side={iAmHolder ? "holder" : iAmLender ? "lender" : "borrower"}
 					t={t}
 					back={`/loans/${id}`}
+				/>
+			) : null}
+			{more && more.wished.length + more.more.length > 0 ? (
+				<MoreFromOwnerSection
+					more={more}
+					back={`/loans/${id}`}
+					loanId={id}
+					t={t}
 				/>
 			) : null}
 

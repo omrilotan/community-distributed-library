@@ -253,6 +253,27 @@ export default async function SettingsPage({
 				/>
 				<p className="muted">{t.lendLimitHint}</p>
 
+				<input
+					type="hidden"
+					name="suggestShelfShown"
+					value="1"
+					form="profile"
+				/>
+				<label className="check">
+					<input
+						type="checkbox"
+						name="suggestShelf"
+						value="1"
+						form="profile"
+						defaultChecked={body.suggestShelf}
+						aria-describedby="suggestShelf-hint"
+					/>
+					<span>{t.suggestShelf}</span>
+				</label>
+				<p className="muted" id="suggestShelf-hint">
+					{t.suggestShelfHint}
+				</p>
+
 				{/* Empty is the library's length, shown in its place. */}
 				<label htmlFor="loanDays">{t.loanDaysMine}</label>
 				<input

@@ -22,6 +22,7 @@ import { emit } from "./events.ts";
 import { relayed } from "./routes-handoffs.ts";
 import { markRead, unreadByLoan } from "./unread.ts";
 import { joinGroupHandoff, titles } from "./loan-groups.ts";
+import { listCopies } from "./listings.ts";
 
 export const loans = new Hono<{ Bindings: Env }>();
 
@@ -931,6 +932,82 @@ async function participants(env: Env, loanId: string, memberId: string) {
 		open: ["requested", "accepted", "active"].includes(row.status),
 	};
 }
+
+/**
+ * What else the owner a borrower is about to meet has free: the borrower's
+ * own wishes first, then the same authors, then the newest. Only while the
+ * loan waits for its handoff, only for the borrower, and only when the owner
+ * has not turned suggestions off. Books the borrower already asked for are
+ * left out.
+ */
+loans.get("/v1/loans/:id/more", async (c) => {
+	const { member, forbidden } = await viewerWith(c, "loans:read");
+	if (!member) return denied(c, forbidden);
+	const loan = await c.env.DB.prepare(
+		`SELECT l.lender_id, l.status, l.relay_from, o.display_name, o.suggest_shelf, w.authors
+		   FROM loans l
+		   JOIN members o ON o.id = l.lender_id
+		   JOIN copies c ON c.id = l.copy_id
+		   JOIN editions e ON e.id = c.edition_id
+		   JOIN works w ON w.id = e.work_id
+		  WHERE l.id = ? AND l.borrower_id = ?`,
+	)
+		.bind(c.req.param("id"), member.id)
+		.first<{
+			lender_id: string;
+			status: string;
+			relay_from: string | null;
+			display_name: string;
+			suggest_shelf: number;
+			authors: string;
+		}>();
+	if (!loan) return json(c, problem(404, "No such loan"));
+	const owner = { id: loan.lender_id, displayName: loan.display_name };
+	// Worth it only on the way to meeting the owner: a relay is collected
+	// from the reader before, who has nothing of the owner's to hand over.
+	if (
+		loan.suggest_shelf !== 1 ||
+		loan.status !== "accepted" ||
+		loan.relay_from !== null
+	)
+		return c.json({ owner, wished: [], more: [] });
+
+	const [asked, wished, shelf] = await Promise.all([
+		c.env.DB.prepare(
+			`SELECT copy_id FROM loans WHERE borrower_id = ?
+			   AND status IN ('requested', 'accepted', 'active')`,
+		)
+			.bind(member.id)
+			.all<{ copy_id: string }>(),
+		listCopies(c.env, member, {
+			ownerId: loan.lender_id,
+			availableOnly: true,
+			wished: true,
+			limit: 6,
+		}),
+		listCopies(c.env, member, {
+			ownerId: loan.lender_id,
+			availableOnly: true,
+			limit: 24,
+		}),
+	]);
+	const taken = new Set(asked.results.map((row) => row.copy_id));
+	const wishedFree = wished.filter((copy) => !taken.has(copy.id));
+	const shown = new Set(wishedFree.map((copy) => copy.id));
+	const authors = new Set(JSON.parse(loan.authors) as string[]);
+	const more = shelf
+		.filter((copy) => !taken.has(copy.id) && !shown.has(copy.id))
+		// Same author first; the listing's own order (newest) otherwise.
+		.map((copy, index) => ({
+			copy,
+			index,
+			same: copy.work.authors.some((author) => authors.has(author)),
+		}))
+		.sort((a, b) => Number(b.same) - Number(a.same) || a.index - b.index)
+		.slice(0, 6)
+		.map(({ copy }) => copy);
+	return c.json({ owner, wished: wishedFree.slice(0, 6), more });
+});
 
 loans.get("/v1/me/loans", async (c) => {
 	const { member, forbidden } = await viewerWith(c, "loans:read");

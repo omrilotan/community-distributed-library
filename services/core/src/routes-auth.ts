@@ -334,7 +334,7 @@ auth.get("/v1/me", async (c) => {
 	const [row, unread] = await Promise.all([
 		c.env.DB.prepare(
 			`SELECT m.email, m.display_name, m.locale, m.area_label, m.area_lat, m.area_lng, m.browse_prefs,
-		        m.lend_limit, m.loan_days, m.away_until, ms.role,
+		        m.lend_limit, m.loan_days, m.away_until, m.suggest_shelf, ms.role,
 		        co.name AS community_name, co.loan_days AS community_loan_days, co.centre_lat, co.centre_lng, co.radius_m, co.compact,
 		        (SELECT count(*) FROM loans l WHERE l.lender_id = m.id AND l.status = 'requested')
 		        + (SELECT count(*) FROM handoffs h JOIN loans l2 ON l2.id = h.loan_id
@@ -379,6 +379,7 @@ auth.get("/v1/me", async (c) => {
 				area_lng: number | null;
 				role: "member" | "moderator" | "admin";
 				lend_limit: number | null;
+				suggest_shelf: number;
 				loan_days: number | null;
 				away_until: number | null;
 				browse_prefs: string | null;
@@ -414,6 +415,7 @@ auth.get("/v1/me", async (c) => {
 		},
 		role: row.role,
 		lendLimit: row.lend_limit,
+		suggestShelf: row.suggest_shelf === 1,
 		loanDays: row.loan_days,
 		// Yesterday's holiday is over; only a date still ahead counts.
 		awayUntil: row.away_until && row.away_until > now() ? row.away_until : null,
@@ -439,6 +441,7 @@ auth.patch("/v1/me", async (c) => {
 		loanDays,
 		awayUntil,
 		browsePrefs,
+		suggestShelf,
 	} = parsed.data;
 	// An assistant may set the lending limit, the loan length and the time
 	// away; a name, a language, an area and how the shelves look are the
@@ -492,7 +495,8 @@ auth.patch("/v1/me", async (c) => {
 		   loan_days = CASE WHEN ? THEN ? ELSE loan_days END,
 		   -- Same for coming back early.
 		   away_until = CASE WHEN ? THEN ? ELSE away_until END,
-		   browse_prefs = CASE WHEN ? THEN ? ELSE browse_prefs END
+		   browse_prefs = CASE WHEN ? THEN ? ELSE browse_prefs END,
+		   suggest_shelf = COALESCE(?, suggest_shelf)
 		 WHERE id = ?`,
 	)
 		.bind(
@@ -509,6 +513,7 @@ auth.patch("/v1/me", async (c) => {
 			awayUntil ?? null,
 			browsePrefs === undefined ? 0 : 1,
 			browsePrefs || null,
+			suggestShelf === undefined ? null : suggestShelf ? 1 : 0,
 			member.id,
 		)
 		.run();
