@@ -105,8 +105,8 @@ export function End({ start, end }: { start: number; end: number }) {
 					box={{ x: 0, y: 0, w: width, h: height }}
 					from={open}
 					to={end}
-					focus={[0.55, 0.6]}
-					zoom={[1.04, 1.1]}
+					focus={[0.5, 0.4]}
+					zoom={[1, 1.06]}
 					round={false}
 				/>
 				<div

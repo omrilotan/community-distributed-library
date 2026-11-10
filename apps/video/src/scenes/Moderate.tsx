@@ -3,7 +3,7 @@ import { palette } from "../theme.ts";
 import { cue } from "../timing.ts";
 import { Chip, Phone, Rise, Scene, useShape } from "../ui.tsx";
 
-/** "Ask a neighbour or two to moderate: tags, duplicates, reports. About an hour a week." */
+/** "Ask a neighbour or two to moderate: tags, duplicates, reports. A few minutes here and there." */
 export function Moderate({ start, end }: { start: number; end: number }) {
 	const { portrait, width, gutter, stage, body } = useShape();
 	const jobs = [
@@ -22,13 +22,13 @@ export function Moderate({ start, end }: { start: number; end: number }) {
 		</Rise>
 	));
 	const hour = (
-		<Rise at={cue("About an hour") - 10}>
+		<Rise at={cue("A few minutes") - 10}>
 			<Chip
 				tone="solid"
 				icon={<Clock weight="bold" />}
 				size={portrait ? body * 1.15 : 50}
 			>
-				About an hour a week
+				A few minutes here and there
 			</Chip>
 		</Rise>
 	);

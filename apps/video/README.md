@@ -14,7 +14,7 @@ Scenes start on words of the script, not on seconds (`cue()` in `src/timing.ts`)
 
 ## Pictures
 
-- `public/images/`: photographs generated with ChatGPT in the website's style, with no real people, places or brands.
+- `public/images/`: illustrations generated with ChatGPT in the website's flat, risograph-like style, with no real people, places or brands.
 - `public/screens/`: the app itself on a phone (412×924 at 2.625×, 1082×2426), as the library's admin sees it. They were taken from local development with the staging library pulled down (`npm run db:pull -- --library staging`), its photos copied into the local store, and made-up neighbours with example.org addresses added so the lists look lived in. Anyone real in the pulled data is renamed or left out before a screen is taken.
 - `public/logo.svg` and `public/fonts/`: copies of `packages/design/logo.svg` and the website's Outfit.
 
