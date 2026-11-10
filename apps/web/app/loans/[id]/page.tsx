@@ -14,7 +14,7 @@ import { signedOut } from "../../../lib/session.ts";
 import { requireProfile } from "../../../lib/profile.ts";
 import { Callout, Empty } from "../../ui.tsx";
 import { ScrollToEnd } from "../scroll-to-end.tsx";
-import { LoanActions, counterpart } from "../loan-actions.tsx";
+import { LoanActions, Nudge, counterpart } from "../loan-actions.tsx";
 import { HandoffPanel } from "../handoff-panel.tsx";
 import { AvailabilityNudge } from "../availability-nudge.tsx";
 import { loanTimer } from "../../../lib/timer.ts";
@@ -374,6 +374,10 @@ export default async function LoanThreadPage({
 					);
 				})}
 				{nudged ? <p className="bubble bubble-system">{t.nudgeSent}</p> : null}
+				{/* Not heard back: a nudge, where the waiting shows. */}
+				{loan && !cutOff && !nudged ? (
+					<Nudge loan={loan} side={side} t={t} back={`/loans/${id}`} />
+				) : null}
 				{handoffFlash === "confirm" ? (
 					<p className="bubble bubble-system">{t.timeAgreed}</p>
 				) : null}

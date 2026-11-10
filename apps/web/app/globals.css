@@ -3896,3 +3896,33 @@ html[data-library="things"] .book-cover img {
 	align-items: center;
 	margin-block-start: 0.25rem;
 }
+
+/* The way into a loan carries what is unread on it. */
+.next-step .btn .badge-unread {
+	margin-inline-start: 0.5rem;
+}
+
+.next-step .btn {
+	margin-block-start: 0;
+}
+
+@media (max-width: 40rem) {
+	.next-step > .btn:first-child {
+		flex-basis: 100%;
+		justify-content: center;
+		padding-block: 0.6rem;
+	}
+}
+
+/* A nudge, at the end of the conversation it is about. */
+.chat-nudge {
+	align-self: center;
+	margin-block-start: 0.5rem;
+	font-size: 0.875rem;
+}
+
+.chat-nudge button.quiet {
+	margin: 0;
+	padding: 0.25rem 0.75rem;
+	font-size: 0.875rem;
+}

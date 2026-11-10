@@ -75,6 +75,18 @@ export const LoanView = z.object({
 	 * set only for the two people who meet.
 	 */
 	needsTime: z.boolean().default(false),
+	/**
+	 * The time on the table to hand it over (out or back), if any: the day,
+	 * the part of it, and whether both have agreed yet.
+	 */
+	meeting: z
+		.object({
+			day: z.string(),
+			period: z.enum(["morning", "afternoon", "evening"]),
+			agreed: z.boolean(),
+		})
+		.nullable()
+		.default(null),
 	copy: z.object({
 		id: Id,
 		/** The book's own page. */

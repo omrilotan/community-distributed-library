@@ -1023,6 +1023,9 @@ loans.get("/v1/me/loans", async (c) => {
 		        (l.status = 'accepted' AND l.decided_at < unixepoch() - 86400
 		         AND NOT EXISTS (SELECT 1 FROM handoffs h WHERE h.loan_id = l.id
 		                           AND h.status IN ('proposed', 'agreed'))) AS needs_time,
+		        (SELECT h.day || '|' || h.period || '|' || h.status FROM handoffs h
+		          WHERE h.loan_id = l.id AND h.status IN ('proposed', 'agreed')
+		          ORDER BY h.created_at DESC LIMIT 1) AS meeting,
 		        c.id AS copy_id, c.condition, e.work_id, e.title, e.cover_url, w.authors,
 		        b.id AS borrower_id, b.display_name AS borrower_name, b.area_label AS borrower_area,
 		        o.id AS lender_id, o.display_name AS lender_name, o.area_label AS lender_area,
@@ -1091,6 +1094,7 @@ function view(row: LoanRow, viewerId: string): LoanView {
 			row.needs_time === 1 &&
 			(viewerId === row.borrower_id ||
 				viewerId === (row.relay_id ?? row.lender_id)),
+		meeting: meetingOf(row.meeting),
 		copy: {
 			id: row.copy_id,
 			workId: row.work_id,
@@ -1122,6 +1126,16 @@ function view(row: LoanRow, viewerId: string): LoanView {
 	};
 }
 
+/** "day|period|status", as the listing reads it, made a meeting. */
+function meetingOf(stored: string | null): LoanView["meeting"] {
+	if (!stored) return null;
+	const [day, period, status] = stored.split("|");
+	return day &&
+		(period === "morning" || period === "afternoon" || period === "evening")
+		? { day, period, agreed: status === "agreed" }
+		: null;
+}
+
 interface LoanRow {
 	id: string;
 	status: LoanView["status"];
@@ -1139,6 +1153,7 @@ interface LoanRow {
 	copy_quantity: number;
 	waiting: number;
 	needs_time: number;
+	meeting: string | null;
 	copy_id: string;
 	work_id: string;
 	condition: LoanView["copy"]["condition"];

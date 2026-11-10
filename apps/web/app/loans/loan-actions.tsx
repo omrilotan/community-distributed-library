@@ -33,18 +33,9 @@ export function LoanActions({
 	children?: ReactNode;
 }) {
 	const grouped = others.length > 0;
-	const open = ["requested", "accepted", "active"].includes(loan.status);
-	// A suspended member is not nudged; the moderators take it from here.
-	const reachable = !counterpart(loan, side).suspended;
 	// A request its owner has not heard of yet (core holds it a few minutes):
-	// the asker can still take it back unheard, and nobody nudges about it.
-	const heldFor =
-		loan.status === "requested"
-			? Math.ceil(
-					(loan.requestedAt + REQUEST_HOLD_MINUTES * 60 - Date.now() / 1000) /
-						60,
-				)
-			: 0;
+	// the asker can still take it back unheard.
+	const heldFor = heldMinutes(loan);
 	const held = heldFor > 0;
 	const button = (
 		action: string,
@@ -107,7 +98,7 @@ export function LoanActions({
 			</div>
 		);
 	const count = others.length + 1;
-	// A group: the next step for them all, a nudge, the way in.
+	// A group: the next step for them all.
 	if (grouped)
 		return (
 			<div className="actions">
@@ -119,13 +110,6 @@ export function LoanActions({
 					: null}
 				{loan.status === "active" && side !== "holder"
 					? button("returned", t.markAllReturned(count), "primary", true)
-					: null}
-				{side !== "holder" &&
-				open &&
-				reachable &&
-				!held &&
-				loan.nudgeCooldown === 0
-					? button("nudge", t.nudge, "quiet")
 					: null}
 				{children}
 			</div>
@@ -168,13 +152,6 @@ export function LoanActions({
 							"quiet",
 						)
 					: null}
-				{open && reachable && !held ? (
-					loan.nudgeCooldown > 0 ? (
-						<span className="muted">{t.nudgedRecently}</span>
-					) : (
-						button("nudge", t.nudge, "quiet")
-					)
-				) : null}
 				{children}
 				{/* The steps back, last. */}
 				{side === "lender" && loan.status === "requested"
@@ -201,4 +178,57 @@ export function counterpart(
 	if (side !== "borrower") return loan.borrower;
 	const handingOver = loan.status === "requested" || loan.status === "accepted";
 	return (handingOver && loan.relayFrom) || loan.lender;
+}
+
+/**
+ * Minutes left before the owner hears of a new request (core holds it a
+ * few); 0 once they have, or for anything but a request.
+ */
+export function heldMinutes(loan: LoanView): number {
+	return loan.status === "requested"
+		? Math.max(
+				0,
+				Math.ceil(
+					(loan.requestedAt + REQUEST_HOLD_MINUTES * 60 - Date.now() / 1000) /
+						60,
+				),
+			)
+		: 0;
+}
+
+/**
+ * A gentle reminder to the other side, at the end of the conversation it
+ * is about: once a day, not while the owner has yet to hear of a request,
+ * and not to a suspended member.
+ */
+export function Nudge({
+	loan,
+	side,
+	t,
+	back,
+}: {
+	loan: LoanView;
+	side: "lender" | "borrower" | "holder";
+	t: Strings;
+	back: string;
+}) {
+	const open = ["requested", "accepted", "active"].includes(loan.status);
+	if (side === "holder" || !open) return null;
+	if (counterpart(loan, side).suspended || heldMinutes(loan) > 0) return null;
+	return (
+		<div className="chat-nudge">
+			{loan.nudgeCooldown > 0 ? (
+				<span className="muted">{t.nudgedRecently}</span>
+			) : (
+				<form action={`/api/loans/${loan.id}`} method="post" className="inline">
+					<input type="hidden" name="action" value="nudge" />
+					<input type="hidden" name="back" value={back} />
+					<span className="muted">{t.nudgeAsk}</span>{" "}
+					<button type="submit" className="quiet">
+						{t.nudge}
+					</button>
+				</form>
+			)}
+		</div>
+	);
 }
