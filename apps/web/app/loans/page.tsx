@@ -18,6 +18,8 @@ import { PushToggle } from "../push-toggle.tsx";
 import { pushLabels } from "../../lib/push-labels.ts";
 import { dateFormat } from "../../lib/dates.ts";
 import { titled } from "../../lib/page-title.ts";
+import { groupLoans, type Side } from "../../lib/loan-groups.ts";
+import { LoanItem } from "./loan-item.tsx";
 
 export const generateMetadata = titled((t) => t.loans);
 
@@ -103,11 +105,11 @@ export default async function LoansPage({
 			<h2>{t.incoming}</h2>
 			{gridEmpty ? <AvailabilityNudge t={t} /> : null}
 			{lending.length === 0 ? <Empty title={t.noIncoming} /> : null}
-			{lending.map((loan) => (
-				<LoanRow
-					key={loan.id}
+			{groupLoans(lending, "lender").map((group) => (
+				<LoanEntry
+					key={group[0]!.id}
 					showAreas={showAreas}
-					loan={loan}
+					loans={group}
 					side="lender"
 					t={t}
 					locale={locale}
@@ -118,11 +120,11 @@ export default async function LoansPage({
 				<>
 					<h2>{t.relaying}</h2>
 					<p className="muted">{t.relayingHint}</p>
-					{relaying.map((loan) => (
-						<LoanRow
-							key={loan.id}
+					{groupLoans(relaying, "holder").map((group) => (
+						<LoanEntry
+							key={group[0]!.id}
 							showAreas={showAreas}
-							loan={loan}
+							loans={group}
 							side="holder"
 							t={t}
 							locale={locale}
@@ -144,11 +146,11 @@ export default async function LoansPage({
 					}
 				/>
 			) : null}
-			{borrowing.map((loan) => (
-				<LoanRow
-					key={loan.id}
+			{groupLoans(borrowing, "borrower").map((group) => (
+				<LoanEntry
+					key={group[0]!.id}
 					showAreas={showAreas}
-					loan={loan}
+					loans={group}
 					side="borrower"
 					t={t}
 					locale={locale}
@@ -203,6 +205,113 @@ export default async function LoansPage({
 				</article>
 			))}
 		</main>
+	);
+}
+
+/** One loan as a row, or several with the same person as one card. */
+function LoanEntry({
+	loans,
+	...rest
+}: {
+	loans: LoanView[];
+	side: Side;
+	t: Strings;
+	locale: Locale;
+	showAreas?: boolean;
+}) {
+	return loans.length === 1 ? (
+		<LoanRow loan={loans[0]!} {...rest} />
+	) : (
+		<LoanGroup loans={loans} {...rest} />
+	);
+}
+
+/**
+ * Several loans with one person at one stage: one card, one next step for
+ * them all, and each item with its own steps for when only one moves.
+ */
+function LoanGroup({
+	loans,
+	side,
+	t,
+	locale,
+	showAreas = true,
+}: {
+	loans: LoanView[];
+	side: Side;
+	t: Strings;
+	locale: Locale;
+	showAreas?: boolean;
+}) {
+	const [lead, ...others] = loans as [LoanView, ...LoanView[]];
+	const other =
+		side === "borrower"
+			? lead.status === "requested" || lead.status === "accepted"
+				? (lead.relayFrom ?? lead.lender)
+				: lead.lender
+			: lead.borrower;
+	const area = "areaLabel" in other ? (other.areaLabel as string | null) : null;
+	const live = lead.status === "accepted" || lead.status === "active";
+	const unread = loans.reduce((sum, loan) => sum + loan.unread, 0);
+	const overdue = loans.some((loan) => loanTimer(loan, locale, t)?.overdue);
+	return (
+		<article className="card loan-group">
+			<div>
+				<div className="loan-group-head">
+					<a href={`/loans/${lead.id}`}>
+						<bdi>{other.displayName}</bdi>
+					</a>
+					{showAreas && area ? (
+						<span className="muted">
+							{" · "}
+							<bdi>{area}</bdi>
+						</span>
+					) : null}
+					{unread ? (
+						<>
+							{" "}
+							<span className="badge badge-unread">{t.unread(unread)}</span>
+						</>
+					) : null}
+				</div>
+				<div className="loan-status">
+					<span
+						className={`badge${live ? " badge-ok" : ""}${overdue ? " badge-warn" : ""}`}
+					>
+						{t.loanStatus(lead.status)}
+					</span>
+					{loans.some((loan) => loan.needsTime) ? (
+						<a className="badge badge-warn" href={`/loans/${lead.id}#handoff`}>
+							{t.needsTime}
+						</a>
+					) : null}
+				</div>
+				<ul className="loan-items">
+					{loans.map((loan) => (
+						<LoanItem
+							key={loan.id}
+							loan={loan}
+							side={side}
+							t={t}
+							locale={locale}
+							back="/loans"
+						/>
+					))}
+				</ul>
+				<LoanActions
+					loan={lead}
+					others={others}
+					side={side}
+					t={t}
+					back="/loans"
+					compact
+				>
+					<a className="btn quiet" href={`/loans/${lead.id}`}>
+						{t.messages}
+					</a>
+				</LoanActions>
+			</div>
+		</article>
 	);
 }
 

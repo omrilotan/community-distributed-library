@@ -5,6 +5,7 @@ import type {
 	MyLoans,
 	SlotOptions,
 	ThreadMessage,
+	ThreadReport,
 } from "@cdl/contracts";
 import { core } from "../../../lib/core.ts";
 import { strings, type Locale } from "../../../lib/i18n.ts";
@@ -20,10 +21,16 @@ import { ReportEntry } from "../../report-entry.tsx";
 import { ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
 import { dateFormat } from "../../../lib/dates.ts";
 import { titled } from "../../../lib/page-title.ts";
+import { groupOf } from "../../../lib/loan-groups.ts";
+import { LoanItem } from "../loan-item.tsx";
 
 export const generateMetadata = titled((t) => t.loans);
 
-/** One loan as a conversation: the book at the top, the two people talking, a composer at the bottom. */
+/**
+ * One loan as a conversation: the book at the top, the two people talking, a
+ * composer at the bottom. Loans with the same person at the same stage are
+ * one page: every item at the top, one conversation, one handoff.
+ */
 export default async function LoanThreadPage({
 	params,
 	searchParams,
@@ -73,15 +80,32 @@ export default async function LoanThreadPage({
 	if (thread.status === 401) signedOut(thread.status);
 	if (thread.status !== 200) return <Empty title={t.noSuchLoan} />;
 
-	const loan =
-		mine.status === 200
-			? [
-					...mine.body.borrowing,
-					...mine.body.lending,
-					...mine.body.relaying,
-				].find((entry) => entry.id === id)
-			: undefined;
-	const { viewerId, participants, messages, reports, open } = thread.body;
+	const group = mine.status === 200 ? groupOf(id, mine.body) : null;
+	const loan = group?.loans[0];
+	const others = group?.loans.slice(1) ?? [];
+	// The rest of the group's conversations, read into this one.
+	const otherThreads = (
+		await Promise.all(
+			others.map((other) =>
+				core<LoanThread>(`/v1/loans/${encodeURIComponent(other.id)}/messages`),
+			),
+		)
+	).flatMap((answer) => (answer.status === 200 ? [answer.body] : []));
+	const { viewerId, open } = thread.body;
+	const participants = Object.assign(
+		{},
+		...otherThreads.map((one) => one.participants),
+		thread.body.participants,
+	) as LoanThread["participants"];
+	const messages = [thread.body, ...otherThreads]
+		.flatMap((one) => one.messages)
+		.filter(
+			(message, index, all) =>
+				all.findIndex((other) => other.id === message.id) === index,
+		);
+	const reports: ThreadReport[] = [thread.body, ...otherThreads].flatMap(
+		(one) => one.reports,
+	);
 	const other =
 		Object.entries(participants).find(
 			([memberId]) => memberId !== viewerId,
@@ -109,40 +133,48 @@ export default async function LoanThreadPage({
 		timeStyle: "short",
 	});
 
+	const loans = group?.loans ?? [];
+	const grouped = others.length > 0;
 	// The request note is the first thing said; render it as the borrower's opening line.
-	const opening: ThreadMessage[] =
-		loan?.message && loan.borrower.id
+	const opening: ThreadMessage[] = loans.flatMap((one) =>
+		one.message && one.borrower.id
 			? [
 					{
-						id: `request-${loan.id}`,
-						loanId: loan.id,
-						authorId: loan.borrower.id,
-						body: loan.message,
-						createdAt: loan.requestedAt,
+						id: `request-${one.id}`,
+						loanId: one.id,
+						authorId: one.borrower.id,
+						body: one.message,
+						createdAt: one.requestedAt,
 					},
 				]
-			: [];
+			: [],
+	);
 	const log = [...opening, ...messages];
 	// Reports go where they happened, among the messages.
 	// What happened to the loan itself goes where it happened too.
 	const notes: { at: number; note: string }[] = [];
-	if (loan?.startedAt)
-		notes.push({
-			at: loan.startedAt,
-			note: `${t.handedOn(dayFormat.format(loan.startedAt * 1000))}${
-				loan.dueAt ? ` · ${t.dueOn(dayFormat.format(loan.dueAt * 1000))}` : ""
-			}`,
-		});
-	if (loan?.status === "completed" && loan.closedAt)
-		notes.push({
-			at: loan.closedAt,
-			note: t.returnedOn(dayFormat.format(loan.closedAt * 1000)),
-		});
-	if (loan?.status === "declined" || loan?.status === "cancelled")
-		notes.push({
-			at: loan.closedAt ?? loan.decidedAt ?? loan.requestedAt,
-			note: t.loanStatus(loan.status),
-		});
+	const note = (at: number, text: string) => {
+		// Items handed over or returned together say so once.
+		if (!notes.some((one) => one.at === at && one.note === text))
+			notes.push({ at, note: text });
+	};
+	for (const one of loans) {
+		const named = loans.length > 1 ? `${one.copy.title}: ` : "";
+		if (one.startedAt)
+			note(
+				one.startedAt,
+				`${t.handedOn(dayFormat.format(one.startedAt * 1000))}${
+					one.dueAt ? ` · ${t.dueOn(dayFormat.format(one.dueAt * 1000))}` : ""
+				}`,
+			);
+		if (one.status === "completed" && one.closedAt)
+			note(one.closedAt, t.returnedOn(dayFormat.format(one.closedAt * 1000)));
+		if (one.status === "declined" || one.status === "cancelled")
+			note(
+				one.closedAt ?? one.decidedAt ?? one.requestedAt,
+				`${named}${t.loanStatus(one.status)}`,
+			);
+	}
 	const timeline = [
 		...log.map((message) => ({
 			at: message.createdAt,
@@ -167,7 +199,7 @@ export default async function LoanThreadPage({
 		<main className="chat">
 			<header className="chat-head">
 				{/* The title is the link; the cover is the same link for a thumb. */}
-				{loan?.copy.coverUrl ? (
+				{!grouped && loan?.copy.coverUrl ? (
 					<a
 						href={`/works/${loan.copy.workId}`}
 						aria-hidden="true"
@@ -178,7 +210,9 @@ export default async function LoanThreadPage({
 				) : null}
 				<div>
 					<h1>
-						{loan ? (
+						{grouped ? (
+							<bdi>{other}</bdi>
+						) : loan ? (
 							<>
 								<a
 									href={`/works/${loan.copy.workId}`}
@@ -198,10 +232,10 @@ export default async function LoanThreadPage({
 						)}
 					</h1>
 					<div className="muted">
-						<bdi>{other}</bdi>
+						{grouped ? null : <bdi>{other}</bdi>}
 						{loan ? (
 							<>
-								{" · "}
+								{grouped ? null : " · "}
 								<span
 									className={`badge${loan.status === "accepted" || loan.status === "active" ? " badge-ok" : ""}${timer?.overdue ? " badge-warn" : ""}`}
 								>
@@ -209,7 +243,7 @@ export default async function LoanThreadPage({
 										? t.acceptedMeetingSet
 										: t.loanStatus(loan.status)}
 								</span>
-								{timer ? <span> · {timer.text}</span> : null}
+								{timer && !grouped ? <span> · {timer.text}</span> : null}
 							</>
 						) : null}
 					</div>
@@ -219,6 +253,20 @@ export default async function LoanThreadPage({
 					{t.loans}
 				</a>
 			</header>
+			{grouped && group ? (
+				<ul className="loan-items loan-items-head">
+					{loans.map((one) => (
+						<LoanItem
+							key={one.id}
+							loan={one}
+							side={group.side}
+							t={t}
+							locale={locale}
+							back={`/loans/${id}`}
+						/>
+					))}
+				</ul>
+			) : null}
 
 			{cutOff && them ? (
 				<section className="suspended-note" aria-labelledby="suspended-title">
@@ -260,7 +308,10 @@ export default async function LoanThreadPage({
 					lastDay = day;
 					if (entry.note) {
 						return (
-							<div key={`note-${entry.at}`} style={{ display: "contents" }}>
+							<div
+								key={`note-${entry.at}-${entry.note}`}
+								style={{ display: "contents" }}
+							>
 								{separator}
 								<p className="bubble bubble-system">{entry.note}</p>
 							</div>
@@ -350,6 +401,7 @@ export default async function LoanThreadPage({
 			{loan ? (
 				<LoanActions
 					loan={loan}
+					others={others}
 					side={iAmHolder ? "holder" : iAmLender ? "lender" : "borrower"}
 					t={t}
 					back={`/loans/${id}`}
@@ -364,6 +416,22 @@ export default async function LoanThreadPage({
 				>
 					<summary className="muted">{t.reportProblem}</summary>
 					<form action={`/api/loans/${id}/report`} method="post">
+						{grouped ? (
+							<>
+								<label htmlFor="report-loan">{t.reportWhich}</label>
+								<select id="report-loan" name="loan" defaultValue={id}>
+									{loans
+										.filter((one) =>
+											["requested", "accepted", "active"].includes(one.status),
+										)
+										.map((one) => (
+											<option value={one.id} key={one.id}>
+												{one.copy.title}
+											</option>
+										))}
+								</select>
+							</>
+						) : null}
 						<label htmlFor="kind">{t.reportKind}</label>
 						<select
 							id="kind"

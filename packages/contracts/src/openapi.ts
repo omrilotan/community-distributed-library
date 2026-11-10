@@ -27,6 +27,7 @@ import { MetadataLookup } from "./catalogue.ts";
 import { LibraryType, ThingDetails } from "./library-types.ts";
 import { Problem } from "./errors.ts";
 import {
+	AlsoLoans,
 	BrowseRequest,
 	BrowseResponse,
 	LoanStatus,
@@ -541,6 +542,8 @@ export const ROUTES: readonly Route[] = [
 		tag: "Loans",
 		summary: "Owner accepts a request",
 		access: "loans:write",
+		body: AlsoLoans,
+		note: "With `also`, other loans between the same two people at the same stage move in the same go. One email tells the borrower about all of them.",
 	},
 	{
 		method: "post",
@@ -548,6 +551,8 @@ export const ROUTES: readonly Route[] = [
 		tag: "Loans",
 		summary: "Owner declines a request",
 		access: "loans:write",
+		body: AlsoLoans,
+		note: "With `also`, other loans between the same two people at the same stage move in the same go.",
 	},
 	{
 		method: "post",
@@ -562,6 +567,8 @@ export const ROUTES: readonly Route[] = [
 		tag: "Loans",
 		summary: "Giver marks the book handed over",
 		access: "loans:write",
+		body: AlsoLoans,
+		note: "With `also`, other loans between the same two people at the same stage move in the same go. Handed over together, they are all due back on the same day.",
 	},
 	{
 		method: "post",

@@ -473,6 +473,7 @@ const dictionary = {
 		yours: "yours",
 		markHanded: "Mark as handed over",
 		markReturned: "Mark as returned",
+		reportWhich: "About",
 		nudge: "Nudge",
 		nudgeSent: "Nudge sent.",
 		nudgedRecently: "Nudged today — once a day is enough.",
@@ -1257,6 +1258,7 @@ const dictionary = {
 		yours: "שלכם",
 		markHanded: "סימון: נמסר",
 		markReturned: "סימון: הוחזר",
+		reportWhich: "לגבי",
 		nudge: "תזכורת",
 		nudgeSent: "התזכורת נשלחה.",
 		nudgedRecently: "כבר נשלחה תזכורת היום — פעם ביום מספיק.",
@@ -1731,6 +1733,11 @@ function helpers(locale: Locale) {
 		setOf: (n: number) => (he ? `סט של ${n}` : `A set of ${n}`),
 		partOfSet: (n: number, of: number) =>
 			he ? `${n} מתוך ${of}` : `${n} of ${of}`,
+		acceptAll: (n: number) => (he ? `אישור כל ה־${n}` : `Accept all ${n}`),
+		markAllHanded: (n: number) =>
+			he ? `סימון: כל ה־${n} נמסרו` : `Mark all ${n} as handed over`,
+		markAllReturned: (n: number) =>
+			he ? `סימון: כל ה־${n} הוחזרו` : `Mark all ${n} as returned`,
 		howManyAsk: (free: number) =>
 			he ? `כמה (עד ${free})` : `How many (up to ${free})`,
 		reportRelayHint: (owner: string) =>

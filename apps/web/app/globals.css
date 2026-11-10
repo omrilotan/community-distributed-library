@@ -3769,3 +3769,87 @@ html[data-library="things"] .book-cover img {
 .scopes .check:has(.scope) input {
 	margin-block-start: 0.3rem;
 }
+
+/* Several loans with one person: the person heads the card, each item is a
+   row of its own with its cover, its clock and its own quiet steps, and the
+   step for them all closes the card. */
+.loan-group-head a {
+	color: inherit;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.loan-items {
+	list-style: none;
+	margin: 0.625rem 0 0;
+	padding: 0;
+}
+
+.loan-item {
+	display: flex;
+	gap: 0.75rem;
+	align-items: start;
+	padding-block: 0.625rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.loan-item > div {
+	flex: 1;
+	min-inline-size: 0;
+}
+
+.loan-item img,
+.loan-item .thumb {
+	display: block;
+	inline-size: 2.5rem;
+	aspect-ratio: 5 / 8;
+	object-fit: cover;
+	border-radius: 0.1875rem;
+	background: var(--line);
+	flex: none;
+}
+
+.loan-item-title {
+	color: inherit;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.loan-item .actions {
+	margin-block-start: 0.25rem;
+	gap: 0.25rem 0.5rem;
+}
+
+.loan-item .actions button.quiet {
+	padding: 0.2rem 0.6rem;
+	font-size: 0.8125rem;
+}
+
+.loan-item .overdue {
+	color: var(--danger);
+}
+
+/* On the loan's own page the items sit under the person's name. */
+.loan-items-head {
+	margin-block-start: 0;
+}
+
+.loan-items-head .loan-item:first-child {
+	border-block-start: 0;
+}
+
+/* On a phone the step for them all takes the card's width; the nudge and
+   the way in share the row under it. */
+@media (max-width: 40rem) {
+	.loan-group > div > .actions > form:first-child:has(button.small),
+	.chat > .actions > form:first-child:has(button:not(.quiet):not(.link)) {
+		flex-basis: 100%;
+	}
+
+	.loan-group > div > .actions > form:first-child button.small,
+	.chat > .actions > form:first-child button:not(.quiet):not(.link) {
+		inline-size: 100%;
+		padding-block: 0.6rem;
+		font-size: 1rem;
+	}
+}
