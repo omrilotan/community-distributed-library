@@ -261,6 +261,23 @@ export default async function SettingsPage({
 				</select>
 				<p className="muted">{t.settingsLanguageHint}</p>
 
+				<label htmlFor="weekStart">{t.settingsWeekStart}</label>
+				<select
+					id="weekStart"
+					name="weekStart"
+					defaultValue={String(current.weekStart ?? 0)}
+					aria-describedby="weekStart-hint"
+				>
+					{[0, 1, 2, 3, 4, 5, 6].map((day) => (
+						<option key={day} value={day}>
+							{t.weekdayLong(day)}
+						</option>
+					))}
+				</select>
+				<p className="muted" id="weekStart-hint">
+					{t.settingsWeekStartHint}
+				</p>
+
 				<label htmlFor="compact">{t.settingsSize}</label>
 				<select
 					id="compact"

@@ -298,6 +298,11 @@ export const LibrarySettings = z.object({
 	 * or distances. Left out, it stays.
 	 */
 	compact: z.boolean().optional(),
+	/**
+	 * The day a week starts on, 0 for Sunday through 6 for Saturday: members'
+	 * meeting times are laid out from it. Left out, it stays.
+	 */
+	weekStart: z.number().int().min(0).max(6).optional(),
 	/** The library's name, tagline and about text by language. Left out, they stay. */
 	texts: LibraryTexts.optional(),
 	/**
