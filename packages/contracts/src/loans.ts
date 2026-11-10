@@ -27,6 +27,15 @@ export const RequestLoan = z.object({
 	quantity: z.number().int().min(1).max(500).default(1),
 });
 
+/**
+ * Other loans between the same two people, at the same stage, decided in the
+ * same go: accept them all, or hand them all over at once. Each is checked
+ * on its own; those that cannot move are left as they were.
+ */
+export const AlsoLoans = z.object({
+	also: z.array(Id).max(20).optional(),
+});
+
 /** A loan as either party sees it: the counterparty reduced to a name and area label. */
 export const LoanView = z.object({
 	id: Id,
@@ -173,6 +182,7 @@ export const WorkPage = z.object({
 });
 
 export type LoanStatus = z.infer<typeof LoanStatus>;
+export type AlsoLoans = z.infer<typeof AlsoLoans>;
 export type RequestLoan = z.input<typeof RequestLoan>;
 export type LoanView = z.infer<typeof LoanView>;
 export type MyLoans = z.infer<typeof MyLoans>;

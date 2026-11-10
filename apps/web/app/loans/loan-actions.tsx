@@ -14,6 +14,8 @@ export function LoanActions({
 	t,
 	back,
 	compact = false,
+	others = [],
+	item = false,
 	children,
 }: {
 	loan: LoanView;
@@ -21,8 +23,16 @@ export function LoanActions({
 	t: Strings;
 	back: string;
 	compact?: boolean;
+	/**
+	 * The other loans with the same person at the same stage: the next step
+	 * moves them all, and the steps for one alone are on each item.
+	 */
+	others?: LoanView[];
+	/** One item of a group: its own steps, quietly, and no nudge. */
+	item?: boolean;
 	children?: ReactNode;
 }) {
+	const grouped = others.length > 0;
 	const open = ["requested", "accepted", "active"].includes(loan.status);
 	// A suspended member is not nudged; the moderators take it from here.
 	const reachable = !counterpart(loan, side).suspended;
@@ -40,15 +50,23 @@ export function LoanActions({
 		action: string,
 		label: string,
 		kind: "primary" | "quiet" | "link",
+		all = false,
 	) => (
 		<form
 			action={`/api/loans/${loan.id}`}
 			method="post"
-			className={kind === "link" && compact ? "inline actions-end" : "inline"}
+			className={
+				kind === "link" && (compact || item) ? "inline actions-end" : "inline"
+			}
 			key={action}
 		>
 			<input type="hidden" name="action" value={action} />
 			<input type="hidden" name="back" value={back} />
+			{all
+				? others.map((other) => (
+						<input type="hidden" name="also" value={other.id} key={other.id} />
+					))
+				: null}
 			<button
 				type="submit"
 				className={kind === "primary" ? (compact ? "small" : "") : kind}
@@ -57,6 +75,61 @@ export function LoanActions({
 			</button>
 		</form>
 	);
+	// One item of a group: its own next step, quiet, and its own way out.
+	if (item)
+		return (
+			<div className="actions">
+				{side === "lender" && loan.status === "requested"
+					? button("accept", t.accept, "quiet")
+					: null}
+				{loan.status === "accepted"
+					? button("handed", t.markHanded, "quiet")
+					: null}
+				{loan.status === "active"
+					? button("returned", t.markReturned, "quiet")
+					: null}
+				{loan.status === "active" &&
+				loan.extensions < 2 &&
+				!(side === "borrower" && loan.someoneWaiting)
+					? button(
+							"extend",
+							side === "borrower" ? t.extend : t.extendForThem,
+							"quiet",
+						)
+					: null}
+				{side === "lender" && loan.status === "requested"
+					? button("decline", t.decline, "link")
+					: null}
+				{(loan.status === "requested" && side === "borrower") ||
+				(loan.status === "accepted" && side !== "holder")
+					? button("cancel", t.cancel, "link")
+					: null}
+			</div>
+		);
+	const count = others.length + 1;
+	// A group: the next step for them all, a nudge, the way in.
+	if (grouped)
+		return (
+			<div className="actions">
+				{side === "lender" && loan.status === "requested"
+					? button("accept", t.acceptAll(count), "primary", true)
+					: null}
+				{loan.status === "accepted"
+					? button("handed", t.markAllHanded(count), "primary", true)
+					: null}
+				{loan.status === "active" && side !== "holder"
+					? button("returned", t.markAllReturned(count), "primary", true)
+					: null}
+				{side !== "holder" &&
+				open &&
+				reachable &&
+				!held &&
+				loan.nudgeCooldown === 0
+					? button("nudge", t.nudge, "quiet")
+					: null}
+				{children}
+			</div>
+		);
 	// Core lets the reader handing a relay on do this one thing.
 	if (side === "holder")
 		return loan.status === "accepted" || children ? (

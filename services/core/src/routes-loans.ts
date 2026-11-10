@@ -1,5 +1,6 @@
 import { Hono, type Context } from "hono";
 import {
+	AlsoLoans,
 	ExtendLoan,
 	MAX_EXTENSIONS,
 	PostMessage,
@@ -20,6 +21,7 @@ import { holdOn, onCopyAvailable } from "./waitlist.ts";
 import { emit } from "./events.ts";
 import { relayed } from "./routes-handoffs.ts";
 import { markRead, unreadByLoan } from "./unread.ts";
+import { joinGroupHandoff, titles } from "./loan-groups.ts";
 
 export const loans = new Hono<{ Bindings: Env }>();
 
@@ -271,7 +273,59 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 	const { member, forbidden } = await viewerWith(c, "loans:write");
 	if (!member) return denied(c, forbidden);
 	const id = c.req.param("id") ?? "";
+	const also = await alsoLoans(c, id);
 
+	const first = await decideOne(c, member.id, id, accept);
+	if (first === "missing") return json(c, problem(404, "No open request"));
+	if (first === "moved") return json(c, movedOn());
+	const decided = [first];
+	for (const other of also) {
+		const one = await decideOne(c, member.id, other, accept);
+		if (typeof one === "object") decided.push(one);
+	}
+
+	// One email to each borrower, naming every book decided in this go.
+	const byBorrower = new Map<string, typeof decided>();
+	for (const one of decided)
+		byBorrower.set(one.email, [...(byBorrower.get(one.email) ?? []), one]);
+	for (const group of byBorrower.values())
+		c.executionCtx.waitUntil(
+			tell(c.env, {
+				kind: "loan_decision",
+				to: group[0]!.email,
+				locale: group[0]!.locale,
+				url: `${c.env.APP_URL}/loans`,
+				bookTitle: titles(group.map((one) => one.title)),
+				lenderName: group[0]!.lender_name,
+				accepted: accept,
+			}).catch((error: unknown) =>
+				console.error("[loans] notify failed", error),
+			),
+		);
+	return c.body(null, 204);
+}
+
+/**
+ * The other loans named with this one, to move in the same go. Optional:
+ * a call with no body moves the one loan.
+ */
+async function alsoLoans(
+	c: Context<{ Bindings: Env }>,
+	id: string,
+): Promise<string[]> {
+	const parsed = AlsoLoans.safeParse(await c.req.json().catch(() => ({})));
+	return parsed.success
+		? [...new Set(parsed.data.also ?? [])].filter((other) => other !== id)
+		: [];
+}
+
+/** One request answered; who to tell is the caller's to work out. */
+async function decideOne(
+	c: Context<{ Bindings: Env }>,
+	memberId: string,
+	id: string,
+	accept: boolean,
+) {
 	const loan = await c.env.DB.prepare(
 		`SELECT l.copy_id, l.borrower_id, e.title, m.email, m.locale, o.display_name AS lender_name
 		   FROM loans l
@@ -281,7 +335,7 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 		   JOIN members o ON o.id = l.lender_id
 		  WHERE l.id = ? AND l.lender_id = ? AND l.status = 'requested'`,
 	)
-		.bind(id, member.id)
+		.bind(id, memberId)
 		.first<{
 			copy_id: string;
 			borrower_id: string;
@@ -290,7 +344,7 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 			locale: "en" | "he";
 			lender_name: string;
 		}>();
-	if (!loan) return json(c, problem(404, "No open request"));
+	if (!loan) return "missing" as const;
 
 	const at = now();
 	const [decided] = await c.env.DB.batch([
@@ -314,8 +368,11 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 				]
 			: []),
 		dropStaleHandoffs(c.env, loan.copy_id),
+		// Accepted while a time is on the table for the borrower's other
+		// books: this one comes to the same meeting.
+		...(accept ? [joinGroupHandoff(c.env, id, ulid())] : []),
 	]);
-	if (!decided?.meta.changes) return json(c, movedOn());
+	if (!decided?.meta.changes) return "moved" as const;
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, accept ? "loan.accepted" : "loan.closed", {
 			loanId: id,
@@ -339,19 +396,7 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 			),
 		);
 	}
-
-	c.executionCtx.waitUntil(
-		tell(c.env, {
-			kind: "loan_decision",
-			to: loan.email,
-			locale: loan.locale,
-			url: `${c.env.APP_URL}/loans`,
-			bookTitle: loan.title,
-			lenderName: loan.lender_name,
-			accepted: accept,
-		}).catch((error: unknown) => console.error("[loans] notify failed", error)),
-	);
-	return c.body(null, 204);
+	return loan;
 }
 
 /** Either side may cancel before the handoff; an accepted loan frees the copy again. */
@@ -414,7 +459,40 @@ loans.post("/v1/loans/:id/handed", async (c) => {
 	const { member, forbidden } = await viewerWith(c, "loans:write");
 	if (!member) return denied(c, forbidden);
 	const id = c.req.param("id");
+	const also = await alsoLoans(c, id);
+	const at = now();
 
+	const first = await handOne(c, member.id, id, at);
+	if (first === "missing") return json(c, problem(404, "Nothing to hand over"));
+	if (first === "moved") return json(c, movedOn());
+	const handed = [first];
+	for (const other of also) {
+		const one = await handOne(c, member.id, other, at);
+		if (typeof one === "object") handed.push(one);
+	}
+	// Handed over together, so due back together: on the longest of their
+	// lengths, so nobody's book comes back sooner than its owner allows.
+	if (handed.length > 1)
+		await c.env.DB.prepare(
+			`UPDATE loans SET due_at = ?1 WHERE status = 'active' AND started_at = ?2
+			   AND id IN (SELECT value FROM json_each(?3))`,
+		)
+			.bind(
+				at + Math.max(...handed.map((one) => one.days)) * 86_400,
+				at,
+				JSON.stringify(handed.map((one) => one.id)),
+			)
+			.run();
+	return c.body(null, 204);
+});
+
+/** One loan handed over at `at`; the caller lines up the due dates. */
+async function handOne(
+	c: Context<{ Bindings: Env }>,
+	memberId: string,
+	id: string,
+	at: number,
+) {
 	const loan = await c.env.DB.prepare(
 		`SELECT l.copy_id, l.borrower_id, coalesce(c.loan_days, o.loan_days) AS loan_days, co.loan_days AS community_days,
 		        (SELECT p.id FROM loans p WHERE p.copy_id = l.copy_id AND p.status = 'active'
@@ -425,7 +503,7 @@ loans.post("/v1/loans/:id/handed", async (c) => {
 		   JOIN communities co ON co.id = l.community_id
 		  WHERE l.id = ? AND (l.borrower_id = ? OR l.lender_id = ? OR l.relay_from = ?) AND l.status = 'accepted'`,
 	)
-		.bind(id, member.id, member.id, member.id)
+		.bind(id, memberId, memberId, memberId)
 		.first<{
 			copy_id: string;
 			borrower_id: string;
@@ -433,10 +511,9 @@ loans.post("/v1/loans/:id/handed", async (c) => {
 			community_days: number;
 			previous: string | null;
 		}>();
-	if (!loan) return json(c, problem(404, "Nothing to hand over"));
+	if (!loan) return "missing" as const;
 
 	const days = loan.loan_days ?? loan.community_days;
-	const at = now();
 	const [relay, started] = await c.env.DB.batch([
 		// A relay closes the previous loan as "relayed" in the same breath, and
 		// first: a copy has one active loan at a time.
@@ -454,13 +531,13 @@ loans.post("/v1/loans/:id/handed", async (c) => {
 		).bind(loan.borrower_id, loan.copy_id, id, at),
 		dropStaleHandoffs(c.env, loan.copy_id),
 	]);
-	if (!started?.meta.changes) return json(c, movedOn());
+	if (!started?.meta.changes) return "moved" as const;
 	if (loan.previous && relay?.meta.changes) relayed(c, loan.previous, at);
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "copy.state_changed", { copyId: loan.copy_id }),
 	);
-	return c.body(null, 204);
-});
+	return { id, days };
+}
 
 /** The book is back with its owner. Closes the loan and reopens the shelf slot. */
 loans.post("/v1/loans/:id/returned", async (c) => {

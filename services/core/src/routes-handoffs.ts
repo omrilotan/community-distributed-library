@@ -17,6 +17,7 @@ import { ulid, now } from "./ids.ts";
 import { denied, json } from "./problem.ts";
 import { onCopyAvailable } from "./waitlist.ts";
 import { emit } from "./events.ts";
+import { together, titles } from "./loan-groups.ts";
 
 export const handoffs = new Hono<{ Bindings: Env }>();
 
@@ -173,6 +174,15 @@ handoffs.post("/v1/loans/:id/handoff/propose", async (c) => {
 		return json(c, problem(409, "Already agreed", "Cancel it first"));
 
 	const id = ulid();
+	// The other loans between the same two people at this stage meet at the
+	// same time: one proposal for them all. One with its own agreed time
+	// keeps it.
+	const group = await together(c.env, loanId, direction);
+	const others = group.filter((sibling) => sibling.id !== loanId);
+	const ids = new Map([
+		[loanId, id],
+		...others.map((o) => [o.id, ulid()] as const),
+	]);
 	try {
 		await c.env.DB.batch([
 			// Keyed on the loan, not the row read above: a proposal that landed in
@@ -185,6 +195,25 @@ handoffs.post("/v1/loans/:id/handoff/propose", async (c) => {
 				`INSERT INTO handoffs (id, loan_id, direction, day, period, proposed_by, status, created_at)
 				 VALUES (?, ?, ?, ?, ?, ?, 'proposed', ?)`,
 			).bind(id, loanId, direction, day, period, member.id, now()),
+			...others.flatMap((sibling) => [
+				c.env.DB.prepare(
+					"UPDATE handoffs SET status = 'cancelled' WHERE loan_id = ? AND direction = ? AND status = 'proposed'",
+				).bind(sibling.id, direction),
+				c.env.DB.prepare(
+					`INSERT INTO handoffs (id, loan_id, direction, day, period, proposed_by, status, created_at)
+					 SELECT ?1, ?2, ?3, ?4, ?5, ?6, 'proposed', ?7
+					  WHERE NOT EXISTS (SELECT 1 FROM handoffs WHERE loan_id = ?2
+					                      AND direction = ?3 AND status = 'agreed')`,
+				).bind(
+					ids.get(sibling.id),
+					sibling.id,
+					direction,
+					day,
+					period,
+					member.id,
+					now(),
+				),
+			]),
 		]);
 	} catch (error) {
 		if (String(error).includes("UNIQUE"))
@@ -201,7 +230,9 @@ handoffs.post("/v1/loans/:id/handoff/propose", async (c) => {
 			to: other.email,
 			locale: other.locale,
 			url: `${c.env.APP_URL}/loans/${loanId}`,
-			bookTitle: loan.title,
+			bookTitle: titles(
+				group.length ? group.map((one) => one.title) : [loan.title],
+			),
 			otherName: me.name,
 			stage: "proposed",
 			day,
@@ -212,15 +243,16 @@ handoffs.post("/v1/loans/:id/handoff/propose", async (c) => {
 			console.error("[handoffs] notify failed", error),
 		),
 	);
-	c.executionCtx.waitUntil(
-		emit(
-			c.env,
-			c.executionCtx,
-			"handoff.scheduled",
-			{ loanId },
-			{ handoffId: id, direction },
-		),
-	);
+	for (const [each, handoffId] of ids)
+		c.executionCtx.waitUntil(
+			emit(
+				c.env,
+				c.executionCtx,
+				"handoff.scheduled",
+				{ loanId: each },
+				{ handoffId, direction },
+			),
+		);
 	return c.json({ id, status: "proposed" }, 201);
 });
 
@@ -256,6 +288,44 @@ handoffs.post("/v1/loans/:id/handoff/confirm", async (c) => {
 		.run();
 	if (!agreed.meta.changes)
 		return json(c, problem(404, "No proposal to confirm"));
+	// The same time put forward for the rest of the group is agreed with it,
+	// under the same code: one meeting, one code.
+	const group = await together(c.env, loanId, proposal.direction);
+	const others = group.filter((sibling) => sibling.id !== loanId);
+	if (others.length)
+		await c.env.DB.prepare(
+			`UPDATE handoffs SET status = 'agreed', agreed_at = ?1, code = ?2
+			  WHERE status = 'proposed' AND direction = ?3 AND day = ?4 AND period = ?5
+			    AND proposed_by != ?6 AND loan_id IN (SELECT value FROM json_each(?7))`,
+		)
+			.bind(
+				now(),
+				code,
+				proposal.direction,
+				proposal.day,
+				proposal.period,
+				member.id,
+				JSON.stringify(others.map((sibling) => sibling.id)),
+			)
+			.run();
+	// Named in the emails: the loans this meeting now covers.
+	const covered = others.length
+		? await c.env.DB.prepare(
+				`SELECT loan_id FROM handoffs WHERE code = ?1 AND status = 'agreed'
+				  AND loan_id IN (SELECT value FROM json_each(?2))`,
+			)
+				.bind(code, JSON.stringify(group.map((one) => one.id)))
+				.all<{ loan_id: string }>()
+		: null;
+	const agreedTitles = covered
+		? titles(
+				group
+					.filter((one) =>
+						covered.results.some((row) => row.loan_id === one.id),
+					)
+					.map((one) => one.title),
+			)
+		: loan.title;
 
 	// Borrower learns where; lender learns the code. The code travels only to the lender.
 	const giver = proposal.direction === "out" ? loan.giver : loan.lender;
@@ -269,7 +339,7 @@ handoffs.post("/v1/loans/:id/handoff/confirm", async (c) => {
 			to: loan.borrower.email,
 			locale: loan.borrower.locale,
 			url: `${c.env.APP_URL}/loans/${loanId}`,
-			bookTitle: loan.title,
+			bookTitle: agreedTitles,
 			otherName: giver.name,
 			stage: "agreed",
 			day: proposal.day,
@@ -282,7 +352,7 @@ handoffs.post("/v1/loans/:id/handoff/confirm", async (c) => {
 			to: giver.email,
 			locale: giver.locale,
 			url: `${c.env.APP_URL}/loans/${loanId}`,
-			bookTitle: loan.title,
+			bookTitle: agreedTitles,
 			otherName: loan.borrower.name,
 			stage: "agreed",
 			day: proposal.day,
@@ -307,12 +377,30 @@ handoffs.post("/v1/loans/:id/handoff/cancel", async (c) => {
 	if (!loan) return json(c, problem(404, "No such loan"));
 	const direction = loan.status === "accepted" ? "out" : "back";
 	if (!meets(loan, direction, member.id)) return json(c, notYours());
-	const result = await c.env.DB.prepare(
-		"UPDATE handoffs SET status = 'cancelled' WHERE loan_id = ? AND status IN ('proposed', 'agreed')",
-	)
-		.bind(loanId)
-		.run();
-	return result.meta.changes
+	// The meeting is called off for every loan it covered: the same day and
+	// time, at the same stage, between the same two people.
+	const group = await together(c.env, loanId, direction);
+	const [result] = await c.env.DB.batch([
+		c.env.DB.prepare(
+			"UPDATE handoffs SET status = 'cancelled' WHERE loan_id = ? AND status IN ('proposed', 'agreed')",
+		).bind(loanId),
+		c.env.DB.prepare(
+			`UPDATE handoffs SET status = 'cancelled'
+			  WHERE status IN ('proposed', 'agreed') AND direction = ?1
+			    AND loan_id IN (SELECT value FROM json_each(?2))
+			    AND EXISTS (SELECT 1 FROM handoffs mine WHERE mine.loan_id = ?3
+			                  AND mine.direction = ?1 AND mine.status = 'cancelled'
+			                  AND mine.day = handoffs.day AND mine.period = handoffs.period
+			                  AND coalesce(mine.code, '') = coalesce(handoffs.code, '')
+			                  AND mine.id = (SELECT id FROM handoffs WHERE loan_id = ?3
+			                                  ORDER BY created_at DESC, id DESC LIMIT 1))`,
+		).bind(
+			direction,
+			JSON.stringify(group.map((one) => one.id).filter((id) => id !== loanId)),
+			loanId,
+		),
+	]);
+	return result?.meta.changes
 		? c.body(null, 204)
 		: json(c, problem(404, "Nothing to cancel"));
 });
@@ -352,6 +440,68 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 	if (entered !== agreed.code) return json(c, problem(403, "Wrong code"));
 
 	const at = now();
+	// The rest of the group met at the same meeting, under the same code:
+	// they change hands with it, and are due back on the same day.
+	const group = (await together(c.env, loanId, agreed.direction)).map(
+		(one) => one.id,
+	);
+	const { results: covered } = await c.env.DB.prepare(
+		`SELECT h.id, h.loan_id, coalesce(cp.loan_days, o.loan_days, co.loan_days) AS days
+		   FROM handoffs h
+		   JOIN loans l ON l.id = h.loan_id
+		   JOIN copies cp ON cp.id = l.copy_id
+		   JOIN members o ON o.id = cp.owner_id
+		   JOIN communities co ON co.id = l.community_id
+		  WHERE h.status = 'agreed' AND h.direction = ?1 AND h.code = ?2
+		    AND h.loan_id IN (SELECT value FROM json_each(?3))`,
+	)
+		.bind(agreed.direction, agreed.code, JSON.stringify(group))
+		.all<{ id: string; loan_id: string; days: number }>();
+	const dueAt =
+		agreed.direction === "out" && covered.length > 1
+			? at + Math.max(...covered.map((row) => row.days)) * 86_400
+			: null;
+	const handed = await handOver(
+		c,
+		loanId,
+		loan.borrowerId,
+		{ id: agreed.id, direction: agreed.direction },
+		at,
+		dueAt,
+	);
+	if (!handed)
+		return json(
+			c,
+			problem(409, "Nothing to hand over", "The loan has moved on"),
+		);
+	for (const row of covered) {
+		if (row.loan_id === loanId) continue;
+		await handOver(
+			c,
+			row.loan_id,
+			loan.borrowerId,
+			{ id: row.id, direction: agreed.direction },
+			at,
+			dueAt,
+		);
+	}
+	return c.body(null, 204);
+});
+
+/**
+ * One loan's side of a completed handoff: on the way out the copy goes to
+ * the borrower and the clock starts (on `dueAt` when the group shares one);
+ * on the way back the loan closes and the copy is on the shelf again.
+ * False when the loan had moved on meanwhile.
+ */
+async function handOver(
+	c: Context<{ Bindings: Env }>,
+	loanId: string,
+	borrowerId: string,
+	agreed: { id: string; direction: "out" | "back" },
+	at: number,
+	dueAt: number | null,
+): Promise<boolean> {
 	let changedCopy = "";
 	// On a relay, the loan of the reader handing it on, which ends here.
 	let previous: string | null = null;
@@ -378,7 +528,7 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 				community_days: number;
 				previous: string | null;
 			}>();
-		if (!copy) return json(c, problem(404, "No such loan"));
+		if (!copy) return false;
 		const days = copy.loan_days ?? copy.community_days;
 		changedCopy = copy.id;
 		previous = copy.previous;
@@ -392,11 +542,11 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 			).bind(at, copy.id, loanId),
 			c.env.DB.prepare(
 				"UPDATE loans SET status = 'active', started_at = ?, due_at = ? WHERE id = ? AND status = 'accepted'",
-			).bind(at, at + days * 86_400, loanId),
+			).bind(at, dueAt ?? at + days * 86_400, loanId),
 			c.env.DB.prepare(
 				`UPDATE copies SET state = 'on_loan', holder_id = ?1 WHERE id = ?2 AND quantity = 1
 				  AND EXISTS (SELECT 1 FROM loans WHERE id = ?3 AND status = 'active' AND started_at = ?4)`,
-			).bind(loan.borrowerId, copy.id, loanId, at),
+			).bind(borrowerId, copy.id, loanId, at),
 			dropStaleHandoffs(c.env, copy.id),
 		);
 	} else {
@@ -424,11 +574,7 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 	const written = await c.env.DB.batch(statements);
 	// The loan itself moved: the statement after the handoff's.
 	const moved = agreed.direction === "out" ? written[2] : written[1];
-	if (!moved?.meta.changes)
-		return json(
-			c,
-			problem(409, "Nothing to hand over", "The loan has moved on"),
-		);
+	if (!moved?.meta.changes) return false;
 	if (agreed.direction === "out" && previous && written[1]?.meta.changes)
 		relayed(c, previous, at);
 	if (agreed.direction === "back") {
@@ -461,8 +607,8 @@ handoffs.post("/v1/loans/:id/handoff/complete", async (c) => {
 	c.executionCtx.waitUntil(
 		emit(c.env, c.executionCtx, "copy.state_changed", { copyId: changedCopy }),
 	);
-	return c.body(null, 204);
-});
+	return true;
+}
 
 /** The current handoff on a loan, shaped for whoever is asking. */
 handoffs.get("/v1/loans/:id/handoff", async (c) => {

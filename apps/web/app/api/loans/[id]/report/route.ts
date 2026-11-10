@@ -7,13 +7,19 @@ export async function POST(
 	const { id } = await context.params;
 	const form = await request.formData();
 	const body = String(form.get("body") ?? "").trim();
-	const { status } = await core(`/v1/loans/${encodeURIComponent(id)}/report`, {
-		method: "POST",
-		body: JSON.stringify({
-			kind: String(form.get("kind") ?? "other"),
-			...(body ? { body } : {}),
-		}),
-	});
+	// On a page of several loans, the one the report is about.
+	const chosen = String(form.get("loan") ?? "");
+	const about = /^[0-9A-Z]{26}$/.test(chosen) ? chosen : id;
+	const { status } = await core(
+		`/v1/loans/${encodeURIComponent(about)}/report`,
+		{
+			method: "POST",
+			body: JSON.stringify({
+				kind: String(form.get("kind") ?? "other"),
+				...(body ? { body } : {}),
+			}),
+		},
+	);
 	const back = `/loans/${encodeURIComponent(id)}`;
 	const location =
 		status === 401
