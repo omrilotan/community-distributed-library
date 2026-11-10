@@ -991,6 +991,8 @@ export const ROUTES: readonly Route[] = [
 			texts: LibraryTexts,
 			/** Everyone lives close by: no areas or distances anywhere. */
 			compact: z.boolean(),
+			/** The day a week starts on: 0 for Sunday through 6 for Saturday. */
+			weekStart: z.number().int().min(0).max(6),
 			/** The library's own colour, or null for the house green. */
 			accent: z.string().nullable(),
 		}),

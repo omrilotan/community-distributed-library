@@ -581,6 +581,9 @@ const dictionary = {
 		settingsSize: "How far apart members live",
 		settingsSizeWide: "Spread over an area: ask where each member lives",
 		settingsSizeCompact: "All close by: no areas, no map",
+		settingsWeekStart: "Week starts on",
+		settingsWeekStartHint:
+			"Members' meeting times are laid out from this day, on their profile and when they join.",
 		settingsSizeHint:
 			"In a library spread over a neighbourhood or a town, members give a rough area, and books show how far away they are. Where everyone lives a few minutes apart (a building, a street, a congregation), that tells nobody anything: the area, the map and distances are left out.",
 		setupNameTitle: "Your name",
@@ -1360,6 +1363,9 @@ const dictionary = {
 		settingsSize: "כמה רחוק החברים גרים זה מזה",
 		settingsSizeWide: "פרוסים על אזור: כל חבר מציין איפה הוא גר",
 		settingsSizeCompact: "כולם קרובים: בלי אזורים ובלי מפה",
+		settingsWeekStart: "השבוע מתחיל ב",
+		settingsWeekStartHint:
+			"זמני המפגש של החברים מוצגים החל מהיום הזה, בפרופיל וכשהם מצטרפים.",
 		settingsSizeHint:
 			"בספרייה שפרוסה על שכונה או עיר, החברים מציינים אזור משוער, והספרים מראים כמה הם רחוקים. כשכולם גרים במרחק כמה דקות זה מזה (בניין, רחוב, קהילה), זה לא אומר כלום: האזור, המפה והמרחקים לא מוצגים.",
 		setupNameTitle: "השם שלכם",
@@ -1761,6 +1767,10 @@ function helpers(locale: Locale) {
 			})[p] ?? p,
 		weekdayName: (d: number) =>
 			dateFormat(locale, { weekday: "short" }).format(
+				new Date(Date.UTC(2024, 0, 7 + d)),
+			),
+		weekdayLong: (d: number) =>
+			dateFormat(locale, { weekday: "long" }).format(
 				new Date(Date.UTC(2024, 0, 7 + d)),
 			),
 		heldFor: (until: string) =>

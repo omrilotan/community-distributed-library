@@ -17,6 +17,8 @@ export interface LibraryInfo {
 	texts: LibraryTexts;
 	/** Everyone lives close by: no areas, map or distances. */
 	compact: boolean;
+	/** The day a week starts on, 0 for Sunday through 6 for Saturday. */
+	weekStart: number;
 	/** The library's own colour; null wears the house green. */
 	accent: string | null;
 }
@@ -47,6 +49,7 @@ const UNKNOWN: LibraryInfo = {
 	defaultLocale: "en",
 	texts: {},
 	compact: false,
+	weekStart: 0,
 	accent: null,
 };
 
@@ -72,6 +75,12 @@ export async function library(): Promise<LibraryInfo> {
 				: "en",
 			texts: body.texts ?? {},
 			compact: body.compact === true,
+			weekStart:
+				Number.isInteger(body.weekStart) &&
+				(body.weekStart as number) >= 0 &&
+				(body.weekStart as number) <= 6
+					? (body.weekStart as number)
+					: 0,
 			// Only ever six hex digits: it is written into a style sheet.
 			accent: Accent.safeParse(body.accent).data ?? null,
 		};

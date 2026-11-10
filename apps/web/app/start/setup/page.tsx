@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { Availability } from "@cdl/contracts";
 import { core } from "../../../lib/core.ts";
 import { getMe } from "../../../lib/profile.ts";
-import { libraryWords } from "../../../lib/library.ts";
+import { library, libraryWords } from "../../../lib/library.ts";
 import { strings, type Locale } from "../../../lib/i18n.ts";
 import { requireSession, signedOut } from "../../../lib/session.ts";
 import { AreaPicker, MEMBER_REACH_M } from "../../area-picker.tsx";
@@ -127,7 +127,11 @@ export default async function SetupPage({
 					<input type="hidden" name="step" value="times" />
 					<h1>{t.setupTimesTitle}</h1>
 					<p className="muted">{t.setupTimesHint}</p>
-					<WeekGrid value={current} t={t} />
+					<WeekGrid
+						value={current}
+						t={t}
+						weekStart={(await library()).weekStart}
+					/>
 					<p className="actions">
 						<button type="submit">{t.setupNext}</button>
 						<a href="/">{t.setupLater}</a>

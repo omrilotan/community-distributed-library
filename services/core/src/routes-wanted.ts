@@ -100,6 +100,8 @@ wanted.get("/v1/community", async (c) => {
 		texts: library.texts,
 		// Everyone lives close by: no areas or distances anywhere.
 		compact: library.compact,
+		// Where the members' meeting times start their week.
+		weekStart: library.weekStart,
 		// The library's own colour, or null for the house green.
 		accent: library.accent,
 	});

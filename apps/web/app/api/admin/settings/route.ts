@@ -34,6 +34,9 @@ export async function POST(request: Request): Promise<Response> {
 				? { radiusM: Number(form.get("radiusM")) }
 				: {}),
 			compact: String(form.get("compact") ?? "0") === "1",
+			...(form.has("weekStart")
+				? { weekStart: Number(form.get("weekStart")) }
+				: {}),
 			// The colour picked: the house green (none), a named one, or the
 			// library's own from the colour field.
 			...accent(form),

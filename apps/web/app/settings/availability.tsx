@@ -11,14 +11,17 @@ const PERIODS = ["morning", "afternoon", "evening"] as const;
 export function AvailabilityFields({
 	value,
 	t,
+	weekStart = 0,
 }: {
 	value: Availability;
 	t: Strings;
+	/** The library's first day of the week, 0 for Sunday. */
+	weekStart?: number;
 }) {
 	return (
 		<>
 			<p className="muted">{t.availabilityHint}</p>
-			<WeekGrid value={value} t={t} />
+			<WeekGrid value={value} t={t} weekStart={weekStart} />
 			<label htmlFor="meetingPlace">{t.meetingPlace}</label>
 			<input
 				id="meetingPlace"
@@ -44,8 +47,20 @@ export function AvailabilityFields({
 	);
 }
 
-/** The seven days by three parts of a day, ticked where the member is free. */
-export function WeekGrid({ value, t }: { value: Availability; t: Strings }) {
+/**
+ * The seven days by three parts of a day, ticked where the member is free,
+ * starting from the day the library's week starts on.
+ */
+export function WeekGrid({
+	value,
+	t,
+	weekStart = 0,
+}: {
+	value: Availability;
+	t: Strings;
+	weekStart?: number;
+}) {
+	const days = [0, 1, 2, 3, 4, 5, 6].map((offset) => (weekStart + offset) % 7);
 	const set = new Set(
 		value.slots.map((slot) => `${slot.weekday}:${slot.period}`),
 	);
@@ -57,7 +72,7 @@ export function WeekGrid({ value, t }: { value: Availability; t: Strings }) {
 					<span key={period}>{t.periodName(period)}</span>
 				))}
 			</div>
-			{[0, 1, 2, 3, 4, 5, 6].map((weekday) => (
+			{days.map((weekday) => (
 				<div className="slot-row" key={weekday}>
 					<span className="slot-date">
 						<b>{t.weekdayName(weekday)}</b>

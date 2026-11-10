@@ -148,7 +148,11 @@ export default async function SettingsPage({
 					<section id="availability">
 						<h2>{t.availabilityTitle}</h2>
 						<input type="hidden" name="withAvailability" value="1" />
-						<AvailabilityFields value={availability.body} t={t} />
+						<AvailabilityFields
+							value={availability.body}
+							t={t}
+							weekStart={(await library()).weekStart}
+						/>
 					</section>
 				) : null}
 

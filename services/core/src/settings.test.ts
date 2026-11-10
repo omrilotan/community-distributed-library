@@ -13,7 +13,8 @@ afterEach(async () => {
 			`UPDATE communities SET name = 'Our Street', loan_days = 21,
 			        member_invites_open = 5, member_invite_days = 14, texts = '{}',
 			        languages = 'en,he', default_locale = 'en',
-			        centre_lat = 51.6012, centre_lng = -0.1924, centre_label = NULL, radius_m = 3000, accent = NULL
+			        centre_lat = 51.6012, centre_lng = -0.1924, centre_label = NULL, radius_m = 3000, accent = NULL,
+			        week_start = 0
 			  WHERE id = ?`,
 		).bind(FINCH),
 	]);
@@ -43,6 +44,7 @@ describe("the library's settings", () => {
 			defaultLocale: "en",
 			languages: ["en", "he"],
 			compact: false,
+			weekStart: 0,
 			texts: {},
 			centre: { label: "", lat: 51.6012, lng: -0.1924 },
 			radiusM: 3000,
@@ -52,6 +54,35 @@ describe("the library's settings", () => {
 		expect((await as(SAM).post("/v1/invites", {})).status).toBe(403);
 		expect(
 			(await as(DANA).patch("/v1/admin/settings", { ...settings, loanDays: 0 }))
+				.status,
+		).toBe(422);
+	});
+});
+
+describe("the library's week", () => {
+	it("starts on the day the admin picks, and visitors are told", async () => {
+		await env.DB.prepare(
+			"UPDATE memberships SET role = 'admin' WHERE member_id = ? AND community_id = ?",
+		)
+			.bind(DANA, FINCH)
+			.run();
+		const { texts: _, ...before } = (await as(DANA).get("/v1/admin/settings"))
+			.body;
+		expect((await api(null, "GET", "/v1/community")).body.weekStart).toBe(0);
+		expect(
+			(await as(DANA).patch("/v1/admin/settings", { ...before, weekStart: 1 }))
+				.status,
+		).toBe(204);
+		expect((await as(DANA).get("/v1/admin/settings")).body.weekStart).toBe(1);
+		expect((await api(null, "GET", "/v1/community")).body.weekStart).toBe(1);
+		// Left out, it stays.
+		const { weekStart: __, ...without } = before;
+		expect((await as(DANA).patch("/v1/admin/settings", without)).status).toBe(
+			204,
+		);
+		expect((await as(DANA).get("/v1/admin/settings")).body.weekStart).toBe(1);
+		expect(
+			(await as(DANA).patch("/v1/admin/settings", { ...before, weekStart: 7 }))
 				.status,
 		).toBe(422);
 	});

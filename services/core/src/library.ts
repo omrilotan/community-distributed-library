@@ -12,6 +12,8 @@ export interface Library {
 	languages: Locale[];
 	defaultLocale: Locale;
 	compact: boolean;
+	/** The day a week starts on, 0 for Sunday through 6 for Saturday. */
+	weekStart: number;
 	texts: LibraryTexts;
 	/** The library's own colour; null wears the house green. */
 	accent: string | null;
@@ -25,7 +27,7 @@ export interface Library {
  */
 export async function theLibrary(env: Env): Promise<Library> {
 	const { results } = await env.DB.prepare(
-		"SELECT id, slug, name, type, languages, default_locale, compact, texts, accent FROM communities LIMIT 2",
+		"SELECT id, slug, name, type, languages, default_locale, compact, week_start, texts, accent FROM communities LIMIT 2",
 	).all<{
 		id: string;
 		slug: string;
@@ -34,6 +36,7 @@ export async function theLibrary(env: Env): Promise<Library> {
 		languages: string;
 		default_locale: Locale;
 		compact: number;
+		week_start: number;
 		texts: string;
 		accent: string | null;
 	}>();
@@ -50,6 +53,7 @@ export async function theLibrary(env: Env): Promise<Library> {
 		languages: row.languages.split(",") as Locale[],
 		defaultLocale: row.default_locale,
 		compact: row.compact === 1,
+		weekStart: row.week_start,
 		texts: readTexts(row.texts),
 		accent: row.accent,
 	};

@@ -349,7 +349,7 @@ admin.get("/v1/admin/settings", async (c) => {
 	const who = await libraryAdmin(c);
 	if (!who) return json(c, problem(403, "Admins only"));
 	const row = await c.env.DB.prepare(
-		"SELECT name, loan_days, member_invites_open, member_invite_days, default_locale, languages, compact, texts, centre_lat, centre_lng, centre_label, radius_m, accent FROM communities WHERE id = ?",
+		"SELECT name, loan_days, member_invites_open, member_invite_days, default_locale, languages, compact, week_start, texts, centre_lat, centre_lng, centre_label, radius_m, accent FROM communities WHERE id = ?",
 	)
 		.bind(who.communityId)
 		.first<{
@@ -360,6 +360,7 @@ admin.get("/v1/admin/settings", async (c) => {
 			default_locale: "en" | "he";
 			languages: string;
 			compact: number;
+			week_start: number;
 			texts: string;
 			centre_lat: number;
 			centre_lng: number;
@@ -378,6 +379,7 @@ admin.get("/v1/admin/settings", async (c) => {
 		defaultLocale: row.default_locale,
 		languages: row.languages.split(",") as ("en" | "he")[],
 		compact: row.compact === 1,
+		weekStart: row.week_start,
 		texts: readTexts(row.texts),
 		centre: {
 			label: row.centre_label ?? "",
@@ -405,6 +407,7 @@ admin.patch("/v1/admin/settings", async (c) => {
 		defaultLocale,
 		languages,
 		compact,
+		weekStart,
 		texts,
 		centre,
 		radiusM,
@@ -447,7 +450,7 @@ admin.patch("/v1/admin/settings", async (c) => {
 		);
 	await c.env.DB.prepare(
 		`UPDATE communities SET name = ?, loan_days = ?, member_invites_open = ?, member_invite_days = ?, default_locale = COALESCE(?, default_locale),
-		       languages = ?, compact = COALESCE(?, compact), texts = COALESCE(?, texts),
+		       languages = ?, compact = COALESCE(?, compact), week_start = COALESCE(?, week_start), texts = COALESCE(?, texts),
 		       centre_lat = COALESCE(?, centre_lat), centre_lng = COALESCE(?, centre_lng),
 		       centre_label = COALESCE(?, centre_label), radius_m = COALESCE(?, radius_m),
 		       accent = CASE WHEN ? THEN ? ELSE accent END
@@ -461,6 +464,7 @@ admin.patch("/v1/admin/settings", async (c) => {
 			defaultLocale ?? null,
 			offered,
 			compact === undefined ? null : compact ? 1 : 0,
+			weekStart ?? null,
 			// Per language: words for a language left out of the change stay, so
 			// offering one language for a while does not lose the other's.
 			texts === undefined
