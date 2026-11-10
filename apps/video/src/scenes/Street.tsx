@@ -23,7 +23,7 @@ export function Street({ start, end }: { start: number; end: number }) {
 					box={{ x: gutter, y: stage.top, w: inner, h: streetHeight }}
 					from={start}
 					to={end}
-					focus={[0.62, 0.55]}
+					focus={[0.3, 0.6]}
 				/>
 				<div
 					style={{

@@ -2,6 +2,6 @@ Give it a description, its languages and a colour. Then invite your first neighb
 
 From there, the library runs itself. Members lend from their own shelves, agree a time, and confirm each handoff at the door with a short code. Reminders chase late returns, so you don't have to.
 
-Ask a neighbour or two to moderate: tags, duplicates, reports. About an hour a week.
+Ask a neighbour or two to moderate: tags, duplicates, reports. A few minutes here and there.
 
 No money changes hands, nothing ships, and nobody sits in between. The members and the data stay yours, and the code is public domain. Start one for your street at community-distributed-library dot com.
