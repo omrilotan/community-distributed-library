@@ -3587,3 +3587,185 @@ html[data-library="things"] .book-cover img {
 	outline: 2px solid var(--accent);
 	outline-offset: 2px;
 }
+
+/* Connect an assistant: the address, a card of numbered steps per app, then
+   what it may do, and the developers' part set apart below. */
+.connect {
+	max-inline-size: 42rem;
+}
+
+.connect-lead {
+	font-size: 1.0625rem;
+}
+
+.connect-address {
+	display: grid;
+	gap: 0.25rem;
+	background: var(--accent-soft);
+	border-radius: var(--radius);
+	padding: 0.75rem 1rem;
+	margin-block: 1rem 0.5rem;
+}
+
+.connect-label {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--accent);
+}
+
+.connect-address .copyable {
+	margin-block: 0;
+}
+
+.connect-address code {
+	background: var(--surface);
+	font-size: 0.9375rem;
+}
+
+.connect-apps {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.connect-app {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 1rem;
+}
+
+.connect-app h3 {
+	font-size: 1rem;
+	margin-block-end: 0.75rem;
+}
+
+/* Numbers in round badges, the text beside them. */
+.connect-steps {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	gap: 0.75rem;
+	counter-reset: step;
+}
+
+.connect-steps > li {
+	counter-increment: step;
+	display: grid;
+	grid-template-columns: 1.5rem minmax(0, 1fr);
+	column-gap: 0.75rem;
+	align-items: start;
+}
+
+.connect-steps > li::before {
+	content: counter(step);
+	grid-row: span 3;
+	display: grid;
+	place-items: center;
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
+	border-radius: 50%;
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: 0.8125rem;
+	font-weight: 700;
+}
+
+.connect-steps p {
+	margin: 0;
+	padding-block-start: 0.1rem;
+}
+
+.connect-steps .copyable {
+	margin-block: 0.5rem 0;
+}
+
+/* Commands wrap rather than scroll: all of it in view, nothing to swipe. */
+.connect-steps pre {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	background: var(--bg);
+}
+
+.connect-limits {
+	display: grid;
+	gap: 0 1.5rem;
+	margin-block-start: 1rem;
+}
+
+@media (min-width: 40rem) {
+	.connect-limits {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.connect-can,
+.connect-cannot {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 1rem;
+	display: grid;
+	gap: 0.5rem;
+}
+
+.connect-can li,
+.connect-cannot li {
+	display: grid;
+	grid-template-columns: 1.25rem minmax(0, 1fr);
+	gap: 0.5rem;
+}
+
+.connect-can li::before,
+.connect-cannot li::before {
+	font-weight: 700;
+	text-align: center;
+}
+
+.connect-can li::before {
+	content: "✓";
+	color: var(--accent);
+}
+
+.connect-cannot li::before {
+	content: "✕";
+	color: var(--warn);
+}
+
+.connect-developers {
+	margin-block-start: 3rem;
+	padding-block-start: 1.5rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.connect-developers > h2 {
+	margin-block-start: 0;
+}
+
+.connect-dev {
+	margin-block-start: 2rem;
+}
+
+.connect-dev h3 {
+	font-size: 1rem;
+}
+
+/* A scope: what it lets a script do, then its name for the code. */
+.scope {
+	display: grid;
+}
+
+.scope code {
+	justify-self: start;
+	font-size: 0.75rem;
+	color: var(--muted);
+	background: none;
+	padding: 0;
+}
+
+.scopes .check:has(.scope) {
+	align-items: start;
+}
+
+.scopes .check:has(.scope) input {
+	margin-block-start: 0.3rem;
+}

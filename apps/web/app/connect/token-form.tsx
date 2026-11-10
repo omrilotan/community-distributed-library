@@ -114,8 +114,9 @@ export function TokenForm({
 									name === "catalogue:read" || name === "shelf:read"
 								}
 							/>
-							<span>
-								<code dir="ltr">{name}</code> · {description}
+							<span className="scope">
+								<span>{description}</span>
+								<code dir="ltr">{name}</code>
 							</span>
 						</label>
 					))}

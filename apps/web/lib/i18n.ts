@@ -380,7 +380,12 @@ const dictionary = {
 		fallbackHanded: "Met without the code? Use “Mark as handed over” below.",
 		connectTitle: "Connect an assistant",
 		connectIntro:
-			"Claude, ChatGPT, Claude Code and other MCP clients can use the library on your behalf. The server address:",
+			"Let Claude, ChatGPT or another assistant use the library for you. It acts as you, and only with the permissions you allow.",
+		connectAddress: "Server address",
+		connectSetUp: "Set it up",
+		connectDevelopers: "For developers",
+		connectDevelopersIntro:
+			"Scripts and services of your own: the REST API, personal tokens and webhooks.",
 		connectCan: "What an assistant can do for you",
 		connectCannot: "What it cannot do",
 		connectManage:
@@ -1162,7 +1167,12 @@ const dictionary = {
 		fallbackHanded: "נפגשתם בלי קוד? השתמשו ב״סימון: נמסר״ למטה.",
 		connectTitle: "חיבור עוזר",
 		connectIntro:
-			"Claude, ChatGPT, Claude Code ולקוחות MCP אחרים יכולים להשתמש בספרייה בשמכם. כתובת השרת:",
+			"Claude, ChatGPT או עוזר אחר יכולים להשתמש בספרייה בשבילכם. הם פועלים בשמכם, ורק עם ההרשאות שתאשרו.",
+		connectAddress: "כתובת השרת",
+		connectSetUp: "הגדרה",
+		connectDevelopers: "למפתחים",
+		connectDevelopersIntro:
+			"סקריפטים ושירותים משלכם: REST API, טוקנים אישיים ו-webhooks.",
 		connectCan: "מה עוזר יכול לעשות בשבילכם",
 		connectCannot: "מה הוא לא יכול",
 		connectManage: "כל חיבור מופיע בפרופיל שלכם, ושם אפשר לנתק אותו.",
