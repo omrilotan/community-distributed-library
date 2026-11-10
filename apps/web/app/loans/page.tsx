@@ -11,7 +11,6 @@ import { signedOut } from "../../lib/session.ts";
 import { requireProfile } from "../../lib/profile.ts";
 import { loanTimer } from "../../lib/timer.ts";
 import { Callout, Empty, PageHead } from "../ui.tsx";
-import { LoanActions } from "./loan-actions.tsx";
 import { PlainCover } from "../plain-cover.tsx";
 import { AvailabilityNudge } from "./availability-nudge.tsx";
 import { PushToggle } from "../push-toggle.tsx";
@@ -20,6 +19,7 @@ import { dateFormat } from "../../lib/dates.ts";
 import { titled } from "../../lib/page-title.ts";
 import { groupLoans, type Side } from "../../lib/loan-groups.ts";
 import { LoanItem } from "./loan-item.tsx";
+import { NextStep } from "./next-step.tsx";
 
 export const generateMetadata = titled((t) => t.loans);
 
@@ -243,7 +243,7 @@ function LoanGroup({
 	locale: Locale;
 	showAreas?: boolean;
 }) {
-	const [lead, ...others] = loans as [LoanView, ...LoanView[]];
+	const lead = loans[0]!;
 	const other =
 		side === "borrower"
 			? lead.status === "requested" || lead.status === "accepted"
@@ -252,7 +252,6 @@ function LoanGroup({
 			: lead.borrower;
 	const area = "areaLabel" in other ? (other.areaLabel as string | null) : null;
 	const live = lead.status === "accepted" || lead.status === "active";
-	const unread = loans.reduce((sum, loan) => sum + loan.unread, 0);
 	const overdue = loans.some((loan) => loanTimer(loan, locale, t)?.overdue);
 	return (
 		<article className="card loan-group">
@@ -266,12 +265,6 @@ function LoanGroup({
 							{" · "}
 							<bdi>{area}</bdi>
 						</span>
-					) : null}
-					{unread ? (
-						<>
-							{" "}
-							<span className="badge badge-unread">{t.unread(unread)}</span>
-						</>
 					) : null}
 				</div>
 				<div className="loan-status">
@@ -295,21 +288,11 @@ function LoanGroup({
 							t={t}
 							locale={locale}
 							back="/loans"
+							actions={false}
 						/>
 					))}
 				</ul>
-				<LoanActions
-					loan={lead}
-					others={others}
-					side={side}
-					t={t}
-					back="/loans"
-					compact
-				>
-					<a className="btn quiet" href={`/loans/${lead.id}`}>
-						{t.messages}
-					</a>
-				</LoanActions>
+				<NextStep loans={loans} side={side} t={t} locale={locale} />
 			</div>
 		</article>
 	);
@@ -367,12 +350,6 @@ function LoanRow({
 						· {t.partOfSet(loan.quantity, loan.copy.quantity)}
 					</span>
 				) : null}
-				{loan.unread ? (
-					<>
-						{" "}
-						<span className="badge badge-unread">{t.unread(loan.unread)}</span>
-					</>
-				) : null}
 				<div className="muted">
 					<bdi>{other.displayName}</bdi>
 					{showAreas && other.areaLabel ? (
@@ -399,11 +376,7 @@ function LoanRow({
 						</a>
 					) : null}
 				</div>
-				<LoanActions loan={loan} side={side} t={t} back="/loans" compact>
-					<a className="btn quiet" href={`/loans/${loan.id}`}>
-						{t.messages}
-					</a>
-				</LoanActions>
+				<NextStep loans={[loan]} side={side} t={t} locale={locale} />
 			</div>
 		</article>
 	);

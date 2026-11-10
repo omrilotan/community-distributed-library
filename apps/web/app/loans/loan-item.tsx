@@ -12,12 +12,15 @@ export function LoanItem({
 	t,
 	locale,
 	back,
+	actions = true,
 }: {
 	loan: LoanView;
 	side: Side;
 	t: Strings;
 	locale: Locale;
 	back: string;
+	/** Its own steps; the list leaves them to the loan's page. */
+	actions?: boolean;
 }) {
 	const timer = loanTimer(loan, locale, t);
 	return (
@@ -46,7 +49,9 @@ export function LoanItem({
 						{timer.text}
 					</div>
 				) : null}
-				<LoanActions loan={loan} side={side} t={t} back={back} item />
+				{actions ? (
+					<LoanActions loan={loan} side={side} t={t} back={back} item />
+				) : null}
 			</div>
 		</li>
 	);

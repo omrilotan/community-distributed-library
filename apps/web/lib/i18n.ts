@@ -472,6 +472,10 @@ const dictionary = {
 		isbnFound: "Found",
 		yours: "yours",
 		markHanded: "Mark as handed over",
+		arrangeHandoff: "Arrange the handoff",
+		arrangeReturn: "Arrange the return",
+		viewRequest: "View request",
+		viewLoan: "Open",
 		markReturned: "Mark as returned",
 		moreHint:
 			"You are meeting anyway. Ask now, and if they say yes it comes to the same handoff.",
@@ -483,6 +487,7 @@ const dictionary = {
 			"When someone is about to collect from you, they see a few more of yours they might like, so one meeting can cover several.",
 		reportWhich: "About",
 		nudge: "Nudge",
+		nudgeAsk: "Waiting to hear back?",
 		nudgeSent: "Nudge sent.",
 		nudgedRecently: "Nudged today — once a day is enough.",
 		nothingYetHint: "Be the first: add a book from your shelf.",
@@ -1265,6 +1270,10 @@ const dictionary = {
 		isbnFound: "נמצא",
 		yours: "שלכם",
 		markHanded: "סימון: נמסר",
+		arrangeHandoff: "תיאום המסירה",
+		arrangeReturn: "תיאום ההחזרה",
+		viewRequest: "לבקשה",
+		viewLoan: "פתיחה",
 		markReturned: "סימון: הוחזר",
 		moreHint: "ממילא נפגשים. אפשר לבקש עכשיו, ואם יאשרו, זה יצטרף לאותה מסירה.",
 		moreAsk: "לבקש גם את זה",
@@ -1275,6 +1284,7 @@ const dictionary = {
 			"כשמישהו עומד לאסוף מכם, יוצגו לו עוד כמה דברים שלכם שאולי יעניינו אותו, כדי שפגישה אחת תספיק לכמה.",
 		reportWhich: "לגבי",
 		nudge: "תזכורת",
+		nudgeAsk: "מחכים לתשובה?",
 		nudgeSent: "התזכורת נשלחה.",
 		nudgedRecently: "כבר נשלחה תזכורת היום — פעם ביום מספיק.",
 		nothingYetHint: "היו הראשונים: הוסיפו ספר מהמדף שלכם.",
@@ -1748,6 +1758,8 @@ function helpers(locale: Locale) {
 		setOf: (n: number) => (he ? `סט של ${n}` : `A set of ${n}`),
 		partOfSet: (n: number, of: number) =>
 			he ? `${n} מתוך ${of}` : `${n} of ${of}`,
+		meetingDetails: (when: string) =>
+			he ? `${when} · פרטים` : `${when} · details`,
 		acceptAll: (n: number) => (he ? `אישור כל ה־${n}` : `Accept all ${n}`),
 		markAllHanded: (n: number) =>
 			he ? `סימון: כל ה־${n} נמסרו` : `Mark all ${n} as handed over`,
