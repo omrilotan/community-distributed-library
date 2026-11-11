@@ -246,9 +246,11 @@ export default async function SettingsPage({
 					)}
 				</section>
 
-				<button type="submit" className="profile-save">
-					{t.save}
-				</button>
+				{/* Pinned to the bottom of the screen while any field is in view,
+				    like the loan page's composer; it settles after the last one. */}
+				<div className="profile-save">
+					<button type="submit">{t.save}</button>
+				</div>
 			</form>
 
 			<section className="account-group">
