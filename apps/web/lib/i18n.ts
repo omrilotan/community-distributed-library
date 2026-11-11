@@ -303,8 +303,9 @@ const dictionary = {
 		reportProblem: "Report a problem",
 		reportKind: "What happened",
 		reportBody: "Details",
+		reportBodyPlaceholder: "What happened, and when. Anything that helps.",
 		reportHint:
-			"Goes to the moderators only. Nothing is decided automatically; a lost book takes the copy off the shelves.",
+			"Only the moderators see this. A person reads it and answers here; nothing happens automatically.",
 		reportSend: "Send report",
 		reportAbout: "about",
 		readThread: "Read the conversation",
@@ -485,7 +486,7 @@ const dictionary = {
 		suggestShelf: "Show borrowers what else I lend",
 		suggestShelfHint:
 			"When someone is about to collect from you, they see a few more of yours they might like, so one meeting can cover several.",
-		reportWhich: "About",
+		reportWhich: "Which one",
 		nudge: "Nudge",
 		nudgeAsk: "Waiting to hear back?",
 		nudgeSent: "Nudge sent.",
@@ -1111,8 +1112,9 @@ const dictionary = {
 		reportProblem: "דיווח על בעיה",
 		reportKind: "מה קרה",
 		reportBody: "פרטים",
+		reportBodyPlaceholder: "מה קרה ומתי. כל מה שיעזור.",
 		reportHint:
-			"מגיע רק למודרטורים. שום דבר לא נקבע אוטומטית; ספר שאבד יורד מהמדפים.",
+			"רק המודרטורים רואים את זה. אדם קורא ועונה כאן; שום דבר לא קורה אוטומטית.",
 		reportSend: "שליחת דיווח",
 		reportAbout: "לגבי",
 		readThread: "קריאת השיחה",
@@ -1282,7 +1284,7 @@ const dictionary = {
 		suggestShelf: "להראות לשואלים מה עוד אני משאיל/ה",
 		suggestShelfHint:
 			"כשמישהו עומד לאסוף מכם, יוצגו לו עוד כמה דברים שלכם שאולי יעניינו אותו, כדי שפגישה אחת תספיק לכמה.",
-		reportWhich: "לגבי",
+		reportWhich: "על מה",
 		nudge: "תזכורת",
 		nudgeAsk: "מחכים לתשובה?",
 		nudgeSent: "התזכורת נשלחה.",
@@ -2124,12 +2126,26 @@ function helpers(locale: Locale) {
 			he ? `כתיבה אל ${name}` : `Write to ${name}`,
 		reportKindName: (k: string) =>
 			({
-				damage: he ? "נזק" : "Damage",
+				damage: he ? "נזק" : "Damaged",
 				loss: he ? "אובדן" : "Lost",
 				no_show: he ? "לא הגיע/ה" : "No-show",
 				conduct: he ? "התנהגות" : "Conduct",
 				other: he ? "אחר" : "Other",
 			})[k] ?? k,
+		reportKindHint: (k: string) =>
+			({
+				damage: he ? "הגיע או חזר פגום." : "It arrived or came back damaged.",
+				loss: he
+					? "אי אפשר למצוא אותו. אף אחד אחר לא יוכל לבקש אותו עד שיימצא."
+					: "It can't be found. No one else can ask for it until it turns up.",
+				no_show: he
+					? "לא הגיעו למפגש שנקבע."
+					: "They didn't come to the time you agreed.",
+				conduct: he
+					? "משהו שנאמר או נעשה לא היה בסדר."
+					: "Something they said or did wasn't OK.",
+				other: he ? "כל דבר אחר." : "Anything else.",
+			})[k] ?? "",
 		reportStatusName: (status: string) =>
 			({
 				open: he ? "פתוח" : "Open",
