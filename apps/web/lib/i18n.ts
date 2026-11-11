@@ -776,6 +776,7 @@ const dictionary = {
 		wishlistTab: "To read",
 		contactShort: "Contact",
 		profileQuick: "Your account",
+		aboutYou: "About you",
 		deviceTitle: "Sign in on another device",
 		deviceHint:
 			"A link that signs you in on your phone or another computer, without waiting for an email. It works once, for ten minutes. Anyone who has it can sign in as you, so open it only on your own device.",
@@ -1566,6 +1567,7 @@ const dictionary = {
 		wishlistTab: "לקריאה",
 		contactShort: "יצירת קשר",
 		profileQuick: "החשבון שלך",
+		aboutYou: "עליך",
 		deviceTitle: "כניסה ממכשיר אחר",
 		deviceHint:
 			"קישור שמכניס אתכם מהטלפון או ממחשב אחר, בלי לחכות לאימייל. הוא עובד פעם אחת, לעשר דקות. מי שמחזיק בו יכול להיכנס בשמכם, אז פתחו אותו רק במכשיר שלכם.",
