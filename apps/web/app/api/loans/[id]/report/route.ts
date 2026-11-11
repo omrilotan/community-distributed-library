@@ -15,11 +15,7 @@ export async function POST(
 		{
 			method: "POST",
 			body: JSON.stringify({
-				// Every box ticked; none means "other", the details say what.
-				kinds: (() => {
-					const ticked = form.getAll("kind").map(String);
-					return ticked.length ? ticked : ["other"];
-				})(),
+				kind: String(form.get("kind") ?? "other"),
 				...(body ? { body } : {}),
 			}),
 		},

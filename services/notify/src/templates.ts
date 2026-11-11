@@ -366,20 +366,14 @@ function wishlistAvailable(message: WishlistMessage): Rendered {
 
 function report(message: ReportMessage): Rendered {
 	const he = message.locale === "he";
-	// One kind, or several comma-joined when they happened together.
-	const kind = message.reportKind
-		.split(",")
-		.map(
-			(one) =>
-				({
-					damage: he ? "נזק" : "damage",
-					loss: he ? "אובדן" : "loss",
-					no_show: he ? "אי-הגעה" : "no-show",
-					conduct: he ? "התנהגות" : "conduct",
-					other: he ? "אחר" : "other",
-				})[one] ?? one,
-		)
-		.join(", ");
+	const kind =
+		{
+			damage: he ? "נזק" : "damage",
+			loss: he ? "אובדן" : "loss",
+			no_show: he ? "אי-הגעה" : "no-show",
+			conduct: he ? "התנהגות" : "conduct",
+			other: he ? "אחר" : "other",
+		}[message.reportKind] ?? message.reportKind;
 	const about = [
 		message.bookTitle
 			? he

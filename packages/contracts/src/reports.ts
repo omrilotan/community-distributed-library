@@ -2,20 +2,11 @@ import { z } from "zod";
 import { Id, Timestamp } from "./primitives.ts";
 import { ReportKind, ThreadMessage, ThreadReport } from "./thread.ts";
 
-/**
- * Filed from a loan: the other party is the subject. One kind, or several
- * that happened together (`kinds`): each is filed as its own report, with
- * the same words.
- */
-export const FileReport = z
-	.object({
-		kind: ReportKind.optional(),
-		kinds: z.array(ReportKind).min(1).max(5).optional(),
-		body: z.string().trim().max(1000).optional(),
-	})
-	.refine((report) => report.kind || report.kinds?.length, {
-		message: "A kind is required",
-	});
+/** Filed from a loan: the other party is the subject. */
+export const FileReport = z.object({
+	kind: ReportKind,
+	body: z.string().trim().max(1000).optional(),
+});
 
 export const ReportView = z.object({
 	id: Id,

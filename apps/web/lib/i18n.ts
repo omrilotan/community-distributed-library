@@ -303,7 +303,6 @@ const dictionary = {
 		reportProblem: "Report a problem",
 		reportKind: "What happened",
 		reportBody: "Details",
-		reportKindMany: "Tick all that apply.",
 		reportBodyPlaceholder: "What happened, and when. Anything that helps.",
 		reportHint:
 			"Only the moderators see this. A person reads it and answers here; nothing happens automatically.",
@@ -1114,7 +1113,6 @@ const dictionary = {
 		reportProblem: "דיווח על בעיה",
 		reportKind: "מה קרה",
 		reportBody: "פרטים",
-		reportKindMany: "סמנו את כל מה שמתאים.",
 		reportBodyPlaceholder: "מה קרה ומתי. כל מה שיעזור.",
 		reportHint:
 			"רק המודרטורים רואים את זה. אדם קורא ועונה כאן; שום דבר לא קורה אוטומטית.",

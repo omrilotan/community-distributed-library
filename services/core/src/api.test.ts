@@ -591,30 +591,6 @@ describe("moderating a reported conversation", () => {
 		expect(Object.keys(page.body.participants)).toHaveLength(2);
 	});
 
-	it("files one report per kind ticked, and a loss among them closes the loan", async () => {
-		const { activeLoan } = await import("../test/api.ts");
-		const copy = await as(DANA).post("/v1/copies", {
-			manual: { title: `Two things ${Date.now()}`, authors: ["A. Stub"] },
-		});
-		const loan = await activeLoan(SAM, DANA, copy.body.id);
-		const filed = await as(DANA).post(`/v1/loans/${loan}/report`, {
-			kinds: ["conduct", "loss", "conduct"],
-			body: "Never brought it back, and was rude",
-		});
-		expect(filed.status).toBe(201);
-		const thread = await as(DANA).get(`/v1/loans/${loan}/messages`);
-		expect(thread.body.reports.map((r: any) => r.kind).sort()).toEqual([
-			"conduct",
-			"loss",
-		]);
-		const copyNow = await as(DANA).get(`/v1/copies/${copy.body.id}`);
-		expect(copyNow.body.state).toBe("lost");
-		const none = await as(DANA).post(`/v1/loans/${loan}/report`, {
-			kinds: [],
-		});
-		expect(none.status).toBe(422);
-	});
-
 	it("is closed to everybody else", async () => {
 		const { reportId } = await reportedLoan();
 		const refused = await as(SAM).get(`/v1/admin/reports/${reportId}/thread`);
