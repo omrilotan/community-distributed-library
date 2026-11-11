@@ -492,14 +492,14 @@ export default async function LoanThreadPage({
 						) : null}
 						<fieldset className="report-choices">
 							<legend>{t.reportKind}</legend>
-							<p className="muted">{t.reportKindMany}</p>
 							{(["damage", "loss", "no_show", "conduct", "other"] as const).map(
 								(kind) => (
 									<label key={kind}>
 										<input
-											type="checkbox"
+											type="radio"
 											name="kind"
 											value={kind}
+											required
 											defaultChecked={reportOpen === kind}
 										/>
 										<span>
