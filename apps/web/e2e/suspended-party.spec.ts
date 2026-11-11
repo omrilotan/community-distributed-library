@@ -40,7 +40,9 @@ test("a loan with a suspended member points to the moderators", async ({
 		// The way to the moderators is open and ready.
 		await expect(page.locator("details.report")).toHaveAttribute("open", "");
 		await note.getByRole("link").click();
-		await expect(page.getByRole("radio", { name: /^Conduct/ })).toBeVisible();
+		await expect(
+			page.getByRole("checkbox", { name: /^Conduct/ }),
+		).toBeVisible();
 	} finally {
 		await asMember(
 			request,
