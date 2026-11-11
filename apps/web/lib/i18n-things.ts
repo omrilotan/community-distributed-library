@@ -56,8 +56,6 @@ export const thingWords = {
 		areaRequired: "Set your area first — distances depend on it.",
 		extendWaiting:
 			"Someone is waiting for this, so only the owner can extend it.",
-		reportHint:
-			"Goes to the moderators only. Nothing is decided automatically; something lost comes off the list.",
 		bookTurnedUp: "It turned up",
 		waitlistJoin: "Tell me when one is free",
 		waitlistJoined:
@@ -176,8 +174,6 @@ export const thingWords = {
 			"מולא מההערה שכתב/ה אחד הבעלים. השאירו רק את מה שמתאר את הפריט עצמו לפני השמירה.",
 		areaRequired: "קודם קבעו את האזור שלכם — המרחקים תלויים בו.",
 		extendWaiting: "מישהו מחכה לזה, אז רק הבעלים יכולים להאריך.",
-		reportHint:
-			"מגיע רק למודרטורים. שום דבר לא נקבע אוטומטית; משהו שאבד יורד מהרשימה.",
 		bookTurnedUp: "נמצא",
 		waitlistJoin: "עדכנו אותי כשמתפנה",
 		waitlistJoined: "אתם ברשימה. כשיתפנה תקבלו זכות ראשונים.",

@@ -2666,6 +2666,76 @@ html[data-filters-settling] .filters-panel > * {
 
 .report summary {
 	cursor: pointer;
+	inline-size: fit-content;
+}
+
+.report[open] > form {
+	margin-block-start: 0.5rem;
+	padding: 1rem;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+.report textarea {
+	inline-size: 100%;
+	resize: vertical;
+}
+
+.report button[type="submit"] {
+	margin-block-start: 0.25rem;
+}
+
+/* Each choice a whole row to tap: the radio, its name, a line on what it means. */
+.report-choices {
+	border: 0;
+	padding: 0;
+	margin: 0 0 1rem;
+	display: grid;
+	gap: 0.25rem;
+}
+
+.report-choices legend {
+	padding: 0;
+	margin-block-end: 0.5rem;
+	font-weight: 500;
+}
+
+.report-choices label {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding: 0.6rem 0.75rem;
+	margin: 0;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	cursor: pointer;
+}
+
+.report-choices label:has(input:checked) {
+	border-color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.report-choices input {
+	accent-color: var(--accent);
+	margin-block-start: 0.2rem;
+	flex: none;
+}
+
+.report-choices span {
+	display: grid;
+	gap: 0.1rem;
+	min-inline-size: 0;
+}
+
+.report-choices small {
+	font-size: 0.875rem;
+}
+
+@media (max-width: 40rem) {
+	.report button[type="submit"] {
+		inline-size: 100%;
+	}
 }
 
 /* Maps */

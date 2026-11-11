@@ -436,64 +436,6 @@ export default async function LoanThreadPage({
 				/>
 			) : null}
 
-			{loan && open && !iAmHolder ? (
-				<details
-					className="report"
-					id="report"
-					open={Boolean(reportOpen) || cutOff}
-				>
-					<summary className="muted">{t.reportProblem}</summary>
-					<form action={`/api/loans/${id}/report`} method="post">
-						{grouped ? (
-							<>
-								<label htmlFor="report-loan">{t.reportWhich}</label>
-								<select id="report-loan" name="loan" defaultValue={id}>
-									{loans
-										.filter((one) =>
-											["requested", "accepted", "active"].includes(one.status),
-										)
-										.map((one) => (
-											<option value={one.id} key={one.id}>
-												{one.copy.title}
-											</option>
-										))}
-								</select>
-							</>
-						) : null}
-						<label htmlFor="kind">{t.reportKind}</label>
-						<select
-							id="kind"
-							name="kind"
-							defaultValue={reportOpen === "damage" ? "damage" : "other"}
-						>
-							{(["damage", "loss", "no_show", "conduct", "other"] as const).map(
-								(kind) => (
-									<option value={kind} key={kind}>
-										{t.reportKindName(kind)}
-									</option>
-								),
-							)}
-						</select>
-						<label htmlFor="body">{t.reportBody}</label>
-						<input
-							id="body"
-							name="body"
-							type="text"
-							dir="auto"
-							maxLength={1000}
-						/>
-						<p className="muted">
-							{relayed
-								? t.reportRelayHint(loan!.lender.displayName)
-								: t.reportHint}
-						</p>
-						<button type="submit" className="secondary">
-							{t.reportSend}
-						</button>
-					</form>
-				</details>
-			) : null}
-
 			{cutOff && them ? (
 				<p className="muted" style={{ textAlign: "center" }}>
 					{t.composerSuspended(them.displayName)}
@@ -520,6 +462,72 @@ export default async function LoanThreadPage({
 					{t.threadClosed}
 				</p>
 			)}
+			{loan && open && !iAmHolder ? (
+				<details
+					className="report"
+					id="report"
+					open={Boolean(reportOpen) || cutOff}
+				>
+					<summary className="muted">{t.reportProblem}</summary>
+					<form action={`/api/loans/${id}/report`} method="post">
+						{grouped ? (
+							<fieldset className="report-choices">
+								<legend>{t.reportWhich}</legend>
+								{loans
+									.filter((one) =>
+										["requested", "accepted", "active"].includes(one.status),
+									)
+									.map((one) => (
+										<label key={one.id}>
+											<input
+												type="radio"
+												name="loan"
+												value={one.id}
+												defaultChecked={one.id === id}
+											/>
+											<span dir="auto">{one.copy.title}</span>
+										</label>
+									))}
+							</fieldset>
+						) : null}
+						<fieldset className="report-choices">
+							<legend>{t.reportKind}</legend>
+							{(["damage", "loss", "no_show", "conduct", "other"] as const).map(
+								(kind) => (
+									<label key={kind}>
+										<input
+											type="radio"
+											name="kind"
+											value={kind}
+											required
+											defaultChecked={reportOpen === kind}
+										/>
+										<span>
+											<strong>{t.reportKindName(kind)}</strong>
+											<small className="muted">{t.reportKindHint(kind)}</small>
+										</span>
+									</label>
+								),
+							)}
+						</fieldset>
+						<label htmlFor="body">{t.reportBody}</label>
+						<textarea
+							id="body"
+							name="body"
+							rows={4}
+							dir="auto"
+							maxLength={1000}
+							placeholder={t.reportBodyPlaceholder}
+						/>
+						<p className="muted">
+							{relayed
+								? `${t.reportHint} ${t.reportRelayHint(loan!.lender.displayName)}`
+								: t.reportHint}
+						</p>
+						<button type="submit">{t.reportSend}</button>
+					</form>
+				</details>
+			) : null}
 		</main>
 	);
 }
