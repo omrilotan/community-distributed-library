@@ -307,7 +307,8 @@ export default async function LoanThreadPage({
 			{error &&
 			error !== "nudged" &&
 			error !== "code" &&
-			error !== "waiting" ? (
+			error !== "waiting" &&
+			error !== "which" ? (
 				<Callout tone="warn">{t.loanActionFailed}</Callout>
 			) : null}
 
@@ -473,18 +474,18 @@ export default async function LoanThreadPage({
 						{grouped ? (
 							<fieldset className="report-choices">
 								<legend>{t.reportWhich}</legend>
+								<input type="hidden" name="pick" value="1" />
+								<p className="muted">{t.reportWhichHint}</p>
+								{error === "which" ? (
+									<Callout tone="warn">{t.reportWhichMissing}</Callout>
+								) : null}
 								{loans
 									.filter((one) =>
 										["requested", "accepted", "active"].includes(one.status),
 									)
 									.map((one) => (
 										<label key={one.id}>
-											<input
-												type="radio"
-												name="loan"
-												value={one.id}
-												defaultChecked={one.id === id}
-											/>
+											<input type="checkbox" name="loan" value={one.id} />
 											<span dir="auto">{one.copy.title}</span>
 										</label>
 									))}

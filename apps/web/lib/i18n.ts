@@ -486,7 +486,10 @@ const dictionary = {
 		suggestShelf: "Show borrowers what else I lend",
 		suggestShelfHint:
 			"When someone is about to collect from you, they see a few more of yours they might like, so one meeting can cover several.",
-		reportWhich: "Which one",
+		reportWhich: "Which ones",
+		reportWhichHint:
+			"Tick each one it is about. Leave them all clear if it is about the meeting, not an item.",
+		reportWhichMissing: "Tick which ones were damaged or lost.",
 		nudge: "Nudge",
 		nudgeAsk: "Waiting to hear back?",
 		nudgeSent: "Nudge sent.",
@@ -1286,6 +1289,9 @@ const dictionary = {
 		suggestShelfHint:
 			"כשמישהו עומד לאסוף מכם, יוצגו לו עוד כמה דברים שלכם שאולי יעניינו אותו, כדי שפגישה אחת תספיק לכמה.",
 		reportWhich: "על מה",
+		reportWhichHint:
+			"סמנו כל פריט שזה נוגע לו. אם זה על הפגישה ולא על פריט, אל תסמנו כלום.",
+		reportWhichMissing: "סמנו מה ניזוק או אבד.",
 		nudge: "תזכורת",
 		nudgeAsk: "מחכים לתשובה?",
 		nudgeSent: "התזכורת נשלחה.",
