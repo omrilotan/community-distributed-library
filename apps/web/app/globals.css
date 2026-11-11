@@ -2722,14 +2722,19 @@ html[data-filters-settling] .filters-panel > * {
 	flex: none;
 }
 
+/* The name in bold, its explanation running on after it on the same
+   line, wrapping beneath when the screen is narrow. */
 .report-choices span {
-	display: grid;
-	gap: 0.1rem;
 	min-inline-size: 0;
 }
 
+.report-choices strong {
+	font-weight: 700;
+	margin-inline-end: 0.35em;
+}
+
 .report-choices small {
-	font-size: 0.875rem;
+	font-size: inherit;
 }
 
 @media (max-width: 40rem) {
