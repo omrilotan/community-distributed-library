@@ -7,20 +7,32 @@ export async function POST(
 	const { id } = await context.params;
 	const form = await request.formData();
 	const body = String(form.get("body") ?? "").trim();
-	// On a page of several loans, the one the report is about.
-	const chosen = String(form.get("loan") ?? "");
-	const about = /^[0-9A-Z]{26}$/.test(chosen) ? chosen : id;
-	const { status } = await core(
-		`/v1/loans/${encodeURIComponent(about)}/report`,
-		{
-			method: "POST",
-			body: JSON.stringify({
-				kind: String(form.get("kind") ?? "other"),
-				...(body ? { body } : {}),
-			}),
-		},
-	);
+	const kind = String(form.get("kind") ?? "other");
 	const back = `/loans/${encodeURIComponent(id)}`;
+	// On a page of several loans, the ones the report is about: any number.
+	// None ticked is about the meeting, filed on this page's loan, but damage
+	// or a loss has to name what it happened to.
+	const chosen = [
+		...new Set(
+			form
+				.getAll("loan")
+				.map(String)
+				.filter((one) => /^[0-9A-Z]{26}$/.test(one)),
+		),
+	];
+	if (form.has("pick") && !chosen.length && ["damage", "loss"].includes(kind))
+		return new Response(null, {
+			status: 303,
+			headers: { location: `${back}?report=${kind}&error=which#report` },
+		});
+	let status = 201;
+	for (const about of chosen.length ? chosen : [id]) {
+		({ status } = await core(`/v1/loans/${encodeURIComponent(about)}/report`, {
+			method: "POST",
+			body: JSON.stringify({ kind, ...(body ? { body } : {}) }),
+		}));
+		if (status !== 201) break;
+	}
 	const location =
 		status === 401
 			? "/login"
