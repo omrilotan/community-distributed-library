@@ -19,7 +19,7 @@ test("a report sits in the reporter's timeline and nowhere else", async ({
 	const comment = `Waited an hour ${Date.now()}`;
 
 	await page.goto(`/loans/${loan.loanId}?report=1`);
-	await page.getByRole("radio", { name: /^No-show/ }).check();
+	await page.getByRole("checkbox", { name: /^No-show/ }).check();
 	await page.locator("details.report textarea#body").fill(comment);
 	await page.locator("details.report button[type='submit']").click();
 

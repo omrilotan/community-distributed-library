@@ -71,42 +71,52 @@ reports.post("/v1/loans/:id/report", async (c) => {
 			? loan.lender_id
 			: loan.borrower_id;
 
-	const id = ulid();
-	const statements = [
+	// Several things can go wrong at once: one report each, the same words.
+	const kinds = [
+		...new Set(
+			parsed.data.kinds ?? (parsed.data.kind ? [parsed.data.kind] : []),
+		),
+	];
+	const filed = kinds.map((kind) => ({ id: ulid(), kind }));
+	const id = filed[0]!.id;
+	const lossId = filed.find((one) => one.kind === "loss")?.id ?? id;
+	const statements = filed.map((one) =>
 		c.env.DB.prepare(
 			`INSERT INTO reports (id, community_id, reporter_id, subject_member, loan_id, kind, body, status, created_at)
 			 VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?)`,
 		).bind(
-			id,
+			one.id,
 			loan.community_id,
 			member.id,
 			subject,
 			loanId,
-			parsed.data.kind,
+			one.kind,
 			parsed.data.body ?? null,
 			now(),
 		),
-	];
+	);
+	const first = statements.length;
 	// Only a loan that is out can be lost; the report says so on the loan too.
-	const losing = parsed.data.kind === "loss" && loan.status === "active";
+	const losing = kinds.includes("loss") && loan.status === "active";
 	const at = now();
 	const relays = losing ? await waitingRelays(c.env, loan.copy_id) : [];
 	if (losing) {
 		statements.push(
 			c.env.DB.prepare(
 				"UPDATE loans SET status = 'lost', outcome = 'lost', closed_at = ?, lost_mark = ? WHERE id = ? AND status = 'active'",
-			).bind(at, id, loanId),
+			).bind(at, lossId, loanId),
 			// A whole item is lost; part of a set comes off its count.
-			markLost(c.env, loan.copy_id, loan.quantity, loanId, id),
+			markLost(c.env, loan.copy_id, loan.quantity, loanId, lossId),
 			// Nobody can be handed on what is lost: a relay waiting on it ends.
-			endWaitingRelays(c.env, loan.copy_id, loanId, id, at),
+			endWaitingRelays(c.env, loan.copy_id, loanId, lossId, at),
 			dropStaleHandoffs(c.env, loan.copy_id),
 		);
 	}
 	const written = await c.env.DB.batch(statements);
-	if (written[3]?.meta.changes) relaysEnded(c.env, c.executionCtx, relays, at);
+	if (written[first + 2]?.meta.changes)
+		relaysEnded(c.env, c.executionCtx, relays, at);
 	// Lost by this report, not by one filed a moment before it.
-	if (losing && written[1]?.meta.changes) {
+	if (losing && written[first]?.meta.changes) {
 		c.executionCtx.waitUntil(
 			emit(c.env, c.executionCtx, "loan.closed", { loanId }),
 		);
@@ -123,7 +133,7 @@ reports.post("/v1/loans/:id/report", async (c) => {
 	}
 
 	// The owner was not at the handover, so on a relay they hear it from us.
-	if (relayed && parsed.data.kind === "damage") {
+	if (relayed && kinds.includes("damage")) {
 		const reporter = await c.env.DB.prepare(
 			"SELECT display_name FROM members WHERE id = ?",
 		)
@@ -167,7 +177,8 @@ reports.post("/v1/loans/:id/report", async (c) => {
 					to: row.email,
 					locale: row.locale,
 					url: `${c.env.APP_URL}/admin`,
-					reportKind: parsed.data.kind,
+					// Several kinds go in one email, comma-joined.
+					reportKind: kinds.join(","),
 					reporterName: name(member.id),
 					subjectName: name(subject),
 					bookTitle: loan.title,
