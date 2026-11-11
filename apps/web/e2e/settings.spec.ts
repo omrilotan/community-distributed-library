@@ -68,7 +68,7 @@ test("saves every field with the one button", async ({ page }) => {
 	await page.locator("#loanDays").fill("17");
 	await page.locator("#meetingPlace").fill("By the blue gate");
 	await page.locator("#meetingNote").fill("Knock, don't ring");
-	await page.locator(".profile-save").click();
+	await page.locator(".profile-save button").click();
 	await expect(page).toHaveURL(/\/settings\?saved=1/);
 	expect((await me()).body.lendLimit).toBe(97);
 	expect((await me()).body.loanDays).toBe(17);

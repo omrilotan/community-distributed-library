@@ -3561,11 +3561,30 @@ button.photos-act:hover {
 	margin-block-start: 0;
 }
 
-/* The profile's one Save, after all its fields: hard to miss. */
+/* The profile's one Save: a bar stuck to the bottom of the screen, above
+   the tab bar, for as long as any of the form is in view, so it is never
+   lost in the middle. Past the form it settles under the last field. */
 .profile-save {
+	position: sticky;
+	inset-block-end: var(--tabbar-space, 0px);
+	z-index: 5;
+	margin-block: 2rem 1rem;
+	padding-block: 0.75rem;
+	background: var(--bg);
+	border-block-start: 1px solid var(--line);
+}
+
+/* On a phone, clear the round Browse button that rises out of the tab bar. */
+@media (max-width: 44rem) {
+	.profile-save {
+		padding-block-end: 1.75rem;
+	}
+}
+
+.profile-save button {
 	inline-size: 100%;
 	justify-content: center;
-	margin-block: 2rem 1rem;
+	margin: 0;
 	padding-block: 0.85rem;
 	font-size: 1.0625rem;
 }
