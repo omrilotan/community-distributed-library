@@ -3545,6 +3545,22 @@ button.photos-act:hover {
 	}
 }
 
+/* My account: each group of settings set apart by a rule and room, so the
+   page reads as a few short sections rather than one long run of fields. */
+.account-group {
+	margin-block-start: 2rem;
+	padding-block-start: 1.5rem;
+	border-block-start: 1px solid var(--line);
+}
+
+.account-group > h2 {
+	margin-block: 0 0.5rem;
+}
+
+.account-group > h2 + .muted {
+	margin-block-start: 0;
+}
+
 /* The profile's one Save, after all its fields: hard to miss. */
 .profile-save {
 	inline-size: 100%;

@@ -30,9 +30,10 @@ export const generateMetadata = titled((t) => t.profile);
 /**
  * First sign-in, and the place to change it later: a name and a rough area.
  * The area is required — distance is what makes the storefront useful.
- * Then, in order: when and where you meet, away until, invitations,
- * notifications, how many out at once, for how long and the language, one
- * Save for all of it, and the rest.
+ * Then, in order: when and where you meet; away until, how many out at
+ * once, for how long and the language; one Save for all of it. After it,
+ * what acts at once or is only shown: notifications, invitations, figures
+ * and connected apps.
  */
 export default async function SettingsPage({
 	searchParams,
@@ -83,7 +84,7 @@ export default async function SettingsPage({
 	return (
 		<main className="narrow" style={{ maxInlineSize: "34rem" }}>
 			<h1>{ready ? t.profile : t.welcome}</h1>
-			<p className="muted">{t.welcomeHint}</p>
+			{ready ? null : <p className="muted">{t.welcomeHint}</p>}
 			{/* The account's own doors, first: another device, an assistant. Not
 			    on a first visit, which is only about name and area. */}
 			{ready ? (
@@ -106,46 +107,53 @@ export default async function SettingsPage({
 			) : null}
 
 			<UnsavedGuard />
-			{/* One form, one Save. The invitations and notifications sit inside its
-			    run of fields but act at once, so they stay outside it; the fields
-			    after them join it by its id. */}
+			{/* One form, one Save, right after its fields: who you are, when you
+			    meet, how you lend. What acts at once (notifications,
+			    invitations) and what is only shown come after it. */}
 			<form id="profile" action="/api/me" method="post" data-unsaved>
 				{first ? <input type="hidden" name="first" value="1" /> : null}
-				<p className="form-key">{t.requiredKey}</p>
-				<label htmlFor="displayName">{t.displayName}</label>
-				<input
-					id="displayName"
-					name="displayName"
-					type="text"
-					dir="auto"
-					required
-					defaultValue={body.displayName}
-				/>
-
-				{body.community.compact ? (
-					<input type="hidden" name="noArea" value="1" />
-				) : (
-					<AreaPicker
-						centre={body.community.centre}
-						reach={MEMBER_REACH_M}
-						initial={body.area ?? null}
-						labels={{
-							area: t.areaLabel,
-							areaHint: t.areaLabelHint,
-							locate: t.locate,
-							located: t.located,
-							locatedNoName: t.locatedNoName,
-							locatedFar: t.locatedFar,
-							locateFailed: t.locateFailed,
-							mapHint: t.mapHint,
-							mapMore: t.mapMore,
-							you: t.you,
-						}}
+				<section className={ready ? "account-group" : undefined}>
+					{ready ? (
+						<>
+							<h2>{t.aboutYou}</h2>
+							<p className="muted">{t.welcomeHint}</p>
+						</>
+					) : null}
+					<p className="form-key">{t.requiredKey}</p>
+					<label htmlFor="displayName">{t.displayName}</label>
+					<input
+						id="displayName"
+						name="displayName"
+						type="text"
+						dir="auto"
+						required
+						defaultValue={body.displayName}
 					/>
-				)}
 
+					{body.community.compact ? (
+						<input type="hidden" name="noArea" value="1" />
+					) : (
+						<AreaPicker
+							centre={body.community.centre}
+							reach={MEMBER_REACH_M}
+							initial={body.area ?? null}
+							labels={{
+								area: t.areaLabel,
+								areaHint: t.areaLabelHint,
+								locate: t.locate,
+								located: t.located,
+								locatedNoName: t.locatedNoName,
+								locatedFar: t.locatedFar,
+								locateFailed: t.locateFailed,
+								mapHint: t.mapHint,
+								mapMore: t.mapMore,
+								you: t.you,
+							}}
+						/>
+					)}
+				</section>
 				{ready && availability?.status === 200 ? (
-					<section id="availability">
+					<section id="availability" className="account-group">
 						<h2>{t.availabilityTitle}</h2>
 						<input type="hidden" name="withAvailability" value="1" />
 						<AvailabilityFields
@@ -156,24 +164,99 @@ export default async function SettingsPage({
 					</section>
 				) : null}
 
-				{/* A holiday, a house move, a bad week: everything stays listed and
-				    nobody can ask for it until the day given. */}
-				<label htmlFor="awayUntil">{t.awayUntil}</label>
-				<input
-					id="awayUntil"
-					name="awayUntil"
-					type="date"
-					dir="ltr"
-					defaultValue={
-						body.awayUntil
-							? new Date(body.awayUntil * 1000).toISOString().slice(0, 10)
-							: ""
-					}
-				/>
-				<p className="muted">{body.awayUntil ? t.awayNowHint : t.awayHint}</p>
+				<section className="account-group">
+					<h2>{t.profilePrefs}</h2>
+					{/* A holiday, a house move, a bad week: everything stays listed
+					    and nobody can ask for it until the day given. */}
+					<label htmlFor="awayUntil">{t.awayUntil}</label>
+					<input
+						id="awayUntil"
+						name="awayUntil"
+						type="date"
+						dir="ltr"
+						defaultValue={
+							body.awayUntil
+								? new Date(body.awayUntil * 1000).toISOString().slice(0, 10)
+								: ""
+						}
+					/>
+					<p className="muted">{body.awayUntil ? t.awayNowHint : t.awayHint}</p>
+					<label htmlFor="lendLimit">{t.lendLimit}</label>
+					<input
+						id="lendLimit"
+						name="lendLimit"
+						type="number"
+						inputMode="numeric"
+						min="1"
+						max="999"
+						dir="ltr"
+						defaultValue={body.lendLimit ?? ""}
+						placeholder={t.lendLimitAny}
+					/>
+					<p className="muted">{t.lendLimitHint}</p>
+
+					<input type="hidden" name="suggestShelfShown" value="1" />
+					<label className="check">
+						<input
+							type="checkbox"
+							name="suggestShelf"
+							value="1"
+							defaultChecked={body.suggestShelf}
+							aria-describedby="suggestShelf-hint"
+						/>
+						<span>{t.suggestShelf}</span>
+					</label>
+					<p className="muted" id="suggestShelf-hint">
+						{t.suggestShelfHint}
+					</p>
+
+					{/* Empty is the library's length, shown in its place. */}
+					<label htmlFor="loanDays">{t.loanDaysMine}</label>
+					<input
+						id="loanDays"
+						name="loanDays"
+						type="number"
+						inputMode="numeric"
+						min="1"
+						max="90"
+						defaultValue={body.loanDays ?? ""}
+						placeholder={t.loanDaysLibrary.replace(
+							"{n}",
+							String(body.community.loanDays),
+						)}
+					/>
+					<p className="muted">{t.loanDaysMineHint}</p>
+
+					{/* The library's languages only: a library in one has no choice
+				    to offer, and its emails come in that one. */}
+					{offered.length > 1 ? (
+						<>
+							<label htmlFor="locale">{t.language}</label>
+							<select id="locale" name="locale" defaultValue={locale}>
+								{offered.includes("en") ? (
+									<option value="en">English</option>
+								) : null}
+								{offered.includes("he") ? (
+									<option value="he">עברית</option>
+								) : null}
+							</select>
+						</>
+					) : (
+						<input type="hidden" name="locale" value={offered[0] ?? locale} />
+					)}
+				</section>
+
+				<button type="submit" className="profile-save">
+					{t.save}
+				</button>
 			</form>
 
-			<section id="invite">
+			<section className="account-group">
+				<h2>{t.notifications}</h2>
+				<PushToggle labels={pushLabels(t)} />
+			</section>
+
+			<section id="invite" className="account-group">
 				<h2>{t.inviteTitle}</h2>
 				{withdrawn ? <Callout>{t.inviteWithdrawn}</Callout> : null}
 				<p className="muted">{t.inviteWhy}</p>
@@ -231,102 +314,8 @@ export default async function SettingsPage({
 				) : null}
 			</section>
 
-			<section>
-				<h2>{t.notifications}</h2>
-				<PushToggle labels={pushLabels(t)} />
-			</section>
-
-			<section>
-				<h2>{t.profilePrefs}</h2>
-				<label htmlFor="lendLimit">{t.lendLimit}</label>
-				<input
-					id="lendLimit"
-					name="lendLimit"
-					form="profile"
-					type="number"
-					inputMode="numeric"
-					min="1"
-					max="999"
-					dir="ltr"
-					defaultValue={body.lendLimit ?? ""}
-					placeholder={t.lendLimitAny}
-				/>
-				<p className="muted">{t.lendLimitHint}</p>
-
-				<input
-					type="hidden"
-					name="suggestShelfShown"
-					value="1"
-					form="profile"
-				/>
-				<label className="check">
-					<input
-						type="checkbox"
-						name="suggestShelf"
-						value="1"
-						form="profile"
-						defaultChecked={body.suggestShelf}
-						aria-describedby="suggestShelf-hint"
-					/>
-					<span>{t.suggestShelf}</span>
-				</label>
-				<p className="muted" id="suggestShelf-hint">
-					{t.suggestShelfHint}
-				</p>
-
-				{/* Empty is the library's length, shown in its place. */}
-				<label htmlFor="loanDays">{t.loanDaysMine}</label>
-				<input
-					id="loanDays"
-					name="loanDays"
-					form="profile"
-					type="number"
-					inputMode="numeric"
-					min="1"
-					max="90"
-					defaultValue={body.loanDays ?? ""}
-					placeholder={t.loanDaysLibrary.replace(
-						"{n}",
-						String(body.community.loanDays),
-					)}
-				/>
-				<p className="muted">{t.loanDaysMineHint}</p>
-
-				{/* The library's languages only: a library in one has no choice
-				    to offer, and its emails come in that one. */}
-				{offered.length > 1 ? (
-					<>
-						<label htmlFor="locale">{t.language}</label>
-						<select
-							id="locale"
-							name="locale"
-							form="profile"
-							defaultValue={locale}
-						>
-							{offered.includes("en") ? (
-								<option value="en">English</option>
-							) : null}
-							{offered.includes("he") ? (
-								<option value="he">עברית</option>
-							) : null}
-						</select>
-					</>
-				) : (
-					<input
-						type="hidden"
-						name="locale"
-						form="profile"
-						value={offered[0] ?? locale}
-					/>
-				)}
-			</section>
-
-			<button type="submit" form="profile" className="profile-save">
-				{t.save}
-			</button>
-
 			{stats ? (
-				<section>
+				<section className="account-group">
 					<h2>{t.statsTitle}</h2>
 					<Stats
 						items={[
@@ -343,7 +332,7 @@ export default async function SettingsPage({
 			) : null}
 
 			{ready ? (
-				<section>
+				<section className="account-group">
 					<h2>{t.connectedApps}</h2>
 					{revoked ? <Callout>{t.appRevoked}</Callout> : null}
 					<p className="muted">

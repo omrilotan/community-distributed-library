@@ -42,8 +42,8 @@ test.describe("the settings page", () => {
 });
 
 /**
- * One Save for the whole profile, the fields after the invitations
- * included: they join the form by its id.
+ * One Save for the whole profile: every field it covers sits above it, in
+ * the one form.
  */
 test("saves every field with the one button", async ({ page }) => {
 	const me = () => asMember(page.request, BORROWER.id, "/v1/me");
