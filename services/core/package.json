@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@cdl/contracts": "*",
-    "hono": "^4.9.0"
+    "hono": "^4.13.18"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.23.0",
