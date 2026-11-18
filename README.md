@@ -131,11 +131,17 @@ To run wrangler by hand against a library, write its config first:
 
 ### Secrets and sending
 
-| Where                     | What                                                                     | How                                                                                        |
-| ------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `<slug>-notify`           | `VAPID_PRIVATE_JWK`, the library's private push key                      | `npx wrangler secret put VAPID_PRIVATE_JWK -c "$(node scripts/config.mjs <slug> notify)"`  |
-| the sender's domain       | Cloudflare Email Sending turned on; the `EMAIL` binding sends through it | `npx wrangler email sending enable <domain>`                                               |
-| `cdl-metadata` (optional) | `GOOGLE_BOOKS_KEY`, for more covers                                      | `npx wrangler secret put GOOGLE_BOOKS_KEY -c "$(node scripts/config.mjs shared metadata)"` |
+| Where                     | What                                                                                               | How                                                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `<slug>-notify`           | `VAPID_PRIVATE_JWK`, the library's private push key                                                | `npx wrangler secret put VAPID_PRIVATE_JWK -c "$(node scripts/config.mjs <slug> notify)"`                   |
+| `<slug>-core` (optional)  | `INVITE_KEY`, any long random text: lets whoever made an invite link see it again while it is open | `openssl rand -base64 32 \| npx wrangler secret put INVITE_KEY -c "$(node scripts/config.mjs <slug> core)"` |
+| the sender's domain       | Cloudflare Email Sending turned on; the `EMAIL` binding sends through it                           | `npx wrangler email sending enable <domain>`                                                                |
+| `cdl-metadata` (optional) | `GOOGLE_BOOKS_KEY`, for more covers                                                                | `npx wrangler secret put GOOGLE_BOOKS_KEY -c "$(node scripts/config.mjs shared metadata)"`                  |
+
+Only a hash of an invite link's token lets people in. With `INVITE_KEY` set, core also keeps a copy
+sealed under that key (AES-GCM), so the member or moderator who made a link can show it again, copy
+it or print its code while it is open. The database and its backups cannot open the copy; without the
+key a link is shown once. `npm run provision` sets a key for a new library.
 
 ## API, MCP and webhooks
 

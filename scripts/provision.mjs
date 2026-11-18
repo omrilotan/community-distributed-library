@@ -15,7 +15,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { webcrypto } from "node:crypto";
+import { randomBytes, webcrypto } from "node:crypto";
 import { configFor, manifestPath, npx, root } from "./libraries.mjs";
 
 const { values, positionals } = parseArgs({
@@ -337,7 +337,8 @@ console.log(`\n━━ ${slug}: Workers`);
 if (firstLibrary) deploy(["shared", "metadata"]);
 deploy([slug]);
 
-// 4. Its secrets, on the Worker that sends mail and pushes.
+// 4. Its secrets: the push key on the Worker that sends mail and pushes,
+// and core's key for invite links.
 console.log(`\n━━ ${slug}: secrets`);
 const notify = dry ? "<notify config>" : configFor(data, slug, "notify");
 const keyFile = `${root}.keys/${slug}.vapid.json`;
@@ -355,9 +356,23 @@ if (dry || existsSync(keyFile)) {
 	);
 } else console.log(`No ${keyFile}; VAPID_PRIVATE_JWK left as it is.`);
 
+const core = dry ? "<core config>" : configFor(data, slug, "core");
+// Core's key for sealing invite links, so whoever made one can see it again
+// (services/core/src/seal.ts). Set once and kept nowhere else: nothing but
+// showing an older link again depends on it.
+const coreSecrets = wrangler(["secret", "list", "-c", core], { quiet: true });
+if (coreSecrets?.includes("INVITE_KEY"))
+	console.log("INVITE_KEY is set already; left as it is.");
+else if (
+	wrangler(["secret", "put", "INVITE_KEY", "-c", core], {
+		input: dry ? "" : randomBytes(32).toString("base64"),
+		quiet: true,
+	}) === null
+)
+	fail(`Could not set INVITE_KEY on ${slug}-core. Run again to retry.`);
+
 // 5. The library itself, and its first admin.
 console.log(`\n━━ ${slug}: the library and its first admin`);
-const core = dry ? "<core config>" : configFor(data, slug, "core");
 const memberId = ulid();
 const statements = [
 	`INSERT OR IGNORE INTO communities (id, slug, name, centre_lat, centre_lng, radius_m, join_policy, loan_days, type, created_at)
