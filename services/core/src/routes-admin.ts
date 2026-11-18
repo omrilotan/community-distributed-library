@@ -25,6 +25,7 @@ import {
 import type { Env } from "./env.ts";
 import { libraryAdmin, moderator, viewer } from "./auth.ts";
 import { createInvite, windowOf } from "./invites.ts";
+import { seals } from "./seal.ts";
 import { createMagicLink } from "./sessions.ts";
 import { take } from "./rate-limit.ts";
 import { attention } from "./reminders.ts";
@@ -856,13 +857,14 @@ admin.get("/v1/admin/invites", async (c) => {
 	const who = c.get("moderator");
 	const { results } = await c.env.DB.prepare(
 		`SELECT i.id, m.display_name AS created_by, i.created_by AS created_by_id,
-		        i.max_uses, i.uses, i.starts_at, i.expires_at, i.created_at, i.revoked_at, i.sent_to
+		        i.max_uses, i.uses, i.starts_at, i.expires_at, i.created_at, i.revoked_at, i.sent_to,
+		        i.token_sealed IS NOT NULL AS kept
 		   FROM invites i JOIN members m ON m.id = i.created_by
 		  WHERE i.community_id = ?
-		  ORDER BY i.created_at DESC LIMIT 50`,
+		  ORDER BY i.created_at DESC, i.id DESC LIMIT 50`,
 	)
 		.bind(who.communityId)
-		.all<InviteRow & { created_by_id: string }>();
+		.all<InviteRow & { created_by_id: string; kept: number }>();
 	// Addresses are the admin's, as on the members' list; a moderator sees
 	// the ones they typed in themselves.
 	const seesAll = who.role === "admin";
@@ -877,6 +879,14 @@ admin.get("/v1/admin/invites", async (c) => {
 			createdAt: row.created_at,
 			revokedAt: row.revoked_at,
 			sentTo: seesAll || row.created_by_id === who.id ? row.sent_to : null,
+			// A link is its maker's to show again, and only while it is open.
+			showable:
+				seals(c.env) &&
+				row.kept > 0 &&
+				row.created_by_id === who.id &&
+				!row.revoked_at &&
+				row.expires_at > now() &&
+				row.uses < row.max_uses,
 		})),
 	});
 });
@@ -911,6 +921,7 @@ admin.post("/v1/admin/invites", async (c) => {
 			maxUses: parsed.data.maxUses,
 			startsAt: invite.startsAt,
 			expiresAt: invite.expiresAt,
+			showable: invite.showable,
 		},
 		201,
 	);

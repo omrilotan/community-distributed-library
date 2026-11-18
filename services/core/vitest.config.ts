@@ -36,6 +36,7 @@ export default defineConfig({
 				bindings: {
 					TEST_MIGRATIONS: await readD1Migrations("./migrations"),
 					DEV_AUTH: "true",
+					INVITE_KEY: "a key for tests only",
 					APP_URL: "http://app.test",
 					COVERS_PUBLIC_URL: "http://covers.test",
 				},

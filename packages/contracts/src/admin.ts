@@ -106,6 +106,8 @@ export const InviteSummary = z.object({
 	expiresAt: Timestamp,
 	createdAt: Timestamp,
 	revokedAt: Timestamp.nullable(),
+	/** Whether I can see its link again: mine, still open, and kept. */
+	showable: z.boolean().default(false),
 	/** The address a moderator sent it to; null for a link handed on by hand. */
 	sentTo: z.string().nullable().default(null),
 });

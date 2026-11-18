@@ -57,6 +57,7 @@ const SCRUB = {
 		"DELETE FROM magic_links",
 		"DELETE FROM consent_codes",
 		"DELETE FROM access_tokens",
+		"UPDATE invites SET token_sealed = NULL",
 		// A local change would otherwise send members' real webhooks a signed
 		// event, and their devices a push, from a laptop.
 		"DELETE FROM webhook_deliveries",

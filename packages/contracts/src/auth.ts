@@ -134,8 +134,9 @@ export const CreateInvite = z.object({
 });
 
 /**
- * An invite I made. It carries no link: only a hash of the token is kept, so
- * the link exists once, at creation, and then only in whatever I sent it in.
+ * An invite I made. It carries no link. Where the library keeps a sealed
+ * copy, `showable` says I can ask for the link again while it is open
+ * (POST /v1/me/invites/:id/link); otherwise it was shown once, at creation.
  */
 export const MyInvite = z.object({
 	id: Id,
@@ -144,6 +145,8 @@ export const MyInvite = z.object({
 	expiresAt: Timestamp,
 	createdAt: Timestamp,
 	revokedAt: Timestamp.nullable(),
+	/** Whether its link can be shown again. */
+	showable: z.boolean().default(false),
 	/** Who has joined on it so far. */
 	joined: z.array(z.object({ id: Id, displayName: z.string() })),
 });
@@ -157,6 +160,8 @@ export const Invite = z.object({
 	/** When an event's link opens; null for one that works straight away. */
 	startsAt: Timestamp.nullable().default(null),
 	expiresAt: Timestamp,
+	/** Whether whoever made it can ask for the link again while it is open. */
+	showable: z.boolean().default(false),
 });
 
 /**
