@@ -32,6 +32,29 @@ export function handoffWindow(
 	return { start: localTime(day, from), end: localTime(day, to) };
 }
 
+/**
+ * A whole day in the library's time zone, midnight to midnight: what an
+ * event's invite link is good for. 23 or 25 hours on the days clocks change.
+ */
+export function dayBounds(day: string): { start: Date; end: Date } {
+	const next = new Date(`${day}T12:00:00Z`);
+	next.setUTCDate(next.getUTCDate() + 1);
+	return {
+		start: localTime(day, 0),
+		end: localTime(next.toISOString().slice(0, 10), 0),
+	};
+}
+
+/** Today's date in the library's time zone, as a date input wants it. */
+export function libraryToday(at = new Date()): string {
+	return new Intl.DateTimeFormat("en-CA", {
+		timeZone: LIBRARY_TIME_ZONE,
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).format(at);
+}
+
 /** An hour on a day in the library's time zone, whatever the clocks are doing. */
 function localTime(day: string, hour: number): Date {
 	const guess = new Date(`${day}T${String(hour).padStart(2, "0")}:00:00Z`);

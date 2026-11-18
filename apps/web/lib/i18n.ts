@@ -265,10 +265,6 @@ const dictionary = {
 		finishSignIn: "One tap to finish signing in on this device.",
 		join: "Join the library",
 		joinHint: "You were invited. Enter your email to get a sign-in link.",
-		inviteUsedUp:
-			"This invite has already been used. Ask whoever sent it for a new one.",
-		inviteExpired:
-			"This invite has expired. Ask whoever sent it for a new one.",
 		alreadyMember: "Already a member?",
 		welcome: "Welcome",
 		welcomeHint:
@@ -1085,8 +1081,6 @@ const dictionary = {
 		finishSignIn: "נגיעה אחת כדי לסיים את הכניסה במכשיר הזה.",
 		join: "הצטרפות לספרייה",
 		joinHint: "הוזמנתם. הזינו אימייל לקבלת קישור כניסה.",
-		inviteUsedUp: "ההזמנה הזו כבר נוצלה. בקשו ממי ששלח אותה הזמנה חדשה.",
-		inviteExpired: "תוקף ההזמנה הזו פג. בקשו ממי ששלח אותה הזמנה חדשה.",
 		alreadyMember: "כבר חברים בספרייה?",
 		welcome: "ברוכים הבאים",
 		welcomeHint: "שם שהשכנים מכירים, ובערך איפה אתם. אין צורך בכתובת המדויקת.",
@@ -2001,6 +1995,88 @@ function helpers(locale: Locale) {
 			he
 				? `אני בספרייה השכונתית של ${community} — משאילים ספרים בין שכנים. מצטרפים כאן:`
 				: `I am in the ${community} neighbourhood library — neighbours lending each other books. Join here:`,
+		// A link that cannot let anyone in, said for what it was: one
+		// person's, a group's, or one day's. Every one ends by saying who can
+		// invite them instead (inviteAskMembers, inviteAskModerators).
+		inviteOneUsed: he
+			? "ההזמנה הזו נועדה לאדם אחד, והיא כבר נוצלה. אי אפשר להעביר הזמנות הלאה."
+			: "This invite was for one person, and it has been used. Invites can’t be passed on.",
+		inviteFull: (places: number) =>
+			he
+				? `ההזמנה הזו מלאה: כל ${places} המקומות כבר נתפסו.`
+				: `This invite is full: all ${places} places have been taken.`,
+		inviteOver: he ? "תוקף ההזמנה הזו פג." : "This invite has expired.",
+		inviteWasForDay: (day: string) =>
+			he
+				? `ההזמנה הזו הייתה בתוקף רק ב${day}.`
+				: `This invite was for ${day} only.`,
+		inviteOpensOn: (day: string) =>
+			he
+				? `ההזמנה הזו תיפתח ב${day}. חזרו אז.`
+				: `This invite opens on ${day}. Come back then.`,
+		inviteAskMembers: he
+			? "כל חבר או חברה בספרייה יכולים להזמין אתכם בכל עת, אז פנו למישהו שאתם מכירים שם."
+			: "Any member of the library can invite you at any time, so ask someone you know there.",
+		inviteAskModerators: he
+			? "מנהלי הספרייה יכולים להזמין אתכם בכל עת, אז פנו לאחד מהם."
+			: "The library’s moderators can invite you at any time, so ask one of them.",
+		// Passing a link on: its code, and for moderators a sign to print.
+		showQr: he ? "הצגת קוד QR" : "Show QR code",
+		hideQr: he ? "הסתרת קוד QR" : "Hide QR code",
+		inviteQrAlt: he ? "קוד QR לקישור ההזמנה" : "QR code for the invite link",
+		downloadPng: he ? "הורדה כ-PNG" : "Download PNG",
+		downloadSvg: he ? "הורדה כ-SVG" : "Download SVG",
+		signMake: he ? "יצירת שלט הצטרפות להדפסה" : "Make a join sign to print",
+		signHint: he
+			? "הדפיסו על דף A4 וקפלו לאורך הקווים המקווקווים למשולש שעומד על השולחן. שתי הרצועות שבקצוות נפגשות מתחתיו: הדביקו אותן זו על זו, וכך הבסיס כפול ויציב. הכינו אותו עכשיו: הקישור מוצג רק הפעם."
+			: "Print it on A4 and fold along the dashed lines into a triangle that stands on a table. The two end strips meet underneath: glue one on the other, for a base twice as thick and steady. Make it now: the link is shown only this once.",
+		signPdf: he ? "הורדה כ-PDF ‏(A4)" : "Download PDF (A4)",
+		signPreview: he
+			? "תצוגה מקדימה של שלט ההצטרפות"
+			: "Preview of the join sign",
+		signFailed: he
+			? "לא הצלחנו ליצור את הקובץ. נסו שוב."
+			: "Could not make that file. Try again.",
+		signScan: he ? "סרקו כדי להצטרף" : "Scan to join",
+		signTodayOnly: (day: string) =>
+			he ? `היום בלבד \u00b7 ${day}` : `Today only \u00b7 ${day}`,
+		signJoinBy: (day: string) =>
+			he ? `אפשר להצטרף עד ${day}` : `Join by ${day}`,
+		signFold: he
+			? "קפלו לאורך הקווים המקווקווים \u00b7 שתי הרצועות שבקצוות הן הבסיס \u00b7 הדביקו אותן זו על זו"
+			: "Fold along the dashed lines \u00b7 the two end strips are the base \u00b7 glue one on the other",
+		signGlue: he
+			? "הדבקה: הניחו כאן את הרצועה שבקצה השני"
+			: "Glue: lay the strip from the other end on this one",
+		signMadeWith: "Community Distributed Library",
+		// A moderator's link: for some days, or for one day, an event's.
+		inviteModeDays: he ? "למספר ימים" : "For a number of days",
+		inviteModeDate: he ? "ליום אחד (לאירוע)" : "For one day (an event)",
+		inviteDate: he ? "התאריך" : "Date",
+		inviteEventWhy: he
+			? "מארגנים אירוע? צרו קישור אחד לכל מי שמגיע, שעובד רק באותו יום, והדפיסו אותו כשלט לשולחן. אנשים מצטרפים במקום, ולקישור שנסגר בחצות אין טעם להעביר הלאה."
+			: "Running an event? Make one link for everyone there that works on that day only, and print it as a sign for the table. People join on the spot, and a link that closes at midnight isn\u2019t worth passing on.",
+		inviteDayZone: (zone: string) =>
+			he
+				? `הקישור יעבוד ביום שתבחרו מ-00:00 עד 23:59 לפי שעון ${zone}, אזור הזמן של הספרייה.`
+				: `It works on the day you pick, from 00:00 to 23:59 ${zone} time: the library\u2019s time zone.`,
+		inviteWorksOn: (day: string, zone: string) =>
+			he
+				? `בתוקף ב${day}, 00:00\u201323:59 לפי שעון ${zone} (אזור הזמן של הספרייה).`
+				: `Works on ${day}, 00:00\u201323:59 ${zone} time (the library\u2019s time zone).`,
+		inviteWorksUntil: (when: string) =>
+			he ? `בתוקף עד ${when}.` : `Works until ${when}.`,
+		inviteOnlyOn: (day: string) => (he ? `רק ב${day}` : `${day} only`),
+		inviteDateInvalid: he
+			? "בחרו יום מהיום ועד חודש קדימה."
+			: "Pick a day from today up to a month ahead.",
+		/** "Thursday 20 Nov", in the library's time zone. */
+		inviteDay: (seconds: number) =>
+			dateFormat(he ? "he" : "en-GB", {
+				weekday: "long",
+				day: "numeric",
+				month: "short",
+			}).format(seconds * 1000),
 		startTitle: (community: string) =>
 			he ? `ברוכים הבאים ל${community}` : `Welcome to ${community}`,
 		youReported: (kind: string) =>

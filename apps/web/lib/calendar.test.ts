@@ -51,3 +51,28 @@ describe("a handoff in a calendar", () => {
 		expect(file.replace(/\r\n /g, "")).toContain(`SUMMARY:${title}\r\n`);
 	});
 });
+
+describe("an event's day", () => {
+	it("runs midnight to midnight in the library's time", async () => {
+		const { dayBounds } = await import("./calendar.ts");
+		const winter = dayBounds("2026-11-19");
+		expect(winter.start.toISOString()).toBe("2026-11-19T00:00:00.000Z");
+		expect(winter.end.toISOString()).toBe("2026-11-20T00:00:00.000Z");
+		const summer = dayBounds("2026-07-01");
+		expect(summer.start.toISOString()).toBe("2026-06-30T23:00:00.000Z");
+		expect(summer.end.toISOString()).toBe("2026-07-01T23:00:00.000Z");
+	});
+
+	it("is 23 hours long the day the clocks go forward", async () => {
+		const { dayBounds } = await import("./calendar.ts");
+		const { start, end } = dayBounds("2026-03-29");
+		expect((end.getTime() - start.getTime()) / 3_600_000).toBe(23);
+	});
+
+	it("knows today as London does", async () => {
+		const { libraryToday } = await import("./calendar.ts");
+		expect(libraryToday(new Date(Date.UTC(2026, 6, 1, 23, 30)))).toBe(
+			"2026-07-02",
+		);
+	});
+});

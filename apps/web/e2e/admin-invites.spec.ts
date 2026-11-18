@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { copied, watchClipboard } from "./clipboard.ts";
-import { BORROWER, OWNER, asMember } from "./library.ts";
+import { BORROWER, CORE, OWNER, asMember } from "./library.ts";
 
 /**
  * A new invite link is shown once, so it has to be one press away from the
@@ -30,21 +30,127 @@ test.describe("a moderator's invite link", () => {
 		await page.goto("/admin/invites");
 		await page.locator('form[action="/api/admin/invites"] button').click();
 		// Shown on the page, never carried in its address.
-		await expect(page.locator(".callout .copyable-block")).toBeVisible();
+		const block = page.locator(".callout .link-ready");
+		await expect(block).toBeVisible();
 		expect(page.url()).not.toContain("invite=");
 		// The button only works once the client islands have hydrated.
 		await expect(page.locator('.menu a[href*="back="]')).not.toHaveCount(0);
 
-		const block = page.locator(".callout .copyable-block");
 		const shown = await block.locator("code").innerText();
 		expect(shown).toMatch(/\/join\?invite=/);
-		await block.locator("button").click();
-		await expect(block.locator("button")).toHaveText(/Copied/);
-		const clipboard = await copied(page);
-		expect(clipboard).toBe(shown);
+		await block.getByRole("button", { name: "Copy link" }).click();
+		await expect(
+			block.getByRole("button", { name: "Link copied" }),
+		).toBeVisible();
+		expect(await copied(page)).toBe(shown);
 		// Once: gone on the next view.
 		await page.reload();
-		await expect(page.locator(".callout .copyable-block")).toHaveCount(0);
+		await expect(page.locator(".callout .link-ready")).toHaveCount(0);
+	});
+
+	test("shows the link as a code, and saves it as a picture", async ({
+		page,
+	}) => {
+		await page.goto("/admin/invites");
+		await page.locator('form[action="/api/admin/invites"] button').click();
+		const block = page.locator(".callout .link-ready");
+		await expect(page.locator('.menu a[href*="back="]')).not.toHaveCount(0);
+		await block.getByRole("button", { name: "Show QR code" }).click();
+		await expect(block.locator(".invite-qr img")).toBeVisible();
+		const download = page.waitForEvent("download");
+		await block.getByRole("button", { name: "Download PNG" }).click();
+		expect((await download).suggestedFilename()).toBe("join-qr.png");
+	});
+
+	test("makes a link for one day, says when, and prints it as a sign", async ({
+		page,
+	}) => {
+		await page.goto("/admin/invites");
+		const form = page.locator('form[action="/api/admin/invites"]');
+		await form.locator('input[name="maxUses"]').fill("50");
+		await form.getByLabel("For one day (an event)").check();
+		// The time zone is said before the link is made, and after.
+		await expect(form).toContainText("Europe/London");
+		await form.getByRole("button").click();
+
+		const block = page.locator(".callout .link-ready");
+		await expect(block).toContainText(/Works on \w+day \d+ \w+, 00:00/);
+		await expect(block).toContainText("Europe/London");
+		await expect(
+			page.locator("td", { hasText: " only" }).first(),
+		).toBeVisible();
+
+		await expect(page.locator('.menu a[href*="back="]')).not.toHaveCount(0);
+		await block
+			.getByRole("button", { name: "Make a join sign to print" })
+			.click();
+		await expect(block.locator(".sign-preview")).toBeVisible();
+		const download = page.waitForEvent("download");
+		await block.getByRole("button", { name: "Download PDF (A4)" }).click();
+		const pdf = await download;
+		expect(pdf.suggestedFilename()).toBe("join-sign.pdf");
+		const path = await pdf.path();
+		const { readFile } = await import("node:fs/promises");
+		const head = (await readFile(path!)).subarray(0, 8).toString("latin1");
+		expect(head).toBe("%PDF-1.4");
+	});
+});
+
+/** What a link that cannot let anyone in says, and who can invite instead. */
+test.describe("a spent or early invite", () => {
+	const DAY = 86_400;
+	const now = () => Math.floor(Date.now() / 1000);
+
+	test("opens on its day, not before", async ({ browser }) => {
+		const page = await browser.newPage();
+		const request = page.context().request;
+		const made = await asMember(request, OWNER.id, "/v1/admin/invites", {
+			maxUses: 30,
+			startsAt: now() + 2 * DAY,
+			expiresAt: now() + 3 * DAY,
+		});
+		await page.goto(`/join?invite=${encodeURIComponent(made.body.token)}`);
+		await expect(page.locator(".callout")).toContainText(
+			"This invite opens on",
+		);
+		await expect(page.locator('input[name="email"]')).toHaveCount(0);
+		await page.close();
+	});
+
+	test("tells a used one-person link from a full group's", async ({
+		browser,
+	}) => {
+		const page = await browser.newPage();
+		const request = page.context().request;
+		for (const [maxUses, says] of [
+			[1, "This invite was for one person"],
+			[3, "This invite is full: all 3 places have been taken."],
+		] as const) {
+			const made = await asMember(request, OWNER.id, "/v1/admin/invites", {
+				maxUses,
+			});
+			for (let i = 0; i < maxUses; i++) {
+				const email = `full-${maxUses}-${i}-${Date.now()}@example.com`;
+				const asked = await request.fetch(`${CORE}/v1/auth/magic-link`, {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					data: { email, invite: made.body.token },
+				});
+				const { debugUrl } = await asked.json();
+				const token = new URL(debugUrl).searchParams.get("token");
+				await request.fetch(`${CORE}/v1/auth/exchange`, {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					data: { token },
+				});
+			}
+			await page.goto(`/join?invite=${encodeURIComponent(made.body.token)}`);
+			await expect(page.locator(".callout-warn")).toContainText(says);
+			await expect(page.locator("main")).toContainText(
+				"Any member of the library can invite you at any time",
+			);
+		}
+		await page.close();
 	});
 });
 
