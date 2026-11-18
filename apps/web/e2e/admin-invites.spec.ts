@@ -3,8 +3,9 @@ import { copied, watchClipboard } from "./clipboard.ts";
 import { BORROWER, CORE, OWNER, asMember } from "./library.ts";
 
 /**
- * A new invite link is shown once, so it has to be one press away from the
- * clipboard. The signed-in browser is the borrower, made a moderator here.
+ * A new invite link has to be one press away from the clipboard, and there
+ * again for whoever made it while it is live. The signed-in browser is the
+ * borrower, made a moderator here.
  */
 test.describe("a moderator's invite link", () => {
 	test.use({ permissions: ["clipboard-write"] });
@@ -43,9 +44,44 @@ test.describe("a moderator's invite link", () => {
 			block.getByRole("button", { name: "Link copied" }),
 		).toBeVisible();
 		expect(await copied(page)).toBe(shown);
-		// Once: gone on the next view.
+		// Gone on the next view, and never left in the page behind it.
 		await page.reload();
 		await expect(page.locator(".callout .link-ready")).toHaveCount(0);
+		expect(await page.content()).not.toContain(shown);
+	});
+
+	test("shows a live link again to the moderator who made it", async ({
+		page,
+	}) => {
+		await page.goto("/admin/invites");
+		await page.locator('form[action="/api/admin/invites"] button').click();
+		const block = page.locator(".callout .link-ready");
+		const shown = await block.locator("code").innerText();
+		await page.reload();
+		await expect(block).toHaveCount(0);
+
+		// The newest invite is the first row: its link comes back on request.
+		await page
+			.locator("tbody tr")
+			.first()
+			.getByRole("button", { name: "Show link" })
+			.click();
+		await expect(block.locator("code")).toHaveText(shown);
+		expect(page.url()).not.toContain("invite=");
+		await expect(page.getByText("you can show it again")).toBeVisible();
+
+		// Revoked, it has no link to show.
+		await page
+			.locator("tbody tr")
+			.first()
+			.getByRole("button", { name: "Revoke" })
+			.click();
+		await expect(
+			page
+				.locator("tbody tr")
+				.first()
+				.getByRole("button", { name: "Show link" }),
+		).toHaveCount(0);
 	});
 
 	test("shows the link as a code, and saves it as a picture", async ({

@@ -2028,8 +2028,23 @@ function helpers(locale: Locale) {
 		downloadSvg: he ? "הורדה כ-SVG" : "Download SVG",
 		signMake: he ? "יצירת שלט הצטרפות להדפסה" : "Make a join sign to print",
 		signHint: he
-			? "הדפיסו על דף A4 וקפלו לאורך הקווים המקווקווים למשולש שעומד על השולחן. שתי הרצועות שבקצוות נפגשות מתחתיו: הדביקו אותן זו על זו, וכך הבסיס כפול ויציב. הכינו אותו עכשיו: הקישור מוצג רק הפעם."
-			: "Print it on A4 and fold along the dashed lines into a triangle that stands on a table. The two end strips meet underneath: glue one on the other, for a base twice as thick and steady. Make it now: the link is shown only this once.",
+			? "הדפיסו על דף A4 וקפלו לאורך הקווים המקווקווים למשולש שעומד על השולחן. שתי הרצועות שבקצוות נפגשות מתחתיו: הדביקו אותן זו על זו, וכך הבסיס כפול ויציב."
+			: "Print it on A4 and fold along the dashed lines into a triangle that stands on a table. The two end strips meet underneath: glue one on the other, for a base twice as thick and steady.",
+		// Said after the hint where the link will not be there next time.
+		signNow: he
+			? "הכינו אותו עכשיו: הקישור מוצג רק הפעם."
+			: "Make it now: the link is shown only this once.",
+		// A link its maker can see again while it is open.
+		inviteShowLink: he ? "הצגת הקישור" : "Show link",
+		inviteShownAgain: he
+			? "שלחו כשנוח לכם. עד שישתמשו בו, אפשר להציג אותו שוב מהרשימה שלמטה."
+			: "Send it when you are ready. Until it is used, you can show it again from the list below.",
+		inviteCreatedKept: he
+			? "קישור ההזמנה שלכם. כל עוד הוא פעיל, אפשר להציג אותו שוב מהרשימה שלמטה."
+			: "Your invite link. While it is live, you can show it again from the list below.",
+		inviteLinkGone: he
+			? "אי אפשר להציג את הקישור הזה: הוא נוצר לפני שקישורים נשמרו, או שכבר אינו פתוח. צרו קישור חדש."
+			: "That link cannot be shown: it was made before links were kept, or it is no longer open. Make a new one.",
 		signPdf: he ? "הורדה כ-PDF ‏(A4)" : "Download PDF (A4)",
 		signPreview: he
 			? "תצוגה מקדימה של שלט ההצטרפות"

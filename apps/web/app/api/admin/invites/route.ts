@@ -33,8 +33,9 @@ export async function POST(request: Request): Promise<Response> {
 	if (status === 401) return redirect("/login");
 	if (status !== 201)
 		return redirect(`/admin/invites?error=${window ? "date" : "1"}`);
-	// The URL is shown once, only its hash lives in the database, and it never
-	// travels in an address: the next page view gets it (lib/shown-once.ts).
+	// The URL never travels in an address: the next page view gets it
+	// (lib/shown-once.ts). The database holds its hash, and a sealed copy
+	// where the library keeps links for their maker to see again.
 	return new Response(null, {
 		status: 303,
 		headers: {
@@ -45,6 +46,7 @@ export async function POST(request: Request): Promise<Response> {
 				expiresAt: body.expiresAt,
 				startsAt: body.startsAt ?? null,
 				maxUses: body.maxUses,
+				showable: body.showable,
 			}),
 		},
 	});

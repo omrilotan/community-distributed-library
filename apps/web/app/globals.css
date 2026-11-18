@@ -2659,6 +2659,14 @@ html[data-filters-settling] .filters-panel > * {
 	overflow-wrap: anywhere;
 }
 
+/* An invite's own buttons, kept together at the row's end. */
+.invite-row-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1rem;
+	align-items: center;
+}
+
 /* Report a problem */
 .report {
 	margin-block: 0.5rem;

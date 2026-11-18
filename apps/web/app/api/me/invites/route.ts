@@ -33,6 +33,7 @@ export async function POST(request: Request): Promise<Response> {
 				kind: "invite",
 				url: body.url,
 				expiresAt: body.expiresAt,
+				showable: body.showable,
 			}),
 		},
 	});

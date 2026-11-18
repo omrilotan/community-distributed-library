@@ -261,6 +261,9 @@ export default async function SettingsPage({
 			<section id="invite" className="account-group">
 				<h2>{t.inviteTitle}</h2>
 				{withdrawn ? <Callout>{t.inviteWithdrawn}</Callout> : null}
+				{invite === "gone" ? (
+					<Callout tone="warn">{t.inviteLinkGone}</Callout>
+				) : null}
 				<p className="muted">{t.inviteWhy}</p>
 				<InviteForm
 					made={await shownOnce("invite")}
@@ -273,6 +276,7 @@ export default async function SettingsPage({
 						failed: t.inviteFailed,
 						tooMany: t.inviteTooMany,
 						shownOnce: t.inviteShownOnce,
+						shownAgain: t.inviteShownAgain,
 						copy: t.copyLink,
 						copied: t.linkCopied,
 						share: t.share,
@@ -304,17 +308,30 @@ export default async function SettingsPage({
 										)
 									)}
 								</div>
-								{one.joined.length ? null : (
-									<form
-										action={`/api/me/invites/${one.id}`}
-										method="post"
-										className="inline"
-									>
-										<button type="submit" className="link">
-											{t.inviteWithdraw}
-										</button>
-									</form>
-								)}
+								<div className="invite-row-actions">
+									{one.showable ? (
+										<form
+											action={`/api/me/invites/${one.id}/link`}
+											method="post"
+											className="inline"
+										>
+											<button type="submit" className="link">
+												{t.inviteShowLink}
+											</button>
+										</form>
+									) : null}
+									{one.joined.length ? null : (
+										<form
+											action={`/api/me/invites/${one.id}`}
+											method="post"
+											className="inline"
+										>
+											<button type="submit" className="link">
+												{t.inviteWithdraw}
+											</button>
+										</form>
+									)}
+								</div>
 							</li>
 						))}
 					</ul>

@@ -54,7 +54,9 @@ export default async function AdminInvites({
 							? t.inviteEmailRate
 							: error === "date"
 								? t.inviteDateInvalid
-								: t.adminActionFailed}
+								: error === "gone"
+									? t.inviteLinkGone
+									: t.adminActionFailed}
 				</Callout>
 			) : null}
 			{sent ? <Callout>{t.inviteEmailSent}</Callout> : null}
@@ -80,7 +82,7 @@ export default async function AdminInvites({
 			<h2>{t.inviteLinkTitle}</h2>
 			{newInvite ? (
 				<div className="callout">
-					<p>{t.inviteCreated}</p>
+					<p>{newInvite.showable ? t.inviteCreatedKept : t.inviteCreated}</p>
 					<LinkReady
 						url={newInvite.url}
 						message={t.inviteMessage(me.community.name)}
@@ -134,7 +136,9 @@ export default async function AdminInvites({
 							},
 							labels: {
 								make: t.signMake,
-								hint: t.signHint,
+								hint: newInvite.showable
+									? t.signHint
+									: `${t.signHint} ${t.signNow}`,
 								downloadPdf: t.signPdf,
 								downloadPng: t.downloadPng,
 								preview: t.signPreview,
@@ -226,17 +230,30 @@ export default async function AdminInvites({
 										</span>
 									</td>
 									<td>
-										{live ? (
-											<form
-												action={`/api/admin/invites/${invite.id}/revoke`}
-												method="post"
-												className="inline"
-											>
-												<button type="submit" className="link">
-													{t.revoke}
-												</button>
-											</form>
-										) : null}
+										<div className="invite-row-actions">
+											{invite.showable ? (
+												<form
+													action={`/api/admin/invites/${invite.id}/link`}
+													method="post"
+													className="inline"
+												>
+													<button type="submit" className="link">
+														{t.inviteShowLink}
+													</button>
+												</form>
+											) : null}
+											{live ? (
+												<form
+													action={`/api/admin/invites/${invite.id}/revoke`}
+													method="post"
+													className="inline"
+												>
+													<button type="submit" className="link">
+														{t.revoke}
+													</button>
+												</form>
+											) : null}
+										</div>
 									</td>
 								</tr>
 							);
