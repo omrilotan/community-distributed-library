@@ -167,9 +167,15 @@ test.describe("a spent or early invite", () => {
 			});
 			for (let i = 0; i < maxUses; i++) {
 				const email = `full-${maxUses}-${i}-${Date.now()}@example.com`;
+				// Each neighbour asks from their own home: sign-in links are
+				// rationed by where they are asked from, and the rest of the
+				// suite needs this machine's share.
 				const asked = await request.fetch(`${CORE}/v1/auth/magic-link`, {
 					method: "POST",
-					headers: { "content-type": "application/json" },
+					headers: {
+						"content-type": "application/json",
+						"x-cdl-client-ip": `203.0.113.${10 * maxUses + i}`,
+					},
 					data: { email, invite: made.body.token },
 				});
 				const { debugUrl } = await asked.json();
