@@ -124,7 +124,7 @@ test.describe("invites", () => {
 		await expect(link).toHaveText(/^https?:\/\//);
 	});
 
-	test("makes a link without a script, and shows it once", async ({
+	test("makes a link without a script, and shows it again on request", async ({
 		browser,
 	}) => {
 		const plain = await browser.newContext({
@@ -141,9 +141,15 @@ test.describe("invites", () => {
 		await expect(invite.locator(".token-created code")).toHaveText(
 			/^https?:\/\//,
 		);
-		// Shown once: gone on the next view.
+		const first = await invite.locator(".token-created code").innerText();
+		// Gone on the next view.
 		await page.reload();
 		await expect(invite.locator(".token-created code")).toHaveCount(0);
+		// Still waiting, so its maker can ask for it again.
+		await invite.getByRole("button", { name: "Show link" }).first().click();
+		await expect(page).toHaveURL(/\/settings/);
+		expect(page.url()).not.toContain("invite=");
+		await expect(invite.locator(".token-created code")).toHaveText(first);
 		await plain.close();
 	});
 });

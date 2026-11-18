@@ -9,14 +9,15 @@ export const SHOWN_ONCE_HEADER = "x-cdl-shown-once";
 
 /** What each kind of secret shown once carries. */
 export interface ShownOnceKinds {
-	/** A member's link to one neighbour. */
-	invite: { url: string; expiresAt: number };
+	/** A member's link to one neighbour; `showable` where it can be shown again. */
+	invite: { url: string; expiresAt: number; showable?: boolean };
 	/** A moderator's link for a batch, or for an event's day. */
 	"batch-invite": {
 		url: string;
 		expiresAt: number;
 		startsAt?: number | null;
 		maxUses?: number;
+		showable?: boolean;
 	};
 	/** A sign-in link for the member's other device. */
 	"device-link": { url: string; expiresAt: number };
