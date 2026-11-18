@@ -124,6 +124,13 @@ export const CreateInvite = z.object({
 	maxUses: z.number().int().min(1).max(50).default(1),
 	/** Days until expiry; capped so a link in an old chat message dies. */
 	days: z.number().int().min(1).max(30).default(7),
+	/**
+	 * An event's link, moderators only: it opens at `startsAt` and closes at
+	 * `expiresAt` (Unix seconds), in place of `days`. Both or neither. Made
+	 * ahead of the day, it lets nobody in before it opens.
+	 */
+	startsAt: Timestamp.optional(),
+	expiresAt: Timestamp.optional(),
 });
 
 /**
@@ -147,8 +154,25 @@ export const Invite = z.object({
 	token: z.string(),
 	url: z.url(),
 	maxUses: z.number().int(),
+	/** When an event's link opens; null for one that works straight away. */
+	startsAt: Timestamp.nullable().default(null),
 	expiresAt: Timestamp,
 });
+
+/**
+ * What became of an invite link, for the page it lands on. A withdrawn or
+ * made-up link reads as usable and says nothing more. The rest let the page
+ * word its answer: a link for one person, a group's, or one day's.
+ */
+export const InviteState = z.object({
+	state: z.enum(["usable", "used", "expired", "early"]),
+	maxUses: z.number().int().optional(),
+	startsAt: Timestamp.nullable().optional(),
+	expiresAt: Timestamp.optional(),
+	/** Whether members may invite here, or only moderators. */
+	membersInvite: z.boolean().optional(),
+});
+export type InviteState = z.infer<typeof InviteState>;
 
 export type MagicLinkRequest = z.input<typeof MagicLinkRequest>;
 export type MagicLinkResponse = z.infer<typeof MagicLinkResponse>;

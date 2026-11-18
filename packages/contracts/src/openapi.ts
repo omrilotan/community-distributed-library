@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
 	CodeRequest,
 	CreateInvite,
+	InviteState,
 	ExchangeRequest,
 	Invite,
 	MagicLinkRequest,
@@ -967,7 +968,7 @@ export const ROUTES: readonly Route[] = [
 		summary: "What became of an invite link",
 		access: "public",
 		body: z.object({ token: z.string() }),
-		response: z.object({ state: z.enum(["usable", "used", "expired"]) }),
+		response: InviteState,
 	},
 	{
 		method: "post",
@@ -987,7 +988,7 @@ export const ROUTES: readonly Route[] = [
 		summary: "Invite a neighbour: a link that lets them join",
 		access: "shelf:write",
 		body: CreateInvite,
-		note: "A member's link is for one person, for as long as the library sets, and they may have only as many open as it allows (409 beyond). A moderator's may be for a group, for up to 30 days.",
+		note: "A member's link is for one person, for as long as the library sets, and they may have only as many open as it allows (409 beyond). A moderator's may be for a group, for up to 30 days, or for an event: opening at `startsAt` and closing at `expiresAt`, at most 30 days apart and starting within 30 days.",
 		response: Invite,
 		status: 201,
 	},

@@ -101,6 +101,8 @@ export const InviteSummary = z.object({
 	createdBy: z.string(),
 	maxUses: z.number().int(),
 	uses: z.number().int(),
+	/** When an event's link opens; null for one that worked from the start. */
+	startsAt: Timestamp.nullable().default(null),
 	expiresAt: Timestamp,
 	createdAt: Timestamp,
 	revokedAt: Timestamp.nullable(),

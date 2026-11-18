@@ -1,6 +1,36 @@
+import type { InviteState } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { ulid, now } from "./ids.ts";
 import { hashToken, newToken } from "./tokens.ts";
+
+/** An event's link: opens and closes at these times (Unix seconds). */
+export interface InviteWindow {
+	startsAt: number;
+	expiresAt: number;
+}
+
+const DAY = 86_400;
+/** The furthest ahead an event's link may close, and its longest span. */
+export const WINDOW_DAYS = 30;
+
+/**
+ * Check an event's window: both ends or neither, closing after it opens and
+ * after now, no longer than a month, and no further off than one either.
+ * Opening a little in the past is fine: "today" began at midnight.
+ */
+export function windowOf(
+	input: { startsAt?: number | undefined; expiresAt?: number | undefined },
+	at = now(),
+): InviteWindow | null | "invalid" {
+	const { startsAt, expiresAt } = input;
+	if (startsAt === undefined && expiresAt === undefined) return null;
+	if (startsAt === undefined || expiresAt === undefined) return "invalid";
+	if (expiresAt <= startsAt || expiresAt <= at) return "invalid";
+	if (expiresAt - startsAt > WINDOW_DAYS * DAY) return "invalid";
+	if (expiresAt > at + (WINDOW_DAYS + 1) * DAY) return "invalid";
+	if (startsAt < at - 2 * DAY) return "invalid";
+	return { startsAt, expiresAt };
+}
 
 export async function createInvite(
 	env: Env,
@@ -9,13 +39,15 @@ export async function createInvite(
 	maxUses: number,
 	days: number,
 	sentTo: string | null = null,
+	window: InviteWindow | null = null,
 ) {
 	const id = ulid();
 	const token = newToken();
-	const expiresAt = now() + days * 86_400;
+	const startsAt = window?.startsAt ?? null;
+	const expiresAt = window?.expiresAt ?? now() + days * DAY;
 	await env.DB.prepare(
-		`INSERT INTO invites (id, community_id, created_by, token_hash, max_uses, uses, expires_at, created_at, sent_to)
-		 VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+		`INSERT INTO invites (id, community_id, created_by, token_hash, max_uses, uses, starts_at, expires_at, created_at, sent_to)
+		 VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
 	)
 		.bind(
 			id,
@@ -23,13 +55,18 @@ export async function createInvite(
 			createdBy,
 			await hashToken(token),
 			maxUses,
+			startsAt,
 			expiresAt,
 			now(),
 			sentTo,
 		)
 		.run();
-	return { id, token, expiresAt };
+	return { id, token, startsAt, expiresAt };
 }
+
+/** Open now: not withdrawn, not used up, past its opening and before its close. */
+const OPEN = `revoked_at IS NULL AND expires_at > ?1 AND uses < max_uses
+	AND (starts_at IS NULL OR starts_at <= ?1)`;
 
 /**
  * Whoever made the invite still vouches for the people it brings in: a
@@ -44,36 +81,56 @@ const VOUCHED = `EXISTS (SELECT 1 FROM memberships vm JOIN members vb ON vb.id =
 export async function findInvite(env: Env, token: string) {
 	return env.DB.prepare(
 		`SELECT id, community_id FROM invites
-		  WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > ? AND uses < max_uses
-		    AND ${VOUCHED}`,
+		  WHERE token_hash = ?2 AND ${OPEN} AND ${VOUCHED}`,
 	)
-		.bind(await hashToken(token), now())
+		.bind(now(), await hashToken(token))
 		.first<{ id: string; community_id: string }>();
 }
 
 /**
- * What became of an invite link, for the page it lands on. Only "used" and
- * "expired" are told apart: a withdrawn link or a made-up token reads as
- * usable, and the visitor learns nothing they would not from asking.
+ * What became of an invite link, for the page it lands on. A withdrawn link
+ * or a made-up token reads as usable and says nothing more: the visitor
+ * learns nothing they would not from asking. A real one that is not open
+ * says why, and enough for the page to word it: one person's or a group's,
+ * an event's day, and whether any member could invite them instead.
  */
 export async function inviteState(
 	env: Env,
 	token: string,
-): Promise<"usable" | "used" | "expired"> {
+): Promise<InviteState> {
 	const row = await env.DB.prepare(
-		"SELECT revoked_at, expires_at, uses, max_uses FROM invites WHERE token_hash = ?",
+		`SELECT i.revoked_at, i.starts_at, i.expires_at, i.uses, i.max_uses,
+		        c.member_invites_open
+		   FROM invites i JOIN communities c ON c.id = i.community_id
+		  WHERE i.token_hash = ?`,
 	)
 		.bind(await hashToken(token))
 		.first<{
 			revoked_at: number | null;
+			starts_at: number | null;
 			expires_at: number;
 			uses: number;
 			max_uses: number;
+			member_invites_open: number;
 		}>();
-	if (!row || row.revoked_at) return "usable";
-	if (row.uses >= row.max_uses) return "used";
-	if (row.expires_at <= now()) return "expired";
-	return "usable";
+	if (!row || row.revoked_at) return { state: "usable" };
+	const at = now();
+	const state =
+		row.uses >= row.max_uses
+			? "used"
+			: row.expires_at <= at
+				? "expired"
+				: row.starts_at !== null && row.starts_at > at
+					? "early"
+					: "usable";
+	if (state === "usable") return { state };
+	return {
+		state,
+		maxUses: row.max_uses,
+		startsAt: row.starts_at,
+		expiresAt: row.expires_at,
+		membersInvite: row.member_invites_open > 0,
+	};
 }
 
 /** Counts a use; returns false if the invite ran out between request and exchange. */
@@ -83,10 +140,9 @@ export async function consumeInvite(
 ): Promise<{ community_id: string; created_by: string } | null> {
 	return env.DB.prepare(
 		`UPDATE invites SET uses = uses + 1
-		  WHERE id = ? AND revoked_at IS NULL AND expires_at > ? AND uses < max_uses
-		    AND ${VOUCHED}
+		  WHERE id = ?2 AND ${OPEN} AND ${VOUCHED}
 		  RETURNING community_id, created_by`,
 	)
-		.bind(id, now())
+		.bind(now(), id)
 		.first<{ community_id: string; created_by: string }>();
 }

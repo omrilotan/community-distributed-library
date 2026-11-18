@@ -15,6 +15,7 @@ import {
 	consumeInvite,
 	createInvite,
 	findInvite,
+	windowOf,
 	inviteState,
 } from "./invites.ts";
 import {
@@ -551,7 +552,7 @@ auth.post("/v1/invites/state", async (c) => {
 		per: 60 * 60,
 	});
 	if (!limit.ok) return json(c, problem(429, "Too many checks"));
-	return c.json({ state: await inviteState(c.env, body.token) });
+	return c.json(await inviteState(c.env, body.token));
 });
 
 /**
@@ -582,6 +583,13 @@ auth.post("/v1/invites", async (c) => {
 	const days = isModerator
 		? parsed.data.days
 		: Math.min(parsed.data.days, limits?.member_invite_days ?? 14);
+	// An event's window is a moderator's; a member's link starts now.
+	const window = isModerator ? windowOf(parsed.data) : null;
+	if (window === "invalid")
+		return json(
+			c,
+			problem(422, "Invalid invite", "Check when it opens and closes"),
+		);
 
 	if (!isModerator) {
 		if (allowed === 0)
@@ -615,6 +623,8 @@ auth.post("/v1/invites", async (c) => {
 		member.id,
 		maxUses,
 		days,
+		null,
+		window,
 	);
 	return c.json(
 		{
@@ -622,6 +632,7 @@ auth.post("/v1/invites", async (c) => {
 			token: invite.token,
 			url: `${c.env.APP_URL}/join?invite=${encodeURIComponent(invite.token)}`,
 			maxUses,
+			startsAt: invite.startsAt,
 			expiresAt: invite.expiresAt,
 		},
 		201,
