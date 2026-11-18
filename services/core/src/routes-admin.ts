@@ -24,7 +24,7 @@ import {
 } from "./sets.ts";
 import type { Env } from "./env.ts";
 import { libraryAdmin, moderator, viewer } from "./auth.ts";
-import { createInvite } from "./invites.ts";
+import { createInvite, windowOf } from "./invites.ts";
 import { createMagicLink } from "./sessions.ts";
 import { take } from "./rate-limit.ts";
 import { attention } from "./reminders.ts";
@@ -856,7 +856,7 @@ admin.get("/v1/admin/invites", async (c) => {
 	const who = c.get("moderator");
 	const { results } = await c.env.DB.prepare(
 		`SELECT i.id, m.display_name AS created_by, i.created_by AS created_by_id,
-		        i.max_uses, i.uses, i.expires_at, i.created_at, i.revoked_at, i.sent_to
+		        i.max_uses, i.uses, i.starts_at, i.expires_at, i.created_at, i.revoked_at, i.sent_to
 		   FROM invites i JOIN members m ON m.id = i.created_by
 		  WHERE i.community_id = ?
 		  ORDER BY i.created_at DESC LIMIT 50`,
@@ -872,6 +872,7 @@ admin.get("/v1/admin/invites", async (c) => {
 			createdBy: row.created_by,
 			maxUses: row.max_uses,
 			uses: row.uses,
+			startsAt: row.starts_at,
 			expiresAt: row.expires_at,
 			createdAt: row.created_at,
 			revokedAt: row.revoked_at,
@@ -887,12 +888,20 @@ admin.post("/v1/admin/invites", async (c) => {
 		(await c.req.json().catch(() => null)) ?? {},
 	);
 	if (!parsed.success) return json(c, problem(422, "Invalid invite"));
+	const window = windowOf(parsed.data);
+	if (window === "invalid")
+		return json(
+			c,
+			problem(422, "Invalid invite", "Check when it opens and closes"),
+		);
 	const invite = await createInvite(
 		c.env,
 		who.communityId,
 		who.id,
 		parsed.data.maxUses,
 		parsed.data.days,
+		null,
+		window,
 	);
 	return c.json(
 		{
@@ -900,6 +909,7 @@ admin.post("/v1/admin/invites", async (c) => {
 			token: invite.token,
 			url: `${c.env.APP_URL}/join?invite=${encodeURIComponent(invite.token)}`,
 			maxUses: parsed.data.maxUses,
+			startsAt: invite.startsAt,
 			expiresAt: invite.expiresAt,
 		},
 		201,
@@ -1032,6 +1042,7 @@ interface InviteRow {
 	created_by: string;
 	max_uses: number;
 	uses: number;
+	starts_at: number | null;
 	expires_at: number;
 	created_at: number;
 	revoked_at: number | null;
