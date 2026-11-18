@@ -11,8 +11,13 @@ export const SHOWN_ONCE_HEADER = "x-cdl-shown-once";
 export interface ShownOnceKinds {
 	/** A member's link to one neighbour. */
 	invite: { url: string; expiresAt: number };
-	/** A moderator's link for a batch. */
-	"batch-invite": { url: string; expiresAt: number };
+	/** A moderator's link for a batch, or for an event's day. */
+	"batch-invite": {
+		url: string;
+		expiresAt: number;
+		startsAt?: number | null;
+		maxUses?: number;
+	};
 	/** A sign-in link for the member's other device. */
 	"device-link": { url: string; expiresAt: number };
 	/** A personal token. */

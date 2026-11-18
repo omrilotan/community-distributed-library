@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Invite } from "@cdl/contracts";
 import { useFocusWhenShown } from "../lib/focus-shown.ts";
+import { LinkReady } from "./link-ready.tsx";
 
 interface Labels {
 	create: string;
@@ -14,12 +15,17 @@ interface Labels {
 	copy: string;
 	copied: string;
 	share: string;
+	showQr: string;
+	hideQr: string;
+	qrAlt: string;
+	downloadPng: string;
+	downloadSvg: string;
 }
 
 /**
  * The link exists once. Only its hash is stored, so if it is not sent now it
  * is gone — which is why this shows it large and offers to send it straight
- * into a chat. Another link can follow straight away, one per neighbour; the
+ * into a chat, copy it, or show it as a code to scan (lib/downloads.ts). Another link can follow straight away, one per neighbour; the
  * one on screen is replaced, so it has to be sent first.
  */
 export function InviteForm({
@@ -45,7 +51,6 @@ export function InviteForm({
 				? labels.failed
 				: null,
 	);
-	const [copied, setCopied] = useState(false);
 	const shown = useFocusWhenShown<HTMLDivElement>(invite);
 
 	// Posts as a form, so it works without a script; with one, it stays on
@@ -77,7 +82,6 @@ export function InviteForm({
 			}
 			if (!response.ok) throw new Error(String(response.status));
 			setInvite((await response.json()) as Invite);
-			setCopied(false);
 		} catch {
 			setError(labels.failed);
 		} finally {
@@ -86,48 +90,16 @@ export function InviteForm({
 	}
 
 	if (invite) {
-		const text = `${message}\n${invite.url}`;
 		return (
 			<div className="token-created" ref={shown} tabIndex={-1}>
 				<p className="muted">{labels.shownOnce}</p>
-				<pre dir="ltr">
-					<code>{invite.url}</code>
-				</pre>
-				<div className="actions">
-					<button
-						type="button"
-						className="secondary"
-						onClick={() => {
-							if (typeof navigator.share === "function") {
-								void navigator
-									// The link goes in `url` only: apps add it to the text themselves.
-									.share({ text: message, url: invite.url })
-									.catch(() => undefined);
-							} else {
-								window.open(
-									`https://wa.me/?text=${encodeURIComponent(text)}`,
-									"_blank",
-									"noopener",
-								);
-							}
-						}}
-					>
-						{labels.share}
-					</button>
-					<button
-						type="button"
-						className="link"
-						onClick={() => {
-							void navigator.clipboard
-								?.writeText(invite.url)
-								.then(() => setCopied(true))
-								.catch(() => undefined);
-						}}
-					>
-						{copied ? labels.copied : labels.copy}
-					</button>
-					{asks(labels.another, "link")}
-				</div>
+				<LinkReady
+					url={invite.url}
+					message={message}
+					filename="invite"
+					labels={labels}
+				/>
+				<div className="actions">{asks(labels.another, "link")}</div>
 				<div role="status">
 					{error ? <p className="muted">{error}</p> : null}
 				</div>

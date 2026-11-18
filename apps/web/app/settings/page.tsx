@@ -276,6 +276,11 @@ export default async function SettingsPage({
 						copy: t.copyLink,
 						copied: t.linkCopied,
 						share: t.share,
+						showQr: t.showQr,
+						hideQr: t.hideQr,
+						qrAlt: t.inviteQrAlt,
+						downloadPng: t.downloadPng,
+						downloadSvg: t.downloadSvg,
 					}}
 				/>
 				{myInvites.length ? (

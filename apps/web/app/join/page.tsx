@@ -1,30 +1,28 @@
 import { cookies } from "next/headers";
 import { clientIp, coreRaw } from "../../lib/core.ts";
+import { InviteState } from "@cdl/contracts";
 import { strings, type Locale } from "../../lib/i18n.ts";
+import { whyNot } from "../../lib/invite-words.ts";
 import { Callout } from "../ui.tsx";
 import { titled } from "../../lib/page-title.ts";
 
 export const generateMetadata = titled((t) => t.join);
 
-type InviteState = "usable" | "used" | "expired";
-
 /**
- * What became of the invite. A link used up or past its date sends no
- * email, so the page says which it is rather than promise one. Anything
- * else, a hiccup included, leaves the form as it was.
+ * What became of the invite. A link that cannot let anyone in sends no
+ * email, so the page says why rather than promise one. Anything else, a
+ * hiccup included, leaves the form as it was.
  */
 async function stateOf(invite: string | undefined): Promise<InviteState> {
-	if (!invite) return "usable";
+	if (!invite) return { state: "usable" };
 	const response = await coreRaw("/v1/invites/state", {
 		method: "POST",
 		headers: { "content-type": "application/json", ...(await clientIp()) },
 		body: JSON.stringify({ token: invite }),
 	}).catch(() => null);
-	if (!response?.ok) return "usable";
-	const body = (await response.json().catch(() => null)) as {
-		state?: InviteState;
-	} | null;
-	return body?.state ?? "usable";
+	if (!response?.ok) return { state: "usable" };
+	const parsed = InviteState.safeParse(await response.json().catch(() => null));
+	return parsed.success ? parsed.data : { state: "usable" };
 }
 
 /** Landing for an invite link from the WhatsApp group: same form, invite attached. */
@@ -36,15 +34,24 @@ export default async function JoinPage({
 	const { invite } = await searchParams;
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
-	const state = await stateOf(invite);
+	const invited = await stateOf(invite);
+	const why = whyNot(invited, t);
 
-	if (state !== "usable") {
+	if (why) {
 		return (
 			<main className="narrow">
 				<h1>{t.join}</h1>
-				<Callout tone="warn">
-					{state === "used" ? t.inviteUsedUp : t.inviteExpired}
+				<Callout tone={invited.state === "early" ? "info" : "warn"}>
+					{why}
 				</Callout>
+				{/* A link that will open on its day needs no other invite. */}
+				{invited.state === "early" ? null : (
+					<p>
+						{invited.membersInvite === false
+							? t.inviteAskModerators
+							: t.inviteAskMembers}
+					</p>
+				)}
 				<p>
 					{t.alreadyMember} <a href="/login">{t.signIn}</a>
 				</p>

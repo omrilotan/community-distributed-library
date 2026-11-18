@@ -2,7 +2,11 @@ import { cookies } from "next/headers";
 import type { InviteSummary } from "@cdl/contracts";
 import { core } from "../../../lib/core.ts";
 import { strings, type Locale } from "../../../lib/i18n.ts";
-import { CopyButton } from "../../copy-button.tsx";
+import { LinkReady } from "../../link-ready.tsx";
+import { library, libraryWords } from "../../../lib/library.ts";
+import { brandColours } from "../../../lib/accent.ts";
+import { LIBRARY_TIME_ZONE, libraryToday } from "../../../lib/calendar.ts";
+import { whenLine } from "../../../lib/sign.ts";
 import { Callout, Empty, PageHead } from "../../ui.tsx";
 import { AdminTabs } from "../tabs.tsx";
 import { moderatorOrNull } from "../guard.ts";
@@ -20,14 +24,22 @@ export default async function AdminInvites({
 	const me = await moderatorOrNull();
 	const { error, sent } = await searchParams;
 	// Made a moment ago, shown this once (never from the address).
-	const newInvite = (await shownOnce("batch-invite"))?.url;
+	const newInvite = await shownOnce("batch-invite");
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
 	if (!me) return <Empty title={t.moderatorsOnly} />;
+	const words = await libraryWords(locale);
+	const { accent } = await library();
+	const today = libraryToday();
+	const zone = LIBRARY_TIME_ZONE;
+	/** An event's link is one day's when it is open for about a day. */
+	const oneDay = (one: { startsAt?: number | null; expiresAt: number }) =>
+		one.startsAt != null && one.expiresAt - one.startsAt <= 25 * 3600;
 
 	const invites = await core<{ invites: InviteSummary[] }>("/v1/admin/invites");
 	const now = Math.floor(Date.now() / 1000);
 	const when = dateFormat(locale, { dateStyle: "medium" });
+	const time = dateFormat(locale, { timeStyle: "short" });
 	const rows = invites.status === 200 ? invites.body.invites : [];
 
 	return (
@@ -40,7 +52,9 @@ export default async function AdminInvites({
 						? t.inviteAlreadyMember
 						: error === "rate"
 							? t.inviteEmailRate
-							: t.adminActionFailed}
+							: error === "date"
+								? t.inviteDateInvalid
+								: t.adminActionFailed}
 				</Callout>
 			) : null}
 			{sent ? <Callout>{t.inviteEmailSent}</Callout> : null}
@@ -67,14 +81,71 @@ export default async function AdminInvites({
 			{newInvite ? (
 				<div className="callout">
 					<p>{t.inviteCreated}</p>
-					<CopyButton
-						value={newInvite}
-						labels={{ copy: t.copy, copied: t.copied }}
-						block
+					<LinkReady
+						url={newInvite.url}
+						message={t.inviteMessage(me.community.name)}
+						filename="join"
+						note={
+							newInvite.startsAt != null &&
+							oneDay({
+								startsAt: newInvite.startsAt,
+								expiresAt: newInvite.expiresAt,
+							})
+								? t.inviteWorksOn(t.inviteDay(newInvite.startsAt), zone)
+								: t.inviteWorksUntil(
+										when.format(newInvite.expiresAt * 1000) +
+											" " +
+											time.format(newInvite.expiresAt * 1000),
+									)
+						}
+						labels={{
+							share: t.share,
+							copy: t.copyLink,
+							copied: t.linkCopied,
+							showQr: t.showQr,
+							hideQr: t.hideQr,
+							qrAlt: t.inviteQrAlt,
+							downloadPng: t.downloadPng,
+							downloadSvg: t.downloadSvg,
+						}}
+						sign={{
+							spec: {
+								colour: brandColours(accent).light,
+								rtl: locale === "he",
+								words: {
+									name: words.name || me.community.name,
+									tagline: words.tagline,
+									scan: t.signScan,
+									when: whenLine(
+										{
+											startsAt: newInvite.startsAt ?? null,
+											expiresAt: newInvite.expiresAt,
+										},
+										{
+											todayOnly: t.signTodayOnly,
+											joinBy: t.signJoinBy,
+											day: t.inviteDay,
+										},
+									),
+									foldHint: t.signFold,
+									madeWith: t.signMadeWith,
+									glue: t.signGlue,
+								},
+							},
+							labels: {
+								make: t.signMake,
+								hint: t.signHint,
+								downloadPdf: t.signPdf,
+								downloadPng: t.downloadPng,
+								preview: t.signPreview,
+								failed: t.signFailed,
+							},
+						}}
 					/>
 				</div>
 			) : null}
-			<form action="/api/admin/invites" method="post" className="row">
+			<p className="muted">{t.inviteEventWhy}</p>
+			<form action="/api/admin/invites" method="post" className="invite-batch">
 				<label>
 					{t.inviteUses}
 					<input
@@ -85,10 +156,31 @@ export default async function AdminInvites({
 						defaultValue={5}
 					/>
 				</label>
-				<label>
-					{t.inviteDays}
-					<input name="days" type="number" min={1} max={30} defaultValue={7} />
-				</label>
+				<fieldset className="invite-when">
+					<label className="choice">
+						<input type="radio" name="mode" value="days" defaultChecked />
+						{t.inviteModeDays}
+					</label>
+					<label>
+						{t.inviteDays}
+						<input
+							name="days"
+							type="number"
+							min={1}
+							max={30}
+							defaultValue={7}
+						/>
+					</label>
+					<label className="choice">
+						<input type="radio" name="mode" value="date" />
+						{t.inviteModeDate}
+					</label>
+					<label>
+						{t.inviteDate}
+						<input name="date" type="date" min={today} defaultValue={today} />
+					</label>
+					<p className="muted">{t.inviteDayZone(zone)}</p>
+				</fieldset>
 				<button type="submit">{t.inviteCreate}</button>
 			</form>
 			<p className="muted">{t.inviteHint}</p>
@@ -119,7 +211,11 @@ export default async function AdminInvites({
 									<td dir="ltr">
 										{invite.uses}/{invite.maxUses}
 									</td>
-									<td>{when.format(invite.expiresAt * 1000)}</td>
+									<td>
+										{oneDay(invite) && invite.startsAt != null
+											? t.inviteOnlyOn(t.inviteDay(invite.startsAt))
+											: when.format(invite.expiresAt * 1000)}
+									</td>
 									<td>
 										<span className={`badge${live ? " badge-ok" : ""}`}>
 											{invite.revokedAt
