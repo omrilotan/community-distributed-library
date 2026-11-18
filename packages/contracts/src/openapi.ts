@@ -799,6 +799,15 @@ export const ROUTES: readonly Route[] = [
 	},
 	{
 		method: "post",
+		path: "/v1/me/invites/:id/link",
+		tag: "Profile",
+		summary: "The link of an invite you made, again",
+		access: "shelf:write",
+		note: "Only while the invite can still let someone in, and only where the library keeps a sealed copy of its links (`showable` in the list). 404 otherwise: make a new one.",
+		response: Invite,
+	},
+	{
+		method: "post",
 		path: "/v1/me/invites/:id/revoke",
 		tag: "Profile",
 		summary: "Withdraw an invite link nobody has used",

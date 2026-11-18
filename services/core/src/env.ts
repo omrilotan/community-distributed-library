@@ -72,4 +72,9 @@ export interface Env {
 	/** Where a member's feedback, data request or complaint is sent. */
 	CONTACT_ADDRESS: string;
 	DEV_AUTH?: string;
+	/**
+	 * Secret. Seals a copy of each invite link so whoever made it can see it
+	 * again (seal.ts). Without it, a link is shown once.
+	 */
+	INVITE_KEY?: string;
 }

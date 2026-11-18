@@ -15,6 +15,7 @@ import {
 	consumeInvite,
 	createInvite,
 	findInvite,
+	inviteLink,
 	windowOf,
 	inviteState,
 } from "./invites.ts";
@@ -28,6 +29,7 @@ import {
 } from "./sessions.ts";
 import { snapArea } from "./geo.ts";
 import { denied, json, tooMany } from "./problem.ts";
+import { seals } from "./seal.ts";
 import { callerIp, take } from "./rate-limit.ts";
 import { areaName, resolvePlace } from "./places.ts";
 import { theLibrary } from "./library.ts";
@@ -634,6 +636,7 @@ auth.post("/v1/invites", async (c) => {
 			maxUses,
 			startsAt: invite.startsAt,
 			expiresAt: invite.expiresAt,
+			showable: invite.showable,
 		},
 		201,
 	);
@@ -687,11 +690,12 @@ auth.get("/v1/me/invites", async (c) => {
 	if (!member.scopes.includes("profile:read")) return denied(c, true);
 	const { results } = await c.env.DB.prepare(
 		`SELECT i.id, i.max_uses, i.uses, i.expires_at, i.created_at, i.revoked_at,
+		        i.token_sealed IS NOT NULL AS kept,
 		        (SELECT group_concat(m.id || ':' || m.display_name, char(31))
 		           FROM members m WHERE m.invited_via = i.id) AS joined
 		   FROM invites i
 		  WHERE i.created_by = ? AND i.revoked_at IS NULL AND i.expires_at > ?
-		  ORDER BY i.created_at DESC LIMIT 20`,
+		  ORDER BY i.created_at DESC, i.id DESC LIMIT 20`,
 	)
 		.bind(member.id, now())
 		.all<{
@@ -701,6 +705,7 @@ auth.get("/v1/me/invites", async (c) => {
 			expires_at: number;
 			created_at: number;
 			revoked_at: number | null;
+			kept: number;
 			joined: string | null;
 		}>();
 
@@ -712,6 +717,7 @@ auth.get("/v1/me/invites", async (c) => {
 			expiresAt: row.expires_at,
 			createdAt: row.created_at,
 			revokedAt: row.revoked_at,
+			showable: seals(c.env) && row.kept > 0 && row.uses < row.max_uses,
 			joined: (row.joined ?? "")
 				.split("\u001f")
 				.filter(Boolean)
@@ -720,6 +726,31 @@ auth.get("/v1/me/invites", async (c) => {
 					return { id: id ?? "", displayName: rest.join(":") };
 				}),
 		})),
+	});
+});
+
+/**
+ * The link of an invite I made, again: to send it, or to print its code,
+ * after the page that first showed it is gone. Only while it can still let
+ * someone in, and only where the library keeps links (seal.ts).
+ */
+auth.post("/v1/me/invites/:id/link", async (c) => {
+	const member = await viewer(c);
+	if (!member) return json(c, problem(401, "Not signed in"));
+	if (!member.scopes.includes("shelf:write")) return denied(c, true);
+	const invite = await inviteLink(c.env, c.req.param("id"), member.id);
+	if (!invite)
+		return json(
+			c,
+			problem(
+				404,
+				"No such invite",
+				"Or its link was not kept: make a new one",
+			),
+		);
+	return c.json({
+		...invite,
+		url: `${c.env.APP_URL}/join?invite=${encodeURIComponent(invite.token)}`,
 	});
 });
 

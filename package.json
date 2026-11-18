@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:api": "wrangler dev -c services/core/wrangler.jsonc -c services/metadata/wrangler.jsonc -c services/notify/wrangler.jsonc -c services/convo/wrangler.jsonc --port 8787 --inspector-port 9229 --persist-to .wrangler/state --var COVERS_PUBLIC_URL:http://localhost:8787/v1/covers --var APP_URL:http://localhost:3000 --var DEV_AUTH:true",
+    "dev:api": "wrangler dev -c services/core/wrangler.jsonc -c services/metadata/wrangler.jsonc -c services/notify/wrangler.jsonc -c services/convo/wrangler.jsonc --port 8787 --inspector-port 9229 --persist-to .wrangler/state --var COVERS_PUBLIC_URL:http://localhost:8787/v1/covers --var APP_URL:http://localhost:3000 --var DEV_AUTH:true --var INVITE_KEY:local-development-only",
     "dev:web": "npm run dev -w @cdl/web",
     "db:migrate": "wrangler d1 migrations apply cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc && wrangler d1 migrations apply cdl-metadata --local --persist-to .wrangler/state -c services/metadata/wrangler.jsonc && wrangler d1 migrations apply cdl-convo --local --persist-to .wrangler/state -c services/convo/wrangler.jsonc",
     "db:seed": "wrangler d1 execute cdl-core --local --persist-to .wrangler/state -c services/core/wrangler.jsonc --file services/core/scripts/seed.sql",

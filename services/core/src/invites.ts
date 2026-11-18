@@ -2,6 +2,7 @@ import type { InviteState } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { ulid, now } from "./ids.ts";
 import { hashToken, newToken } from "./tokens.ts";
+import { seal, unseal } from "./seal.ts";
 
 /** An event's link: opens and closes at these times (Unix seconds). */
 export interface InviteWindow {
@@ -45,9 +46,11 @@ export async function createInvite(
 	const token = newToken();
 	const startsAt = window?.startsAt ?? null;
 	const expiresAt = window?.expiresAt ?? now() + days * DAY;
+	// One sent by email is in the email: nobody needs it shown again.
+	const sealed = sentTo ? null : await seal(env, token, id);
 	await env.DB.prepare(
-		`INSERT INTO invites (id, community_id, created_by, token_hash, max_uses, uses, starts_at, expires_at, created_at, sent_to)
-		 VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+		`INSERT INTO invites (id, community_id, created_by, token_hash, max_uses, uses, starts_at, expires_at, created_at, sent_to, token_sealed)
+		 VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
 	)
 		.bind(
 			id,
@@ -59,9 +62,44 @@ export async function createInvite(
 			expiresAt,
 			now(),
 			sentTo,
+			sealed,
 		)
 		.run();
-	return { id, token, startsAt, expiresAt };
+	return { id, token, startsAt, expiresAt, showable: sealed !== null };
+}
+
+/**
+ * The link of an invite again, for whoever made it, while it can still let
+ * someone in (an event's link counts before its day: that is when its sign
+ * gets printed). Null for anyone else's, one withdrawn, used up or expired,
+ * and one whose link was not kept.
+ */
+export async function inviteLink(env: Env, id: string, createdBy: string) {
+	const row = await env.DB.prepare(
+		`SELECT token_hash, token_sealed, max_uses, starts_at, expires_at FROM invites
+		  WHERE id = ? AND created_by = ? AND revoked_at IS NULL
+		    AND expires_at > ? AND uses < max_uses`,
+	)
+		.bind(id, createdBy, now())
+		.first<{
+			token_hash: string;
+			token_sealed: string | null;
+			max_uses: number;
+			starts_at: number | null;
+			expires_at: number;
+		}>();
+	if (!row) return null;
+	const token = await unseal(env, row.token_sealed, id);
+	// The hash is what lets people in: a copy that does not match it is no link.
+	if (!token || (await hashToken(token)) !== row.token_hash) return null;
+	return {
+		id,
+		token,
+		maxUses: row.max_uses,
+		startsAt: row.starts_at,
+		expiresAt: row.expires_at,
+		showable: true,
+	};
 }
 
 /** Open now: not withdrawn, not used up, past its opening and before its close. */
