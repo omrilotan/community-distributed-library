@@ -8,7 +8,7 @@ import {
 /**
  * One tool, called by an agent in the browser through the page (WebMCP), run
  * as the signed-in member. Only the page itself may ask: the session cookie
- * rides along, so another site's page must not (middleware refuses a
+ * rides along, so another site's page must not (the proxy refuses a
  * cross-origin POST; a browser that says where a request came from is held
  * to its own origin here too).
  *

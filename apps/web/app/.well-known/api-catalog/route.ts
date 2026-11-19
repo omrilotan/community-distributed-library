@@ -3,7 +3,7 @@ import { appBase, mcpBase } from "../../../lib/site.ts";
 /**
  * RFC 9727: where a machine finds this site's APIs without reading its pages.
  * A linkset naming the REST API's OpenAPI description and the MCP endpoint;
- * every page points here with `Link: …; rel="api-catalog"` (middleware.ts).
+ * every page points here with `Link: …; rel="api-catalog"` (proxy.ts).
  */
 export function GET(): Response {
 	const site = appBase().replace(/\/$/, "");

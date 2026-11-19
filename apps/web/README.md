@@ -26,7 +26,7 @@ app/*.tsx            small client components: filters, pickers, menus, guards
 lib/i18n.ts          every string, English and Hebrew
 lib/i18n-things.ts   the words a library of things uses instead
 lib/                 session, core client, library settings, maps, images, helpers
-middleware.ts        CSP nonce, Origin check on POST, noindex, ?lang=, remembered filters, security headers
+proxy.ts             CSP nonce, Origin check on POST, noindex, ?lang=, remembered filters, security headers
 public/              service worker (push only), setup screenshots
 e2e/                 Playwright: phone, desktop and things projects; axe in both languages
 ```

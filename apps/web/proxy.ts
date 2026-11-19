@@ -237,7 +237,7 @@ function rememberFilters(response: NextResponse, filters: string) {
 	}
 }
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
 	// Only on the custom domain, even if workers.dev is ever switched back on:
 	// the zone's rules and headers do not reach that address.
 	if (new URL(request.url).hostname.endsWith(".workers.dev")) {
@@ -276,12 +276,12 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 	const robots = ROBOTS;
 	headers.set(ROBOTS_HEADER, robots);
 	// A change of filters: the page hears, to keep it on the member. Only
-	// middleware may say so, as with the secret shown once below.
+	// the proxy may say so, as with the secret shown once below.
 	headers.delete(BROWSE_CHANGED_HEADER);
 	if (remembered.changed !== undefined)
 		headers.set(BROWSE_CHANGED_HEADER, remembered.changed);
 	// A secret shown once (lib/shown-once.ts): handed to this page view in a
-	// header only middleware sets, and the cookie that carried it cleared.
+	// header only the proxy sets, and the cookie that carried it cleared.
 	// The cookie arrives percent-decoded; encoded again, the header stays
 	// ASCII and lib/shown-once.ts decodes it once.
 	headers.delete(SHOWN_ONCE_HEADER);
