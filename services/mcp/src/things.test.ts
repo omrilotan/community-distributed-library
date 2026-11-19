@@ -24,7 +24,9 @@ function thingsServer() {
 			fetch: async (request: Request) => {
 				const url = new URL(request.url);
 				const body = request.body ? await request.json() : null;
-				asked.push({ method: request.method, path: url.pathname, body });
+				// What a tool asks for, not the count of news every answer ends with.
+				if (url.pathname !== "/v1/me/news/hint")
+					asked.push({ method: request.method, path: url.pathname, body });
 				return request.method === "PATCH"
 					? new Response(null, { status: 204 })
 					: Response.json(

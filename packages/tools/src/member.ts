@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Tag, traits, type LibraryType } from "@cdl/contracts";
+import { Tag, traits, type LibraryType, type News } from "@cdl/contracts";
 import { failed, tool, type Tool } from "./tool.ts";
 
 /**
@@ -49,6 +49,27 @@ export function memberTools(type: LibraryType): Tool[] {
 			"Who I am in the library: name, area, community, role.",
 			{},
 			(_, { call }) => call("/v1/me"),
+		),
+
+		tool(
+			"whats_new",
+			say(
+				"What the library told me since this assistant last looked: a request for one of my books, an answer to mine, a new message on a loan, a handover time, a reminder, a book I waited for coming free. Each says what kind it is, the title, the page on the site and, when it is about one loan or one book, its id. Look closer with list_my_loans, get_loan_messages or get_work. Call it when a conversation about the library starts, and when another tool's answer ends by counting news. Listing counts as looking: the next call has only what came after.",
+				"What the library told me since this assistant last looked: a request for one of my things, an answer to mine, a new message on a loan, a handover time, a reminder, a thing I waited for coming free. Each says what kind it is, the name, the page on the site and, when it is about one loan or one thing, its id. Look closer with list_my_loans, get_loan_messages or get_work. Call it when a conversation about the library starts, and when another tool's answer ends by counting news. Listing counts as looking: the next call has only what came after.",
+			),
+			{},
+			async (_, { call }) => {
+				const listed = await call<News>("/v1/me/news");
+				if (listed.status >= 400) return listed;
+				const { news, until, more } = listed.body;
+				// Told, so read: a mark that fails only means hearing it twice.
+				if (news.length)
+					await call("/v1/me/news/seen", {
+						method: "POST",
+						body: { until },
+					}).catch(() => undefined);
+				return { status: 200, body: { news, more } };
+			},
 		),
 
 		tool(
