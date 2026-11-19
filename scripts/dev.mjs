@@ -17,10 +17,19 @@ const npm =
 		? [process.execPath, join(npmBin, "npm-cli.js")]
 		: ["npm"];
 
+// The web app asks the MCP server for things over a service binding, and the
+// two find each other through a registry folder. wrangler 4.165 and the Vite
+// plugin 1.70 each look in a folder of their own unless told where, so every
+// server here is told the same one.
+const env = {
+	CLOUDFLARE_DEV_REGISTRY_PATH: join(root, ".wrangler", "registry"),
+	...process.env,
+};
+
 function run(name, args, { prefix } = {}) {
 	const child = spawn(npm[0], [...npm.slice(1), ...args], {
 		cwd: root,
-		env: process.env,
+		env,
 		stdio: prefix ? ["inherit", "pipe", "pipe"] : "inherit",
 	});
 	if (prefix) {
