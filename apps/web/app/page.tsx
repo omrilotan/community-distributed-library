@@ -122,7 +122,7 @@ export default async function StorefrontPage({
 	const asked = Number(limit ?? shown ?? 0) || 0;
 	const size = Math.min(Math.max(asked || PAGE, PAGE), MOST);
 	const how = `${sort === "new" ? "" : `&sort=${sort}`}${availableOnly ? "&availableOnly=1" : ""}${showMine ? "&showMine=1" : ""}${showRead ? "&showRead=1" : ""}${wished ? "&wished=1" : ""}${within ? `&within=${within}` : ""}`;
-	// The filters just changed (middleware.ts says so): keep them on the
+	// The filters just changed (proxy.ts says so): keep them on the
 	// member, so their next device opens the shelves the same way.
 	const changed = (await headers()).get("x-cdl-browse");
 	// Everything the page needs, in one round: the profile check only

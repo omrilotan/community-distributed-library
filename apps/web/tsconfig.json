@@ -13,7 +13,7 @@
     "app/**/*.ts",
     "app/**/*.tsx",
     "lib/**/*.ts",
-    "middleware.ts",
+    "proxy.ts",
     "e2e/**/*.ts",
     "playwright.config.ts"
   ],

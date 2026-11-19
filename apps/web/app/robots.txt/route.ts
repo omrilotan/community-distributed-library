@@ -1,7 +1,7 @@
 /**
  * No crawler is welcome in a library: it is a neighbourhood's, found by
  * invitation. Only the project's front door, on the bare domain, is public.
- * The pages also say `noindex, nofollow` (middleware.ts), for anything that
+ * The pages also say `noindex, nofollow` (proxy.ts), for anything that
  * reaches one through somebody else's link.
  */
 const ROBOTS = [

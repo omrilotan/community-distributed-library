@@ -1,10 +1,10 @@
 /**
  * The cookie that carries a secret shown once to a browser without scripts
- * (lib/shown-once.ts reads it). Kept apart from that module so middleware
+ * (lib/shown-once.ts reads it). Kept apart from that module so the proxy
  * can name it without pulling in what only pages may use.
  */
 export const SHOWN_ONCE_COOKIE = "__Host-shown-once";
-/** How middleware hands it to the one page view that shows it. */
+/** How the proxy hands it to the one page view that shows it. */
 export const SHOWN_ONCE_HEADER = "x-cdl-shown-once";
 
 /** What each kind of secret shown once carries. */

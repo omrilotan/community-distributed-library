@@ -1,6 +1,6 @@
 /**
  * The edge's copy of a page anybody may see. The application says which
- * pages those are (middleware.ts), by a `CDN-Cache-Control` header; the
+ * pages those are (proxy.ts), by a `CDN-Cache-Control` header; the
  * Worker keeps them, since a Worker's own responses never reach the zone's
  * cache by themselves.
  */

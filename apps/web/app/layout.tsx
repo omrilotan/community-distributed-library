@@ -56,7 +56,7 @@ export default async function RootLayout({
 	children: React.ReactNode;
 }) {
 	const store = await cookies();
-	// The middleware minted a nonce for this request; our own inline script
+	// The proxy minted a nonce for this request; our own inline script
 	// has to carry it or the policy will stop it.
 	const sent = await headers();
 	const nonce = sent
