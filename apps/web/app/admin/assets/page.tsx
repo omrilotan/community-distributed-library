@@ -46,21 +46,31 @@ export default async function AdminAssets({
 					dir="auto"
 					defaultValue={q ?? ""}
 					placeholder={t.assetSearch}
+					aria-label={t.assetSearch}
 				/>
 				<button type="submit">{t.search}</button>
 			</form>
 			{rows.length === 0 ? <Empty title={t.noAssets} /> : null}
-			<div className="table-wrap">
+			<div
+				className="table-wrap"
+				tabIndex={0}
+				role="region"
+				aria-label={t.assets}
+			>
 				<table>
 					<thead>
 						<tr>
-							<th />
-							<th>{t.title}</th>
-							<th>{t.colOwner}</th>
-							<th>{t.colStatus}</th>
-							<th>{t.colLoan}</th>
-							<th>{t.colAdded}</th>
-							<th />
+							<th scope="col">
+								<span className="sr-only">{t.photo}</span>
+							</th>
+							<th scope="col">{t.title}</th>
+							<th scope="col">{t.colOwner}</th>
+							<th scope="col">{t.colStatus}</th>
+							<th scope="col">{t.colLoan}</th>
+							<th scope="col">{t.colAdded}</th>
+							<th scope="col">
+								<span className="sr-only">{t.manage}</span>
+							</th>
 						</tr>
 					</thead>
 					<tbody>

@@ -455,6 +455,7 @@ export default async function LoanThreadPage({
 						required
 						autoComplete="off"
 						placeholder={t.writeMessage}
+						aria-label={t.writeMessage}
 					/>
 					<button type="submit">{t.send}</button>
 				</form>

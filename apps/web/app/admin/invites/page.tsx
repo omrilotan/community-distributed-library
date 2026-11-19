@@ -188,16 +188,23 @@ export default async function AdminInvites({
 				<button type="submit">{t.inviteCreate}</button>
 			</form>
 			<p className="muted">{t.inviteHint}</p>
-			<div className="table-wrap">
+			<div
+				className="table-wrap"
+				tabIndex={0}
+				role="region"
+				aria-label={t.invites}
+			>
 				<table>
 					<thead>
 						<tr>
-							<th>{t.colCreatedBy}</th>
-							<th>{t.colSentTo}</th>
-							<th>{t.colUses}</th>
-							<th>{t.colExpires}</th>
-							<th>{t.colStatus}</th>
-							<th />
+							<th scope="col">{t.colCreatedBy}</th>
+							<th scope="col">{t.colSentTo}</th>
+							<th scope="col">{t.colUses}</th>
+							<th scope="col">{t.colExpires}</th>
+							<th scope="col">{t.colStatus}</th>
+							<th scope="col">
+								<span className="sr-only">{t.manage}</span>
+							</th>
 						</tr>
 					</thead>
 					<tbody>

@@ -83,16 +83,23 @@ export default async function AdminMembers({
 					</div>
 				</form>
 			) : null}
-			<div className="table-wrap">
+			<div
+				className="table-wrap"
+				tabIndex={0}
+				role="region"
+				aria-label={t.members}
+			>
 				<table>
 					<thead>
 						<tr>
-							<th>{t.colName}</th>
-							<th>{t.colRole}</th>
-							<th>{t.colStatus}</th>
-							<th>{t.colCopies}</th>
-							<th>{t.colLastSeen}</th>
-							<th />
+							<th scope="col">{t.colName}</th>
+							<th scope="col">{t.colRole}</th>
+							<th scope="col">{t.colStatus}</th>
+							<th scope="col">{t.colCopies}</th>
+							<th scope="col">{t.colLastSeen}</th>
+							<th scope="col">
+								<span className="sr-only">{t.manage}</span>
+							</th>
 						</tr>
 					</thead>
 					<tbody>

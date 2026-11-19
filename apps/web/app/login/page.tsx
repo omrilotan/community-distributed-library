@@ -128,6 +128,9 @@ export default async function LoginPage({
 						name="email"
 						type="email"
 						inputMode="email"
+						autoComplete="email"
+						autoCapitalize="none"
+						spellCheck={false}
 						dir="ltr"
 						required
 					/>

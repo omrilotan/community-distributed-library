@@ -128,6 +128,7 @@ export function HandoffPanel({
 								autoCapitalize="characters"
 								maxLength={8}
 								placeholder={t.enterCode}
+								aria-label={t.enterCode}
 								required
 							/>
 							<button type="submit">{t.confirmHandoff}</button>

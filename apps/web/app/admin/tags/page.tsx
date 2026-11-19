@@ -211,6 +211,7 @@ export default async function AdminTags({
 									dir="auto"
 									maxLength={200}
 									placeholder={t.declineNote}
+									aria-label={t.declineNote}
 								/>
 								<button type="submit" className="link">
 									{t.declineTag}
