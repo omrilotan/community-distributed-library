@@ -117,6 +117,7 @@ import {
 	WebhookView,
 } from "./webhooks.ts";
 import { CopyState, Condition, LendingPolicy } from "./copies.ts";
+import { News, NewsHint, NewsSeen } from "./news.ts";
 
 /**
  * The public REST surface, as data. The OpenAPI document is generated from
@@ -878,6 +879,33 @@ export const ROUTES: readonly Route[] = [
 		response: z.object({ name: z.string().nullable() }),
 	},
 
+	// News
+	{
+		method: "get",
+		path: "/v1/me/news",
+		tag: "Profile",
+		summary: "What the library told you since this connection last looked",
+		access: "loans:read",
+		note: "Each connection (a personal token, or an assistant you approved) keeps its own place. Only what came after your last visit to the site: what you opened there you have seen. A browser session has no place to keep, and gets the last week. Notices are kept for 30 days; never their words, or who they came from.",
+		response: News,
+	},
+	{
+		method: "post",
+		path: "/v1/me/news/seen",
+		tag: "Profile",
+		summary: "Mark news as seen, up to `until` from the list",
+		access: "loans:read",
+		body: NewsSeen,
+	},
+	{
+		method: "post",
+		path: "/v1/me/news/hint",
+		tag: "Profile",
+		summary: "How many notices are new, by kind, said once",
+		access: "loans:read",
+		note: "For an assistant to mention in passing: each notice is counted here once per connection, and stays in `GET /v1/me/news` until marked seen.",
+		response: NewsHint,
+	},
 	// Webhooks and events
 	{
 		method: "get",

@@ -48,6 +48,7 @@ describe("a member's data", () => {
 			"moderation",
 			"invitationsReceived",
 			"emailsWaiting",
+			"notices",
 		])
 			expect(Array.isArray(out.body[part])).toBe(true);
 	});

@@ -64,6 +64,7 @@ privacy.post("/v1/admin/members/:id/export", async (c) => {
 		moderation,
 		invitedAt,
 		waiting,
+		notices,
 	] = await Promise.all([
 		all(
 			`SELECT c.id, e.title, c.condition, c.lending, c.state, c.note, c.created_at
@@ -148,6 +149,10 @@ privacy.post("/v1/admin/members/:id/export", async (c) => {
 			"SELECT created_at, send_after FROM pending_emails WHERE member_id = ?",
 			id,
 		),
+		all(
+			"SELECT kind, detail, title, url, created_at FROM notices WHERE member_id = ? ORDER BY seq",
+			id,
+		),
 	]);
 
 	return c.json({
@@ -174,6 +179,7 @@ privacy.post("/v1/admin/members/:id/export", async (c) => {
 		moderation,
 		invitationsReceived: invitedAt,
 		emailsWaiting: waiting,
+		notices,
 	});
 });
 
@@ -274,6 +280,7 @@ privacy.post("/v1/admin/members/:id/erase", async (c) => {
 			)
 			.bind(id),
 		db.prepare("DELETE FROM pending_emails WHERE member_id = ?").bind(id),
+		db.prepare("DELETE FROM notices WHERE member_id = ?").bind(id),
 		db.prepare("DELETE FROM loan_reads WHERE member_id = ?").bind(id),
 		db
 			.prepare(

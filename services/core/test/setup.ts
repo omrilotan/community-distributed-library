@@ -129,6 +129,7 @@ beforeEach(async () => {
 			"DELETE FROM invites",
 			// What refers to a member goes before the members a test made.
 			"DELETE FROM pending_emails",
+			"DELETE FROM notices",
 			"DELETE FROM push_subscriptions",
 			`DELETE FROM memberships WHERE member_id NOT IN (
 			   '01J0MEMBER00000000000DANA', '01J0MEMBER0000000000SAM00', '01J0MEMBER00000000000NXA00')`,

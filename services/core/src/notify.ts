@@ -1,7 +1,9 @@
 import {
+	NEWS_KINDS,
 	REQUEST_HOLD_MINUTES,
 	type LibraryType,
 	type Message,
+	type NewsKind,
 } from "@cdl/contracts";
 import type { Env, PushOutcome } from "./env.ts";
 import { ulid, now } from "./ids.ts";
@@ -110,6 +112,7 @@ export async function tell(
 		await sendNow(env, null, message);
 		return;
 	}
+	await keepNotice(env, member.id, message);
 
 	const { results } = await env.DB.prepare(
 		`SELECT id, endpoint, p256dh, auth FROM push_subscriptions
@@ -147,6 +150,66 @@ export async function tell(
 			now() + deferMinutes * 60,
 		)
 		.run();
+}
+
+/** How long a notice is kept as news: long enough for a member back from a holiday. */
+export const NEWS_DAYS = 30;
+
+/**
+ * What a notice was about, for the member's assistant to say what is new
+ * (routes-news.ts): its kind, the title, and the page that shows it. The
+ * words somebody wrote, and their name, are not kept: the assistant reads
+ * those where a member would, from the loan. Never throws: telling the
+ * member matters more than remembering that we did.
+ */
+export async function keepNotice(
+	env: Env,
+	memberId: string,
+	message: Message,
+): Promise<void> {
+	if (!(NEWS_KINDS as readonly string[]).includes(message.kind)) return;
+	const about = message as Message & {
+		kind: NewsKind;
+		url?: string;
+		bookTitle?: string | null;
+	};
+	try {
+		await env.DB.prepare(
+			`INSERT INTO notices (member_id, kind, detail, title, url, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?)`,
+		)
+			.bind(
+				memberId,
+				about.kind,
+				detailOf(message),
+				about.bookTitle ?? null,
+				about.url ?? null,
+				now(),
+			)
+			.run();
+	} catch (error) {
+		console.error("[notify] notice not kept", message.kind, error);
+	}
+}
+
+/** Which of its kind a notice was: the answer, the stage, what came of a report. */
+function detailOf(message: Message): string | null {
+	switch (message.kind) {
+		case "loan_request":
+			return message.relay ? "relay" : null;
+		case "loan_decision":
+			return message.accepted ? "accepted" : "declined";
+		case "loan_nudge":
+		case "loan_reminder":
+		case "handoff":
+			return message.stage;
+		case "report":
+			return message.reportKind;
+		case "report_update":
+			return message.event;
+		default:
+			return null;
+	}
 }
 
 /**
