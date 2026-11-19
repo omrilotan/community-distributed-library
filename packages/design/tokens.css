@@ -26,6 +26,7 @@
 	--warn: #98501f;
 	--warn-soft: #f5e7da;
 	--danger: #9b2c1f;
+	--on-danger: #ffffff;
 	/* Plain covers, for books without a picture: earthy, quiet, all dark-ink
 	   legible. Chosen per book, so the same book is always the same colour. */
 	--paper-1: #d5ebe5;
@@ -69,6 +70,7 @@
 		--warn: #e0a878;
 		--warn-soft: #33271d;
 		--danger: #f0a196;
+		--on-danger: #0c1f1a;
 		--paper-1: #1f3531;
 		--paper-2: #3a2b22;
 		--paper-3: #38321f;

@@ -320,6 +320,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 	}
 	// The rest of the usual hardening. HSTS is set at the zone.
 	response.headers.set("x-content-type-options", "nosniff");
+	// The CSP says it too; this is for browsers that only read the old header.
+	response.headers.set("x-frame-options", "DENY");
 	response.headers.set("referrer-policy", "strict-origin-when-cross-origin");
 	response.headers.set("permissions-policy", PERMISSIONS);
 	response.headers.set("cross-origin-opener-policy", "same-origin");

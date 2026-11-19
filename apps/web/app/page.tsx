@@ -428,7 +428,7 @@ export default async function StorefrontPage({
 
 			{wanted.length ? (
 				<section className="wanted">
-					<PageHead title={t.lookingFor} />
+					<PageHead as="h2" title={t.lookingFor} />
 					<ul className="hooks">
 						{wanted.map((work) => (
 							<li key={work.workId}>
