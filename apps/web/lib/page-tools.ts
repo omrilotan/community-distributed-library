@@ -29,7 +29,9 @@ export async function pageTools(): Promise<Tool[] | null> {
 	if (me.status !== 200) return null;
 	const moderator = moderates(me.body.role) && !(await viewingAsMember());
 	return [
-		...memberTools(info.type),
+		// Not whats_new: that is for an assistant away from the site, which
+		// keeps its place in the news. Here the pages themselves show it.
+		...memberTools(info.type).filter((tool) => tool.name !== "whats_new"),
 		...(moderator ? moderatorTools(info.type) : []),
 	];
 }

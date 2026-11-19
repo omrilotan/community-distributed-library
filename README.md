@@ -159,7 +159,7 @@ profile:read admin`.
   (`x-cdl-signature: t=…,v1=HMAC-SHA256(secret, t.body)`) for `copy.*`, `loan.*` and `handoff.*`,
   retried with backoff, replayable from `/api/v1/events?since=<id>`.
 
-Member tools: `my_profile`, `search_catalogue`, `browse_shelves`, `get_work`, `lookup_isbn`,
+Member tools: `my_profile`, `whats_new`, `search_catalogue`, `browse_shelves`, `get_work`, `lookup_isbn`,
 `list_tags`, `list_my_shelf`, `add_copy`, `update_copy`, `upload_cover`, `set_cover`,
 `set_item_tags`, `request_loan`, `respond_to_request`, `cancel_loan`, `extend_loan`, `nudge`,
 `list_my_loans`, `get_loan_messages`, `post_loan_message`, `join_waitlist`, `leave_waitlist`,
@@ -170,6 +170,12 @@ Moderators also get `edit_item`, `set_item_cover`, `upload_item_cover`, `remove_
 `add_tag`, `edit_tag`, `remove_tag`, `rename_tag_group`.
 
 No tool can confirm a handoff or mark an item handed over or returned: a person has to be there.
+
+Nothing wakes an assistant, so it hears news in passing. `whats_new` lists what the library told the
+member since that connection last looked (`GET /v1/me/news`), and every other tool's answer ends with
+a count of what is new, said once (`POST /v1/me/news/hint`): counts only, never what a notice says.
+A member who wants to be told without asking gives their assistant a scheduled task that calls
+`whats_new`.
 
 ## How some things work
 

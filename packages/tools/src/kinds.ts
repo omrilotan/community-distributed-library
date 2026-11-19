@@ -11,6 +11,8 @@ export type Kind = "read" | "own" | "others";
 
 export const KINDS: Record<string, { kind: Kind; destructive?: boolean }> = {
 	my_profile: { kind: "read" },
+	// Moves only this connection's own place in the news; the library is as it was.
+	whats_new: { kind: "read" },
 	search_catalogue: { kind: "read" },
 	browse_shelves: { kind: "read" },
 	list_tags: { kind: "read" },

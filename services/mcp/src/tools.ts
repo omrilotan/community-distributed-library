@@ -5,6 +5,7 @@ import type { Env, Props } from "./env.ts";
 import { coreClient, coverUploader, type OnRevoked } from "./core-client.ts";
 import { offer, registerModeratorTools } from "./moderator-tools.ts";
 import type { LibraryInfo } from "./library.ts";
+import { mentionNews } from "./news.ts";
 import { classifyTools, instructionsFor } from "./safety.ts";
 
 /**
@@ -30,10 +31,15 @@ export function createServer(
 	const upload = coverUploader(env, props);
 	// Member-written text is data, and changes wait for the member's yes:
 	// said once to the assistant, and on every tool (safety.ts).
-	const server = classifyTools(
-		new McpServer(serverIdentity(env, library), {
-			instructions: instructionsFor(library.type),
-		}),
+	// And every answer ends with how much is new for the member, if anything
+	// is (news.ts): nothing wakes an assistant, so it hears in passing.
+	const server = mentionNews(
+		classifyTools(
+			new McpServer(serverIdentity(env, library), {
+				instructions: instructionsFor(library.type),
+			}),
+		),
+		call,
 	);
 
 	const text = (value: unknown) => ({
