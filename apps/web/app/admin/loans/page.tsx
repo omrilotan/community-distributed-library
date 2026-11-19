@@ -71,16 +71,21 @@ export default async function AdminLoans({
 				<Empty title={t.adminLoansNone} />
 			) : (
 				<>
-					<div className="table-wrap">
+					<div
+						className="table-wrap"
+						tabIndex={0}
+						role="region"
+						aria-label={t.loans}
+					>
 						<table>
 							<thead>
 								<tr>
-									<th>{t.adminLoansBook}</th>
-									<th>{t.adminLoansLender}</th>
-									<th>{t.adminLoansBorrower}</th>
-									<th>{t.colStatus}</th>
-									<th>{t.adminLoansSince}</th>
-									<th>{t.adminLoansDue}</th>
+									<th scope="col">{t.adminLoansBook}</th>
+									<th scope="col">{t.adminLoansLender}</th>
+									<th scope="col">{t.adminLoansBorrower}</th>
+									<th scope="col">{t.colStatus}</th>
+									<th scope="col">{t.adminLoansSince}</th>
+									<th scope="col">{t.adminLoansDue}</th>
 								</tr>
 							</thead>
 							<tbody>

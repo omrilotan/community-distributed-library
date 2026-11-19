@@ -43,13 +43,18 @@ export default async function LogPageView({
 				<Empty title={t.logNone} />
 			) : (
 				<>
-					<div className="table-wrap">
+					<div
+						className="table-wrap"
+						tabIndex={0}
+						role="region"
+						aria-label={t.logTab}
+					>
 						<table className="log">
 							<thead>
 								<tr>
-									<th>{t.logWhen}</th>
-									<th>{t.logWho}</th>
-									<th>{t.logWhat}</th>
+									<th scope="col">{t.logWhen}</th>
+									<th scope="col">{t.logWho}</th>
+									<th scope="col">{t.logWhat}</th>
 								</tr>
 							</thead>
 							<tbody>
