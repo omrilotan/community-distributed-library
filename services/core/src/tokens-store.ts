@@ -110,7 +110,12 @@ export async function redeemConsent(env: Env, code: string) {
 export async function memberForAccessToken(
 	env: Env,
 	token: string,
-): Promise<{ memberId: string; scopes: Scope[]; clientName: string } | null> {
+): Promise<{
+	tokenId: string;
+	memberId: string;
+	scopes: Scope[];
+	clientName: string;
+} | null> {
 	const row = await env.DB.prepare(
 		`SELECT id, member_id, scopes, last_used_at, client_name FROM access_tokens
 		  WHERE token_hash = ? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > ?)`,
@@ -132,6 +137,7 @@ export async function memberForAccessToken(
 			.run();
 	}
 	return {
+		tokenId: row.id,
 		memberId: row.member_id,
 		scopes: row.scopes.split(" ") as Scope[],
 		clientName: row.client_name,

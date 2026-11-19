@@ -28,6 +28,7 @@ function nobody(communityId: string): Viewer {
 		scopes: [],
 		session: false,
 		sessionId: null,
+		tokenId: null,
 		client: null,
 		role: "member",
 		compact: true,

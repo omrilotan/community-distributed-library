@@ -1,5 +1,5 @@
 import type { Env } from "./env.ts";
-import { tell } from "./notify.ts";
+import { NEWS_DAYS, tell } from "./notify.ts";
 import { pruneRateLimits } from "./rate-limit.ts";
 import { expireHolds, offerWaitedFor } from "./waitlist.ts";
 import { now } from "./ids.ts";
@@ -33,7 +33,8 @@ interface LoanRow {
 /**
  * Sign-in links a day past expiry (each keeps an address, joined or not),
  * sessions a month after they ended, a connection's plain token once its
- * code is used or lapsed, and email follow-ups a day old that no pass sent.
+ * code is used or lapsed, email follow-ups a day old that no pass sent, and
+ * notices kept as news (notify.ts) once they are a month old.
  */
 export function forgetSpent(env: Env, at: number) {
 	return env.DB.batch([
@@ -54,6 +55,9 @@ export function forgetSpent(env: Env, at: number) {
 		).bind(at),
 		env.DB.prepare("DELETE FROM pending_emails WHERE created_at < ?").bind(
 			at - DAY,
+		),
+		env.DB.prepare("DELETE FROM notices WHERE created_at < ?").bind(
+			at - NEWS_DAYS * DAY,
 		),
 	]);
 }

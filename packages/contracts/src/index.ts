@@ -12,6 +12,7 @@ export * from "./handoffs.ts";
 export * from "./waitlist.ts";
 export * from "./reports.ts";
 export * from "./webhooks.ts";
+export * from "./news.ts";
 export * from "./wanted.ts";
 export * from "./tags.ts";
 export * from "./library-types.ts";

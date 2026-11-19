@@ -17,6 +17,8 @@ export interface Viewer {
 	sessionId: string | null;
 	/** The assistant acting for them, by the name they approved; null on the site. */
 	client: string | null;
+	/** The connection itself, for what it alone remembers (news it has read). */
+	tokenId: string | null;
 	/** Their role here; what moderator() and libraryAdmin() go by. */
 	role: "member" | "moderator" | "admin";
 	/** The library has everyone close by: no areas or distances anywhere. */
@@ -62,7 +64,8 @@ async function resolve<E extends { Bindings: Env }>(
 	const at = now();
 	const bearer = c.req.header("Authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
 	let row: (MemberRow & { session_id?: string; seen?: number }) | null = null;
-	let caller: Pick<Viewer, "scopes" | "session" | "client"> | null = null;
+	let caller: Pick<Viewer, "scopes" | "session" | "client" | "tokenId"> | null =
+		null;
 
 	if (bearer) {
 		// A session first, in one query with the member it belongs to: the
@@ -77,7 +80,7 @@ async function resolve<E extends { Bindings: Env }>(
 			.first<MemberRow & { session_id: string; seen: number }>();
 		if (session) {
 			row = session;
-			caller = { scopes: SCOPES, session: true, client: null };
+			caller = { scopes: SCOPES, session: true, client: null, tokenId: null };
 		} else {
 			const token = await memberForAccessToken(c.env, bearer);
 			if (!token) return null;
@@ -86,13 +89,14 @@ async function resolve<E extends { Bindings: Env }>(
 				scopes: token.scopes,
 				session: false,
 				client: token.clientName,
+				tokenId: token.tokenId,
 			};
 		}
 	} else if (c.env.DEV_AUTH === "true") {
 		const memberId = c.req.header("X-Member-Id");
 		if (!memberId) return null;
 		row = await memberRow(c.env, memberId);
-		caller = { scopes: SCOPES, session: true, client: null };
+		caller = { scopes: SCOPES, session: true, client: null, tokenId: null };
 	}
 	if (!row || !caller) return null;
 
