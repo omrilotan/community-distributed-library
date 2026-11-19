@@ -16,6 +16,8 @@ export async function GET(): Promise<Response> {
 		...(words.tagline ? { description: words.tagline } : {}),
 		lang: defaultLocale,
 		dir: defaultLocale === "he" ? "rtl" : "ltr",
+		// The same as start_url, which is the identity browsers already use.
+		id: "/",
 		start_url: "/",
 		scope: "/",
 		display: "standalone",

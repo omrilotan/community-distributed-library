@@ -3,13 +3,16 @@
 export function PageHead({
 	title,
 	aside,
+	as: Heading = "h1",
 }: {
 	title: React.ReactNode;
 	aside?: React.ReactNode;
+	/** A page has one h1; a second head on it is an h2 that looks the same. */
+	as?: "h1" | "h2";
 }) {
 	return (
 		<div className="page-head">
-			<h1>{title}</h1>
+			<Heading>{title}</Heading>
 			{aside ? <span className="muted">{aside}</span> : null}
 		</div>
 	);

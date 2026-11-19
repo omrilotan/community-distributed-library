@@ -152,6 +152,7 @@ export default async function RootLayout({
 					media="(display-mode: standalone)"
 					content={brandColours(info.accent).light}
 				/>
+				<meta name="color-scheme" content="light dark" />
 				{accent ? <style dangerouslySetInnerHTML={{ __html: accent }} /> : null}
 				{/* Installing it is what makes notifications possible on iOS. */}
 				<meta name="apple-mobile-web-app-capable" content="yes" />

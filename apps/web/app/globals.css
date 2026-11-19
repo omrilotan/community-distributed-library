@@ -273,6 +273,12 @@ section[id] {
 	margin: 0;
 }
 
+/* An h2 head looks exactly like the h1 one. */
+.page-head h2 {
+	margin-block-start: 0;
+	font-size: 1.625rem;
+}
+
 .muted {
 	color: var(--muted);
 	font-size: 0.875rem;
@@ -516,7 +522,7 @@ button.link:hover {
 button.danger,
 .btn.danger {
 	background: var(--danger);
-	color: #fff;
+	color: var(--on-danger);
 }
 
 button.quiet,
@@ -743,6 +749,13 @@ button.tile:active {
 		block-size: fit-content;
 		margin: auto;
 		border-radius: var(--radius);
+	}
+}
+
+/* Without the Popover API the sheet would sit open over the page for good. */
+@supports not selector(:popover-open) {
+	.sheet {
+		display: none;
 	}
 }
 
@@ -1825,6 +1838,16 @@ button.toggle:hover {
 .slot-cell:has(input:checked) {
 	background: var(--accent);
 	border-color: var(--accent);
+}
+
+/* Forced colours take the fill away, and the box itself is invisible: say
+   which slots are chosen with the system's own colours. */
+@media (forced-colors: active) {
+	.slot-cell:has(input:checked) {
+		background: Highlight;
+		border-color: Highlight;
+		color: HighlightText;
+	}
 }
 
 .slot-cell:has(input:focus-visible) {
@@ -4110,4 +4133,24 @@ html[data-library="things"] .book-cover img {
 	display: grid;
 	gap: 0.25rem;
 	justify-items: start;
+}
+
+/* iOS Safari zooms the page when a field under 16px takes focus. Only there,
+   and only fields somebody types in or picks from: a rule with a class of
+   its own still wins, so the one small field is named. */
+@supports (-webkit-touch-callout: none) {
+	input:where(
+		:not(
+			[type="checkbox"],
+			[type="radio"],
+			[type="range"],
+			[type="color"],
+			[type="file"]
+		)
+	),
+	select,
+	textarea,
+	input.tag-quick-add[type="text"] {
+		font-size: max(1rem, 1em);
+	}
 }
