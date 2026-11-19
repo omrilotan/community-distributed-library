@@ -33,10 +33,10 @@
     "db:pull": "node scripts/db-pull.mjs"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
+    "prettier": "^3.10.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.5",
-    "wrangler": "^4.134.0"
+    "vite": "^8.3.8",
+    "wrangler": "^4.165.0"
   },
   "overrides": {
     "@modelcontextprotocol/client": "^2.2.0",
@@ -50,6 +50,7 @@
     "esbuild@0.28.1": true,
     "esbuild@0.28.2": true,
     "workerd@1.20260815.1": true,
-    "workerd@1.20261019.1": true
+    "workerd@1.20261116.1": true,
+    "workerd@1.20261118.1": true
   }
 }
