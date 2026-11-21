@@ -24,6 +24,7 @@ import { dateFormat } from "../../../lib/dates.ts";
 import { titled } from "../../../lib/page-title.ts";
 import { groupOf } from "../../../lib/loan-groups.ts";
 import { LoanItem } from "../loan-item.tsx";
+import { comeLine } from "../../asks/ask-parts.tsx";
 import { MoreFromOwnerSection } from "../more-from-owner.tsx";
 
 export const generateMetadata = titled((t) => t.loans);
@@ -164,7 +165,21 @@ export default async function LoanThreadPage({
 				]
 			: [],
 	);
-	const log = [...opening, ...messages];
+	// What began as an ask opens with the lender's line too: when to come by.
+	const offered: ThreadMessage[] = loans.flatMap((one) =>
+		one.ask
+			? [
+					{
+						id: `offer-${one.id}`,
+						loanId: one.id,
+						authorId: one.lender.id,
+						body: `${comeLine(one.ask, t)}${one.ask.note ? ` · ${one.ask.note}` : ""}`,
+						createdAt: one.requestedAt,
+					},
+				]
+			: [],
+	);
+	const log = [...opening, ...offered, ...messages];
 	// Reports go where they happened, among the messages.
 	// What happened to the loan itself goes where it happened too.
 	const notes: { at: number; note: string }[] = [];
@@ -214,7 +229,7 @@ export default async function LoanThreadPage({
 		<main className="chat">
 			<header className="chat-head">
 				{/* The title is the link; the cover is the same link for a thumb. */}
-				{!grouped && loan?.copy.coverUrl ? (
+				{!grouped && loan?.copy.coverUrl && !loan.ask ? (
 					<a
 						href={`/works/${loan.copy.workId}`}
 						aria-hidden="true"
@@ -229,12 +244,17 @@ export default async function LoanThreadPage({
 							<bdi>{other}</bdi>
 						) : loan ? (
 							<>
-								<a
-									href={`/works/${loan.copy.workId}`}
-									style={{ color: "inherit", textDecoration: "none" }}
-								>
+								{/* What began as an ask is on no shelf: no page to visit. */}
+								{loan.ask ? (
 									<bdi>{loan.copy.title}</bdi>
-								</a>
+								) : (
+									<a
+										href={`/works/${loan.copy.workId}`}
+										style={{ color: "inherit", textDecoration: "none" }}
+									>
+										<bdi>{loan.copy.title}</bdi>
+									</a>
+								)}
 								{loan.copy.quantity > 1 ? (
 									<span className="muted">
 										{" "}

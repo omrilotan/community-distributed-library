@@ -409,6 +409,62 @@ const dictionary = {
 		wantedFailed: "Could not record the request.",
 		lookingFor: "Neighbours are looking for",
 		haveIt: "Have it? Add your copy",
+		askTitle: "Can't find it? Ask the neighbours",
+		askHint:
+			"Neighbours who have one can offer it, even if it is not listed. You choose which to take.",
+		askWhat: "What do you need?",
+		askNote: "Anything to add?",
+		askOptional: "optional",
+		askBy: "By when?",
+		askByToday: "Today",
+		askByWeek: "This week",
+		askByWhenever: "No rush",
+		askDays: "For how long?",
+		askDay: "A day",
+		askWeekend: "A weekend",
+		askWeek: "A week",
+		askSend: "Ask the neighbours",
+		askFailed: "Could not send the ask.",
+		askTooMany: "You have three asks open. Close one first.",
+		askSent: "Asked. You will hear when a neighbour has one.",
+		askHaveOne: "I have one",
+		askYours: "Your ask",
+		askYouOffered: "You offered yours",
+		askTodayNote: "Asks for today leave at midnight.",
+		askOver: "This ask is over.",
+		askMine: "You asked for",
+		askNoOffers: "No offers yet. You will hear when a neighbour has one.",
+		askTake: "Take this one",
+		askTakeHint:
+			"You see where to go after you take one. The others are told it is sorted.",
+		askTakeFailed: "That offer is no longer there.",
+		askClose: "Close ask",
+		askClosed: "Ask closed.",
+		offerTitle: "Offer yours",
+		offerName: "What is it?",
+		offerNow: "Now, until",
+		offerLater: "Later today, from",
+		offerUsual: "At my usual times",
+		offerUsualHint: "You arrange a time together after.",
+		offerUntil: "Until what time",
+		offerFrom: "From what time",
+		offerNote: "Note",
+		offerPlace: "Where to come (private)",
+		offerPlaceHint:
+			"Saved as where you meet. Shown only to someone who takes your offer.",
+		offerSend: "Offer it",
+		offerNotNow: "Not now",
+		offerFailed: "Could not send the offer.",
+		offerNeedsPlace: "Say where to come, so they can find you.",
+		offerWithdrawn: "Offer taken back.",
+		offersMine: "Your offers",
+		keepHint:
+			"Neighbours could find it and ask to borrow it. You say yes or no each time, and can take it off whenever you like.",
+		keepYes: "Keep it listed",
+		keepNo: "No thanks",
+		keepNote: "Nothing is listed unless you choose it.",
+		keptListed: "On your shelf now. Add a photo when you have a moment.",
+		keepFailed: "Could not save that.",
 		share: "Share",
 		copyLink: "Copy link",
 		copy: "Copy",
@@ -1214,6 +1270,60 @@ const dictionary = {
 		wantedFailed: "לא הצלחנו לרשום את הבקשה.",
 		lookingFor: "שכנים מחפשים",
 		haveIt: "יש לכם? הוסיפו עותק",
+		askTitle: "לא מצאתם? שאלו את השכנים",
+		askHint:
+			"שכנים שיש להם יכולים להציע, גם אם זה לא ברשימה. אתם בוחרים איזו הצעה לקחת.",
+		askWhat: "מה אתם צריכים?",
+		askNote: "משהו להוסיף?",
+		askOptional: "לא חובה",
+		askBy: "עד מתי?",
+		askByToday: "היום",
+		askByWeek: "השבוע",
+		askByWhenever: "בלי לחץ",
+		askDays: "לכמה זמן?",
+		askDay: "יום",
+		askWeekend: "סוף שבוע",
+		askWeek: "שבוע",
+		askSend: "שאלו את השכנים",
+		askFailed: "לא הצלחנו לשלוח את הבקשה.",
+		askTooMany: "יש לכם שלוש בקשות פתוחות. סגרו אחת קודם.",
+		askSent: "נשלח. נודיע לכם כשלמישהו מהשכנים יש.",
+		askHaveOne: "יש לי",
+		askYours: "הבקשה שלכם",
+		askYouOffered: "הצעתם את שלכם",
+		askTodayNote: "בקשות להיום יורדות בחצות.",
+		askOver: "הבקשה הזאת הסתיימה.",
+		askMine: "ביקשתם",
+		askNoOffers: "עדיין אין הצעות. נודיע לכם כשלמישהו מהשכנים יש.",
+		askTake: "לקחת את זה",
+		askTakeHint: "רואים לאן לבוא אחרי שלוקחים. לשאר נודיע שהסתדר.",
+		askTakeFailed: "ההצעה כבר לא זמינה.",
+		askClose: "סגירת הבקשה",
+		askClosed: "הבקשה נסגרה.",
+		offerTitle: "הציעו את שלכם",
+		offerName: "מה זה?",
+		offerNow: "עכשיו, עד",
+		offerLater: "בהמשך היום, החל מ־",
+		offerUsual: "בזמנים הרגילים שלי",
+		offerUsualHint: "קובעים זמן יחד אחר כך.",
+		offerUntil: "עד איזו שעה",
+		offerFrom: "מאיזו שעה",
+		offerNote: "הערה",
+		offerPlace: "לאן לבוא (פרטי)",
+		offerPlaceHint: "נשמר כמקום המפגש שלכם. מוצג רק למי שלוקח את ההצעה.",
+		offerSend: "הציעו",
+		offerNotNow: "לא עכשיו",
+		offerFailed: "לא הצלחנו לשלוח את ההצעה.",
+		offerNeedsPlace: "כתבו לאן לבוא, כדי שימצאו אתכם.",
+		offerWithdrawn: "ההצעה בוטלה.",
+		offersMine: "ההצעות שלכם",
+		keepHint:
+			"שכנים יוכלו למצוא ולבקש לשאול. אתם עונים כן או לא בכל פעם, ואפשר להסיר מתי שרוצים.",
+		keepYes: "להשאיר ברשימה",
+		keepNo: "לא, תודה",
+		keepNote: "שום דבר לא נרשם בלי שבחרתם.",
+		keptListed: "על המדף שלכם עכשיו. הוסיפו תמונה כשיהיה רגע.",
+		keepFailed: "לא הצלחנו לשמור.",
 		share: "שיתוף",
 		copyLink: "העתקת קישור",
 		copy: "העתקה",
@@ -1923,6 +2033,73 @@ function helpers(locale: Locale) {
 			he
 				? `${n} ${plural(n, "שכן/ה מחכה", "שכנים מחכים")}`
 				: `${n} ${plural(n, "neighbour is", "neighbours are")} waiting`,
+		askByText: (by: string) =>
+			by === "today"
+				? he
+					? "היום"
+					: "Today"
+				: by === "week"
+					? he
+						? "השבוע"
+						: "This week"
+					: he
+						? "בלי לחץ"
+						: "No rush",
+		askDaysText: (days: number) =>
+			days <= 1
+				? he
+					? "ליום"
+					: "For a day"
+				: days <= 3
+					? he
+						? "לסוף שבוע"
+						: "For a weekend"
+					: he
+						? "לשבוע"
+						: "For a week",
+		askOffersCount: (n: number) =>
+			he
+				? n === 1
+					? "לשכן/ה אחד/ת יש"
+					: `ל־${n} שכנים יש`
+				: `${n} ${plural(n, "neighbour has", "neighbours have")} one`,
+		offerWhen: (name: string) =>
+			he ? `מתי ⁨${name}⁩ יכול/ה לבוא?` : `When can ⁨${name}⁩ come by?`,
+		offerPrivacy: (name: string) =>
+			he
+				? `⁨${name}⁩ רואה לאן לבוא רק אחרי שלקח/ה את ההצעה. ההצעה לא מוסיפה דבר למדף שלכם.`
+				: `⁨${name}⁩ sees where to come only after taking your offer. Offering puts nothing on your shelf.`,
+		offerSent: (name: string) =>
+			he
+				? `הוצע. נודיע לכם אם ⁨${name}⁩ לוקח/ת.`
+				: `Offered. You will hear if ⁨${name}⁩ takes it.`,
+		offerTo: (name: string) =>
+			he ? `הוצע ל⁨${name}⁩` : `Offered to ⁨${name}⁩`,
+		/** When the asker may come by, as the one who offered said it. */
+		comeText: (come: string, time: string | null) =>
+			come === "now"
+				? he
+					? `אפשר לבוא עד ${time ?? ""}`
+					: `Come by until ${time ?? ""}`
+				: come === "later"
+					? he
+						? `היום החל מ־${time ?? ""}`
+						: `Today from ${time ?? ""}`
+					: he
+						? "בזמנים הרגילים, קובעים יחד"
+						: "At their usual times; you arrange it together",
+		askedFor: (what: string) =>
+			he ? `התבקש: ⁨${what}⁩` : `Asked for: ⁨${what}⁩`,
+		keepTitle: (name: string) =>
+			he
+				? `להשאיר את «${name}» על המדף לפעם הבאה?`
+				: `Keep your “${name}” on your shelf for next time?`,
+		keepSorted: (name: string) =>
+			he
+				? `⁨${name}⁩ כבר לא צריך/ה את זה. תודה שהצעתם.`
+				: `⁨${name}⁩ no longer needs one. Thank you for offering.`,
+		keepReturned: (name: string) =>
+			he ? `חזר מ⁨${name}⁩.` : `It is back from ⁨${name}⁩.`,
 		teaserCounts: (copies: number, waiting: number) =>
 			he
 				? `${copies} ${plural(copies, "עותק", "עותקים")} בקהילה · ${waiting} ${plural(waiting, "ממתין/ה", "ממתינים")}`

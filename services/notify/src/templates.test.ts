@@ -32,6 +32,35 @@ describe("messages in a library of things", () => {
 		});
 	}
 
+	for (const locale of ["en", "he"] as const) {
+		it(`say each stage of an ask, naming what was asked for (${locale})`, () => {
+			const ask = (stage: "new" | "offer" | "taken" | "sorted") =>
+				all(
+					render({
+						kind: "ask",
+						to: "noa@example.com",
+						locale,
+						url: "https://library.example.org/loans",
+						stage,
+						what: "Saw",
+						otherName: "Dana",
+						offered: stage === "offer" || stage === "taken" ? "Hand saw" : null,
+						by: stage === "new" ? "today" : null,
+					}),
+				);
+			for (const stage of ["new", "offer", "taken", "sorted"] as const) {
+				const text = ask(stage);
+				expect(text).toContain("Dana");
+				expect(text).toContain("https://library.example.org/loans");
+				expect(text).not.toMatch(/\bbook|ספר(?!ייה|יית)|undefined|null/i);
+			}
+			expect(ask("new")).toContain("Saw");
+			expect(ask("offer")).toContain("Hand saw");
+			expect(ask("taken")).toContain("Hand saw");
+			expect(ask("sorted")).toContain("Saw");
+		});
+	}
+
 	it("still speak of books in a books library", () => {
 		const invitation = render({
 			kind: "invitation",

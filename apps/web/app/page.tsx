@@ -3,6 +3,8 @@ import { libraryType } from "../lib/library-type.ts";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type {
+	AskView,
+	AsksList,
 	BrowseResponse,
 	SearchResponse,
 	WantedWork,
@@ -15,6 +17,7 @@ import { sessionToken, signedOut } from "../lib/session.ts";
 import { requireProfile } from "../lib/profile.ts";
 import { vocabulary } from "../lib/vocabulary.ts";
 import { WorkCard } from "./copy-card.tsx";
+import { AskTags } from "./asks/ask-parts.tsx";
 import { Callout, Empty, PageHead } from "./ui.tsx";
 import {
 	FilterBar,
@@ -127,7 +130,7 @@ export default async function StorefrontPage({
 	const changed = (await headers()).get("x-cdl-browse");
 	// Everything the page needs, in one round: the profile check only
 	// matters if it fails, and then the rest was cheap to have asked.
-	const [me, listing, vocab, wanted] = await Promise.all([
+	const [me, listing, vocab, wanted, asks] = await Promise.all([
 		requireProfile(),
 		q
 			? core<SearchResponse>(
@@ -143,6 +146,10 @@ export default async function StorefrontPage({
 					(reply) => reply.body?.works ?? [],
 				)
 			: Promise.resolve([] as WantedWork[]),
+		// What neighbours need today or this week: the front page asks who has one.
+		kind.asks && !q && !owner && !offset
+			? core<AsksList>("/v1/asks").then((reply) => reply.body?.asks ?? [])
+			: Promise.resolve([] as AskView[]),
 		changed === null
 			? null
 			: core("/v1/me", {
@@ -310,6 +317,53 @@ export default async function StorefrontPage({
 				/>
 			</FilterBar>
 
+			{asks.length ? (
+				<section className="asks">
+					<PageHead as="h2" title={t.lookingFor} />
+					<ul className="hooks">
+						{asks.map((ask) => (
+							<li key={ask.id}>
+								<div>
+									<a href={`/asks/${ask.id}`}>
+										<bdi>
+											<strong>{ask.what}</strong>
+										</bdi>
+									</a>{" "}
+									<AskTags ask={ask} t={t} />
+									<div className="muted">
+										<bdi>{ask.asker.displayName}</bdi>
+										{ask.note ? (
+											<>
+												{" · "}
+												<bdi>{ask.note}</bdi>
+											</>
+										) : null}
+									</div>
+								</div>
+								{ask.mine ? (
+									<a className="quiet" href="/loans#asks">
+										{ask.offerCount
+											? t.askOffersCount(ask.offerCount)
+											: t.askYours}
+									</a>
+								) : ask.myOffer ? (
+									<a className="quiet" href={`/asks/${ask.id}`}>
+										{t.askYouOffered}
+									</a>
+								) : (
+									<a className="btn" href={`/asks/${ask.id}`}>
+										{t.askHaveOne}
+									</a>
+								)}
+							</li>
+						))}
+					</ul>
+					{asks.some((ask) => ask.by === "today") ? (
+						<p className="muted">{t.askTodayNote}</p>
+					) : null}
+				</section>
+			) : null}
+
 			<PageHead
 				title={
 					owner
@@ -359,6 +413,92 @@ export default async function StorefrontPage({
 			) : null}
 			{error === "wanted" ? (
 				<Callout tone="warn">{t.wantedFailed}</Callout>
+			) : null}
+			{error === "ask" || error === "asks" ? (
+				<Callout tone="warn">
+					{error === "asks" ? t.askTooMany : t.askFailed}
+				</Callout>
+			) : null}
+			{/* Asking for a kind of thing: any neighbour's will do, listed or
+			    not. Open by itself when a search found nothing, and carrying
+			    the words searched for. */}
+			{kind.asks && !owner && !offset ? (
+				<details
+					className="wanted-ask ask-form"
+					open={Boolean(q) && results.length === 0}
+				>
+					<summary>{t.askTitle}</summary>
+					<form action="/api/asks" method="post">
+						<p className="muted">{t.askHint}</p>
+						<label htmlFor="ask-what">{t.askWhat}</label>
+						<input
+							id="ask-what"
+							name="what"
+							maxLength={80}
+							type="text"
+							dir="auto"
+							required
+							defaultValue={q ?? ""}
+						/>
+						<label htmlFor="ask-note">
+							{t.askNote} <span className="muted">({t.askOptional})</span>
+						</label>
+						<input
+							id="ask-note"
+							name="note"
+							maxLength={200}
+							type="text"
+							dir="auto"
+						/>
+						<fieldset className="pick">
+							<legend>{t.askBy}</legend>
+							<div>
+								{(
+									[
+										["today", t.askByToday],
+										["week", t.askByWeek],
+										["whenever", t.askByWhenever],
+									] as const
+								).map(([value, label]) => (
+									<label key={value}>
+										<input
+											type="radio"
+											name="by"
+											value={value}
+											defaultChecked={value === "today"}
+										/>
+										{label}
+									</label>
+								))}
+							</div>
+						</fieldset>
+						<fieldset className="pick">
+							<legend>{t.askDays}</legend>
+							<div>
+								{(
+									[
+										[1, t.askDay],
+										[3, t.askWeekend],
+										[7, t.askWeek],
+									] as const
+								).map(([value, label]) => (
+									<label key={value}>
+										<input
+											type="radio"
+											name="days"
+											value={value}
+											defaultChecked={value === 1}
+										/>
+										{label}
+									</label>
+								))}
+							</div>
+						</fieldset>
+						<button type="submit" className="secondary">
+							{t.askSend}
+						</button>
+					</form>
+				</details>
 			) : null}
 			{/* Asking for something by name joins it with whatever is listed
 			    later under that name: books only, where names mean one thing. */}

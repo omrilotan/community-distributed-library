@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import type {
 	Availability,
 	LoanView,
+	MyAsks,
 	MyLoans,
 	WaitlistEntry,
 } from "@cdl/contracts";
@@ -20,6 +21,7 @@ import { titled } from "../../lib/page-title.ts";
 import { groupLoans, type Side } from "../../lib/loan-groups.ts";
 import { LoanItem } from "./loan-item.tsx";
 import { NextStep } from "./next-step.tsx";
+import { AsksOnLoans } from "./asks.tsx";
 
 export const generateMetadata = titled((t) => t.loans);
 
@@ -38,20 +40,30 @@ export default async function LoansPage({
 		nudged?: string;
 		extended?: string;
 		past?: string;
+		asked?: string;
+		closed?: string;
+		withdrawn?: string;
+		kept?: string;
 	}>;
 }) {
 	const me = await requireProfile();
 	// Everyone close by: nobody's area is worth a line.
 	const showAreas = !me.community.compact;
-	const { error, nudged, extended, past } = await searchParams;
+	const { error, nudged, extended, past, asked, closed, withdrawn, kept } =
+		await searchParams;
 	const showPast = past === "1";
 	const locale = ((await cookies()).get("locale")?.value ?? "en") as Locale;
 	const t = strings(locale);
 
-	const [mine, queue] = await Promise.all([
+	const [mine, queue, askReply] = await Promise.all([
 		core<MyLoans>("/v1/me/loans"),
 		core<{ entries: WaitlistEntry[] }>("/v1/me/waitlist"),
+		core<MyAsks>("/v1/me/asks"),
 	]);
+	const asks: MyAsks =
+		askReply.status === 200
+			? askReply.body
+			: { asks: [], offers: [], keep: [] };
 	if (mine.status === 401) signedOut(mine.status);
 	const all =
 		mine.status === 200
@@ -67,8 +79,10 @@ export default async function LoansPage({
 	const relaying = shown(all.relaying);
 	const waiting = queue.status === 200 ? queue.body.entries : [];
 	// A request just in is the moment to set one's times, if none are set.
-	const asked = lending.some((loan) => loan.status === "requested");
-	const grid = asked ? await core<Availability>("/v1/me/availability") : null;
+	const requested = lending.some((loan) => loan.status === "requested");
+	const grid = requested
+		? await core<Availability>("/v1/me/availability")
+		: null;
 	const gridEmpty = grid?.status === 200 && grid.body.slots.length === 0;
 	const dateTime = dateFormat(locale, {
 		dateStyle: "short",
@@ -88,6 +102,14 @@ export default async function LoansPage({
 				}
 			/>
 			{nudged ? <Callout>{t.nudgeSent}</Callout> : null}
+			{asked ? <Callout>{t.askSent}</Callout> : null}
+			{closed ? <Callout>{t.askClosed}</Callout> : null}
+			{withdrawn ? <Callout>{t.offerWithdrawn}</Callout> : null}
+			{kept ? (
+				<Callout>
+					{t.keptListed} <a href="/shelf">{t.shelf}</a>
+				</Callout>
+			) : null}
 			{extended ? <Callout>{t.extended}</Callout> : null}
 			{error ? (
 				<Callout tone="warn">
@@ -95,12 +117,18 @@ export default async function LoansPage({
 						? t.nudgedRecently
 						: error === "waiting"
 							? t.extendWaiting
-							: t.loanActionFailed}
+							: error === "offer"
+								? t.askTakeFailed
+								: error === "keep"
+									? t.keepFailed
+									: t.loanActionFailed}
 				</Callout>
 			) : null}
 			{/* Loans move on a neighbour's answer: hearing at once matters here.
 			    Shown only while this device has notifications off. */}
 			<PushToggle labels={pushLabels(t)} nudge={t.pushNudge} />
+
+			<AsksOnLoans mine={asks} t={t} />
 
 			<h2>{t.incoming}</h2>
 			{gridEmpty ? <AvailabilityNudge t={t} /> : null}

@@ -202,6 +202,7 @@ A member who wants to be told without asking gives their assistant a scheduled t
 Built: invite-only sign-in (links to share or scan, and one-day event links with a printable sign),
 catalogue with tags and filters, requests, handoffs with codes, relays,
 waitlists, wishlists, wanted books, extensions, reminders, reports and moderation, push and email,
-API, MCP and webhooks, books and things libraries with sets.
+API, MCP and webhooks, books and things libraries with sets, and in a library of things asks
+("a saw, today": neighbours offer theirs, listed or not, and one offer becomes a loan).
 
 Not built: drop points, reputation, blocks.

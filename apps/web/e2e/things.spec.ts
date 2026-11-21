@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { BORROWER, CORE, OWNER, asMember } from "./library.ts";
 
 /**
@@ -11,6 +12,18 @@ const lends = (
 	request: import("@playwright/test").APIRequestContext,
 	type: string,
 ) => request.post(`${CORE}/v1/dev/library-type`, { data: { type } });
+
+/** What asks say is said of things: no books, covers or ISBNs. */
+const noBookWords = async (part: Locator) =>
+	expect(await part.innerText()).not.toMatch(/\bbooks?\b|\bcovers?\b|ISBN/i);
+
+/** The rules a page breaks, by name: WCAG 2.2 AA, as a11y.spec.ts checks the rest. */
+const axe = async (page: Page) =>
+	(
+		await new AxeBuilder({ page })
+			.withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+			.analyze()
+	).violations.map((violation) => violation.id);
 
 test.describe("a library of things", () => {
 	test.beforeAll(async ({ playwright }) => {
@@ -245,6 +258,107 @@ test.describe("a library of things", () => {
 			method: "DELETE",
 			headers: { "X-Member-Id": BORROWER.id },
 		});
+	});
+
+	test("asks the neighbours, and takes an offer that becomes a loan", async ({
+		page,
+	}) => {
+		const what = `Saw ${Date.now()}`;
+		await page.goto(`/?q=${encodeURIComponent(what)}`);
+		// Nothing found: the ask form is open, carrying the words searched for.
+		const form = page.locator("form[action='/api/asks']");
+		await expect(form).toBeVisible();
+		await expect(form.locator("#ask-what")).toHaveValue(what);
+		await form.locator("#ask-note").fill("Hand saw or small chainsaw");
+		await form.locator("input[name=by][value=week]").check({ force: true });
+		await form.locator("button[type=submit]").click();
+		await expect(page).toHaveURL(/\/loans\?asked=1/);
+		const card = page.locator("#asks .ask-card", { hasText: what });
+		await expect(card).toContainText("No offers yet");
+		await noBookWords(page.locator("#asks"));
+
+		const asks = await asMember(page.request, OWNER.id, "/v1/asks");
+		const ask = asks.body.asks.find(
+			(one: { what: string }) => one.what === what,
+		);
+		expect(ask).toMatchObject({ by: "week", days: 1, mine: false });
+		const offered = await asMember(
+			page.request,
+			OWNER.id,
+			`/v1/asks/${ask.id}/offers`,
+			{
+				name: "Hand saw",
+				come: "now",
+				time: "18:00",
+				note: "Top bell",
+				meetingPlace: "12 Elm Road",
+			},
+		);
+		expect(offered.status).toBe(201);
+
+		await page.reload();
+		await expect(card).toContainText("1 neighbour has one");
+		expect(await axe(page), "loans, with an ask and its offer").toEqual([]);
+		await expect(card).toContainText("Come by until 18:00");
+		await expect(card).toContainText("Top bell");
+		await card.locator("form[action$='/take'] button").click();
+		// The offer is a loan now, with where to come and what was said.
+		await expect(page).toHaveURL(/\/loans\/[0-9A-Z]{26}/);
+		// (Named in the heading, or in the list when Dana lends Sam more at once.)
+		await expect(page.locator("main")).toContainText("Hand saw");
+		await expect(page.locator("main")).toContainText("Come by until 18:00");
+		const loanId = new URL(page.url()).pathname.split("/").pop()!;
+		// It is on no shelf.
+		await page.goto("/?q=Hand+saw");
+		await expect(page.locator("#listing")).not.toContainText("Hand saw");
+		await asMember(page.request, BORROWER.id, `/v1/loans/${loanId}/cancel`, {});
+	});
+
+	test("offers what a neighbour asked for, from the front page", async ({
+		page,
+	}) => {
+		const what = `Ladder ${Date.now()}`;
+		const asked = await asMember(page.request, OWNER.id, "/v1/asks", {
+			what,
+			by: "today",
+			days: 1,
+		});
+		expect(asked.status).toBe(201);
+
+		await page.goto("/");
+		const row = page.locator(".asks li", { hasText: what });
+		await expect(row).toContainText("Today");
+		expect(await axe(page), "the front page, with an ask").toEqual([]);
+		await row.locator("a.btn").click();
+		await expect(page).toHaveURL(new RegExp(`/asks/${asked.body.id}`));
+		await expect(page.locator("h1")).toHaveText("Offer yours");
+		await noBookWords(page.locator("main"));
+		await expect(page.locator("#offer-name")).toHaveValue(what);
+		expect(await axe(page), "the offer form").toEqual([]);
+
+		await page.locator("#offer-name").fill("Step ladder");
+		await page.locator("input[name=come][value=later]").check();
+		await page.locator("input[name=from]").fill("17:30");
+		if (await page.locator("#offer-place").count())
+			await page.locator("#offer-place").fill("3 Oak Lane");
+		await page.locator(".offer-form button[type=submit]").click();
+		await expect(page).toHaveURL(/offered=1/);
+		await expect(page.locator("main")).toContainText("You offered yours");
+		await expect(page.locator("main")).toContainText("Today from 17:30");
+
+		// The asker sees it; closing the ask ends it for both.
+		const theirs = await asMember(page.request, OWNER.id, "/v1/me/asks");
+		expect(theirs.body.asks[0].offers).toEqual([
+			expect.objectContaining({ name: "Step ladder", come: "later" }),
+		]);
+		await asMember(
+			page.request,
+			OWNER.id,
+			`/v1/asks/${asked.body.id}/close`,
+			{},
+		);
+		await page.goto("/");
+		await expect(page.locator(".asks li", { hasText: what })).toHaveCount(0);
 	});
 
 	test("lends part of a set", async ({ page }) => {

@@ -4,6 +4,7 @@ import type { Side } from "../../lib/loan-groups.ts";
 import { loanTimer } from "../../lib/timer.ts";
 import { PlainCover } from "../plain-cover.tsx";
 import { LoanActions } from "./loan-actions.tsx";
+import { comeLine } from "../asks/ask-parts.tsx";
 
 /** One item of a group: its cover, its name, its clock and its own steps. */
 export function LoanItem({
@@ -23,9 +24,11 @@ export function LoanItem({
 	actions?: boolean;
 }) {
 	const timer = loanTimer(loan, locale, t);
+	// What began as an ask is on no shelf: its page is the loan itself.
+	const page = loan.ask ? `/loans/${loan.id}` : `/works/${loan.copy.workId}`;
 	return (
 		<li className="loan-item">
-			<a href={`/works/${loan.copy.workId}`} aria-hidden="true" tabIndex={-1}>
+			<a href={page} aria-hidden="true" tabIndex={-1}>
 				{loan.copy.coverUrl ? (
 					<img alt="" src={loan.copy.coverUrl} />
 				) : (
@@ -35,7 +38,7 @@ export function LoanItem({
 				)}
 			</a>
 			<div>
-				<a className="loan-item-title" href={`/works/${loan.copy.workId}`}>
+				<a className="loan-item-title" href={page}>
 					<bdi>{loan.copy.title}</bdi>
 				</a>
 				{loan.copy.quantity > 1 ? (
@@ -43,6 +46,17 @@ export function LoanItem({
 						{" "}
 						· {t.partOfSet(loan.quantity, loan.copy.quantity)}
 					</span>
+				) : null}
+				{loan.ask && loan.status === "accepted" ? (
+					<div className="muted">
+						{comeLine(loan.ask, t)}
+						{loan.ask.note ? (
+							<>
+								{" · "}
+								<bdi>{loan.ask.note}</bdi>
+							</>
+						) : null}
+					</div>
 				) : null}
 				{timer ? (
 					<div className={`muted${timer.overdue ? " overdue" : ""}`}>
