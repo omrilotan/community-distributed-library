@@ -215,6 +215,26 @@ export const ContactMessage = z.object({
 	body: z.string(),
 });
 
+/**
+ * An ask ("does anyone have a saw?") as it moves: a neighbour asked, somebody
+ * offered theirs, the asker took an offer, or it was sorted without yours.
+ */
+export const AskMessage = z.object({
+	kind: z.literal("ask"),
+	to: z.email(),
+	locale: Locale,
+	url: z.url(),
+	stage: z.enum(["new", "offer", "taken", "sorted"]),
+	/** The kind of thing asked for: "Saw". */
+	what: z.string(),
+	/** The asker; for `offer`, the neighbour who offered. */
+	otherName: z.string(),
+	/** What theirs is ("Hand saw"), for `offer` and `taken`. */
+	offered: z.string().nullable(),
+	/** How soon it is needed, for `new`. */
+	by: z.enum(["today", "week", "whenever"]).nullable(),
+});
+
 export const Message = z.discriminatedUnion("kind", [
 	MagicLinkMessage,
 	InvitationMessage,
@@ -232,6 +252,7 @@ export const Message = z.discriminatedUnion("kind", [
 	ReportUpdateMessage,
 	ContactMessage,
 	CopyDamageMessage,
+	AskMessage,
 ]);
 
 export const Delivery = z.object({
@@ -244,6 +265,7 @@ export const Delivery = z.object({
 	retry: z.boolean().optional(),
 });
 
+export type AskMessage = z.infer<typeof AskMessage>;
 export type ContactMessage = z.infer<typeof ContactMessage>;
 export type CopyDamageMessage = z.infer<typeof CopyDamageMessage>;
 export type ReportUpdateMessage = z.infer<typeof ReportUpdateMessage>;

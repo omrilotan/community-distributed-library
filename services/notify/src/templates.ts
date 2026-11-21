@@ -1,4 +1,5 @@
 import type {
+	AskMessage,
 	ContactMessage,
 	CopyDamageMessage,
 	HandoffMessage,
@@ -66,6 +67,8 @@ function compose(message: Message): Rendered {
 			return contact(message);
 		case "copy_damage":
 			return copyDamage(message);
+		case "ask":
+			return ask(message);
 	}
 }
 
@@ -455,6 +458,78 @@ function contact(message: ContactMessage): Rendered {
 <p style="color:#555">${escape(tail)}</p>
 </body></html>`,
 	};
+}
+
+/** An ask as it moves: asked, offered, taken, or sorted without yours. */
+function ask(message: AskMessage): Rendered {
+	const he = message.locale === "he";
+	const what = he ? `«${message.what}»` : `“${message.what}”`;
+	const offered = message.offered
+		? he
+			? `«${message.offered}»`
+			: `“${message.offered}”`
+		: what;
+	const name = message.otherName;
+	switch (message.stage) {
+		case "new": {
+			const when = {
+				today: he ? "היום" : "today",
+				week: he ? "השבוע" : "this week",
+				whenever: he ? "בלי לחץ" : "no rush",
+			}[message.by ?? "whenever"];
+			return wrap(
+				message.locale,
+				he
+					? `${name} מחפש/ת ${what} (${when})`
+					: `${name} is looking for ${what} (${when})`,
+				he
+					? `${name} שאל/ה את השכנים: ${what}. מתי: ${when}. יש לכם? אפשר להציע את שלכם.`
+					: `${name} asked the neighbours for ${what}. Needed: ${when}. If you have one, you can offer yours.`,
+				message.url,
+				he
+					? "ההצעה לא מוסיפה דבר למדף שלכם."
+					: "Offering puts nothing on your shelf.",
+			);
+		}
+		case "offer":
+			return wrap(
+				message.locale,
+				he
+					? `ל${name} יש ${offered} בשבילכם`
+					: `${name} has ${offered} for you`,
+				he
+					? `ביקשתם ${what}, ו${name} מציע/ה את ${offered}. קחו את ההצעה ותראו לאן לבוא.`
+					: `You asked for ${what}, and ${name} offers ${offered}. Take the offer and you will see where to come.`,
+				message.url,
+				he
+					? "אם כמה שכנים הציעו, בוחרים אחת."
+					: "If several neighbours offered, you choose one.",
+			);
+		case "taken":
+			return wrap(
+				message.locale,
+				he ? `${name} לקח/ה את ההצעה שלכם` : `${name} took your offer`,
+				he
+					? `${name} רוצה לשאול את ${offered}. בעמוד ההשאלה: מתי באים, והקוד למסירה.`
+					: `${name} would like to borrow your ${offered}. The loan page shows when they are coming and the code for handing it over.`,
+				message.url,
+				he
+					? "הפריט לא מופיע במדפים אלא אם תבחרו."
+					: "It is not on the shelves unless you choose so.",
+			);
+		case "sorted":
+			return wrap(
+				message.locale,
+				he ? `${what}: הסתדר, תודה` : `${what}: sorted, thank you`,
+				he
+					? `${name} כבר לא צריך/ה ${what}. תודה שהצעתם.`
+					: `${name} no longer needs ${what}. Thank you for offering.`,
+				message.url,
+				he
+					? "רוצים להשאיר את שלכם על המדף לפעם הבאה? בוחרים בעמוד ההשאלות."
+					: "Want to keep yours on your shelf for next time? Choose on your loans page.",
+			);
+	}
 }
 
 function wrap(

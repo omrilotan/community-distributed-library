@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Id, Timestamp } from "./primitives.ts";
 import { Condition, CopyListing, ListingSort, WorkListing } from "./copies.ts";
 import { Edition, Work } from "./catalogue.ts";
+import { LoanAsk } from "./asks.ts";
 
 /**
  * Minutes a new loan request waits before its owner hears of it: until then
@@ -87,6 +88,12 @@ export const LoanView = z.object({
 		})
 		.nullable()
 		.default(null),
+	/**
+	 * Set when the loan began as an ask (asks.ts): what was asked for, and
+	 * when the lender said to come by. Its item is on no shelf, so it has no
+	 * page of its own to visit.
+	 */
+	ask: LoanAsk.nullable().default(null),
 	copy: z.object({
 		id: Id,
 		/** The book's own page. */

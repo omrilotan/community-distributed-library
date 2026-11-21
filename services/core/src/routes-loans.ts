@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 import {
 	AlsoLoans,
 	ExtendLoan,
+	LoanAsk,
 	MAX_EXTENSIONS,
 	PostMessage,
 	RequestLoan,
@@ -1026,6 +1027,8 @@ loans.get("/v1/me/loans", async (c) => {
 		        (SELECT h.day || '|' || h.period || '|' || h.status FROM handoffs h
 		          WHERE h.loan_id = l.id AND h.status IN ('proposed', 'agreed')
 		          ORDER BY h.created_at DESC LIMIT 1) AS meeting,
+		        (SELECT json_object('what', a.what, 'come', ao.come, 'time', ao.time, 'day', ao.day, 'note', ao.note)
+		           FROM ask_offers ao JOIN asks a ON a.id = ao.ask_id WHERE ao.loan_id = l.id) AS ask,
 		        c.id AS copy_id, c.condition, e.work_id, e.title, e.cover_url, w.authors,
 		        b.id AS borrower_id, b.display_name AS borrower_name, b.area_label AS borrower_area,
 		        o.id AS lender_id, o.display_name AS lender_name, o.area_label AS lender_area,
@@ -1095,6 +1098,7 @@ function view(row: LoanRow, viewerId: string): LoanView {
 			(viewerId === row.borrower_id ||
 				viewerId === (row.relay_id ?? row.lender_id)),
 		meeting: meetingOf(row.meeting),
+		ask: askOf(row.ask),
 		copy: {
 			id: row.copy_id,
 			workId: row.work_id,
@@ -1127,6 +1131,13 @@ function view(row: LoanRow, viewerId: string): LoanView {
 }
 
 /** "day|period|status", as the listing reads it, made a meeting. */
+/** The offer a loan began as, when it began as an ask. */
+function askOf(stored: string | null): LoanView["ask"] {
+	if (!stored) return null;
+	const parsed = LoanAsk.safeParse(JSON.parse(stored));
+	return parsed.success ? parsed.data : null;
+}
+
 function meetingOf(stored: string | null): LoanView["meeting"] {
 	if (!stored) return null;
 	const [day, period, status] = stored.split("|");
@@ -1154,6 +1165,7 @@ interface LoanRow {
 	waiting: number;
 	needs_time: number;
 	meeting: string | null;
+	ask: string | null;
 	copy_id: string;
 	work_id: string;
 	condition: LoanView["copy"]["condition"];

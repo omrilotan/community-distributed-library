@@ -54,6 +54,20 @@ const LIMITS: {
 		allow: 20,
 		per: 3600,
 	},
+	{
+		// An ask for today reaches every member's phone.
+		pattern: /^\/v1\/asks$/,
+		bucket: "ask",
+		allow: 3,
+		per: 86400,
+	},
+	{
+		// Offering, taking an offer and closing an ask each tell somebody.
+		pattern: /^\/v1\/asks\/[^/]+\/(offers|close|offers\/[^/]+\/take)$/,
+		bucket: "decide",
+		allow: 20,
+		per: 3600,
+	},
 	{ pattern: /^\/v1\/contact$/, bucket: "contact", allow: 3, per: 86400 },
 	{ pattern: /^\/v1\/invites$/, bucket: "invite", allow: 5, per: 86400 },
 	{

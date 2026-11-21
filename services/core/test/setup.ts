@@ -118,6 +118,8 @@ beforeEach(async () => {
 			"DELETE FROM read_works",
 			"DELETE FROM wishlist",
 			"DELETE FROM handoffs",
+			"DELETE FROM ask_offers",
+			"DELETE FROM asks",
 			"DELETE FROM loans",
 			"DELETE FROM consent_codes",
 			"DELETE FROM access_tokens",

@@ -782,7 +782,7 @@ async function meetingPlace(
 }
 
 /** Six characters, no ambiguous glyphs, easy to read aloud. */
-function handoffCode(): string {
+export function handoffCode(): string {
 	const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 	const bytes = crypto.getRandomValues(new Uint8Array(6));
 	return [...bytes].map((byte) => alphabet[byte % alphabet.length]).join("");

@@ -39,6 +39,12 @@ export interface LibraryTraits {
 	relays: boolean;
 	/** Members mark what they have read. */
 	readMarks: boolean;
+	/**
+	 * Members ask for a kind of thing ("a saw, today") and neighbours offer
+	 * theirs, listed or not (asks.ts). For what is asked for by kind: any saw
+	 * will do, where a book is asked for by its title and waited for.
+	 */
+	asks: boolean;
 	/** The shape of an owner's details on their item, if any. */
 	details: z.ZodType | null;
 	/**
@@ -85,6 +91,7 @@ export const TRAITS: Record<LibraryType, LibraryTraits> = {
 		sets: false,
 		relays: true,
 		readMarks: true,
+		asks: false,
 		details: null,
 		photos: { most: 1, aspect: 5 / 8 },
 	},
@@ -96,6 +103,7 @@ export const TRAITS: Record<LibraryType, LibraryTraits> = {
 		sets: true,
 		relays: true,
 		readMarks: false,
+		asks: true,
 		details: ThingDetails,
 		photos: { most: 4, aspect: 1 },
 	},
