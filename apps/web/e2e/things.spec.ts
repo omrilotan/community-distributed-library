@@ -311,6 +311,21 @@ test.describe("a library of things", () => {
 		// It is on no shelf.
 		await page.goto("/?q=Hand+saw");
 		await expect(page.locator("#listing")).not.toContainText("Hand saw");
+		// A search that found something ends with the way to ask, closed.
+		const fountain = `Fountain ${Date.now()}`;
+		const listed = await asMember(page.request, OWNER.id, "/v1/copies", {
+			thing: { name: fountain, quantity: 1 },
+		});
+		expect(listed.status).toBe(201);
+		await page.goto(`/?q=${encodeURIComponent(fountain)}`);
+		await expect(page.locator("#listing")).toContainText(fountain);
+		const after = page.locator("#listing ~ details.ask-form");
+		await expect(after).toHaveCount(1);
+		await expect(after).not.toHaveAttribute("open");
+		await page.request.fetch(`${CORE}/v1/copies/${listed.body.id}`, {
+			method: "DELETE",
+			headers: { "X-Member-Id": OWNER.id },
+		});
 		await asMember(page.request, BORROWER.id, `/v1/loans/${loanId}/cancel`, {});
 	});
 

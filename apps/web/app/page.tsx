@@ -238,6 +238,90 @@ export default async function StorefrontPage({
 				.find((copy) => copy.owner.id === owner)?.owner.displayName ?? null)
 		: null;
 
+	// Asking for a kind of thing: any neighbour's will do, listed or not. It
+	// comes after what a search found, where "not here" is thought; open by
+	// itself when nothing was found, and carrying the words searched for. With
+	// no search there is no end of the list to wait for, so it sits above it.
+	const askForm =
+		kind.asks && !owner && !offset ? (
+			<details
+				className="wanted-ask ask-form"
+				open={Boolean(q) && results.length === 0}
+			>
+				<summary>{t.askTitle}</summary>
+				<form action="/api/asks" method="post">
+					<p className="muted">{t.askHint}</p>
+					<label htmlFor="ask-what">{t.askWhat}</label>
+					<input
+						id="ask-what"
+						name="what"
+						maxLength={80}
+						type="text"
+						dir="auto"
+						required
+						defaultValue={q ?? ""}
+					/>
+					<label htmlFor="ask-note">
+						{t.askNote} <span className="muted">({t.askOptional})</span>
+					</label>
+					<input
+						id="ask-note"
+						name="note"
+						maxLength={200}
+						type="text"
+						dir="auto"
+					/>
+					<fieldset className="pick">
+						<legend>{t.askBy}</legend>
+						<div>
+							{(
+								[
+									["today", t.askByToday],
+									["week", t.askByWeek],
+									["whenever", t.askByWhenever],
+								] as const
+							).map(([value, label]) => (
+								<label key={value}>
+									<input
+										type="radio"
+										name="by"
+										value={value}
+										defaultChecked={value === "today"}
+									/>
+									{label}
+								</label>
+							))}
+						</div>
+					</fieldset>
+					<fieldset className="pick">
+						<legend>{t.askDays}</legend>
+						<div>
+							{(
+								[
+									[1, t.askDay],
+									[3, t.askWeekend],
+									[7, t.askWeek],
+								] as const
+							).map(([value, label]) => (
+								<label key={value}>
+									<input
+										type="radio"
+										name="days"
+										value={value}
+										defaultChecked={value === 1}
+									/>
+									{label}
+								</label>
+							))}
+						</div>
+					</fieldset>
+					<button type="submit" className="secondary">
+						{t.askSend}
+					</button>
+				</form>
+			</details>
+		) : null;
+
 	return (
 		<main>
 			<form action="/" method="get" role="search" className="search">
@@ -419,87 +503,7 @@ export default async function StorefrontPage({
 					{error === "asks" ? t.askTooMany : t.askFailed}
 				</Callout>
 			) : null}
-			{/* Asking for a kind of thing: any neighbour's will do, listed or
-			    not. Open by itself when a search found nothing, and carrying
-			    the words searched for. */}
-			{kind.asks && !owner && !offset ? (
-				<details
-					className="wanted-ask ask-form"
-					open={Boolean(q) && results.length === 0}
-				>
-					<summary>{t.askTitle}</summary>
-					<form action="/api/asks" method="post">
-						<p className="muted">{t.askHint}</p>
-						<label htmlFor="ask-what">{t.askWhat}</label>
-						<input
-							id="ask-what"
-							name="what"
-							maxLength={80}
-							type="text"
-							dir="auto"
-							required
-							defaultValue={q ?? ""}
-						/>
-						<label htmlFor="ask-note">
-							{t.askNote} <span className="muted">({t.askOptional})</span>
-						</label>
-						<input
-							id="ask-note"
-							name="note"
-							maxLength={200}
-							type="text"
-							dir="auto"
-						/>
-						<fieldset className="pick">
-							<legend>{t.askBy}</legend>
-							<div>
-								{(
-									[
-										["today", t.askByToday],
-										["week", t.askByWeek],
-										["whenever", t.askByWhenever],
-									] as const
-								).map(([value, label]) => (
-									<label key={value}>
-										<input
-											type="radio"
-											name="by"
-											value={value}
-											defaultChecked={value === "today"}
-										/>
-										{label}
-									</label>
-								))}
-							</div>
-						</fieldset>
-						<fieldset className="pick">
-							<legend>{t.askDays}</legend>
-							<div>
-								{(
-									[
-										[1, t.askDay],
-										[3, t.askWeekend],
-										[7, t.askWeek],
-									] as const
-								).map(([value, label]) => (
-									<label key={value}>
-										<input
-											type="radio"
-											name="days"
-											value={value}
-											defaultChecked={value === 1}
-										/>
-										{label}
-									</label>
-								))}
-							</div>
-						</fieldset>
-						<button type="submit" className="secondary">
-							{t.askSend}
-						</button>
-					</form>
-				</details>
-			) : null}
+			{q ? null : askForm}
 			{/* Asking for something by name joins it with whatever is listed
 			    later under that name: books only, where names mean one thing. */}
 			{q && kind.mergeByName ? (
@@ -565,6 +569,8 @@ export default async function StorefrontPage({
 					}}
 				/>
 			) : null}
+
+			{q ? askForm : null}
 
 			{wanted.length ? (
 				<section className="wanted">
