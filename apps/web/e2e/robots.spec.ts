@@ -73,6 +73,37 @@ test.describe("agents", () => {
 		);
 	});
 
+	test("find the MCP server and the API in the ARD manifest", async ({
+		page,
+		request,
+	}) => {
+		const about = await page.goto("/about");
+		expect(about!.headers()["link"]).toContain(
+			'</.well-known/ard.json>; rel="ard"',
+		);
+		const response = await request.get("/.well-known/ard.json");
+		expect(response.status()).toBe(200);
+		const { entries } = (await response.json()) as {
+			entries: {
+				identifier: string;
+				displayName: string;
+				type: string;
+				url: string;
+				representativeQueries: string[];
+			}[];
+		};
+		expect(entries.map((entry) => entry.type)).toEqual([
+			"application/mcp-server-card+json",
+			"application/vnd.oai.openapi+json",
+		]);
+		for (const entry of entries) {
+			expect(entry.identifier).toMatch(/^urn:air:[^:]+:(mcp|api)$/);
+			expect(entry.representativeQueries.length).toBeGreaterThanOrEqual(2);
+			expect(entry.representativeQueries.length).toBeLessThanOrEqual(5);
+			expect((await request.get(entry.url)).status()).toBe(200);
+		}
+	});
+
 	test("find the MCP server's card on the library's own host", async ({
 		request,
 	}) => {

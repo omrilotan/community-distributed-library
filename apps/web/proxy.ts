@@ -308,10 +308,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 	// small community's shelves are found by invitation.
 	response.headers.set("x-robots-tag", robots);
 	// Not for search engines, but an agent sent by a member should find its
-	// way in: RFC 9727 names where the APIs are described.
+	// way in: RFC 9727 names where the APIs are described, and ARD the same
+	// things by the name agents of that kind look for.
 	response.headers.set(
 		"link",
-		'</.well-known/api-catalog>; rel="api-catalog", </llms.txt>; rel="describedby"; type="text/markdown"',
+		'</.well-known/api-catalog>; rel="api-catalog", </.well-known/ard.json>; rel="ard", </llms.txt>; rel="describedby"; type="text/markdown"',
 	);
 	// Network errors: every failure, none of the successes.
 	if (REPORTS) {

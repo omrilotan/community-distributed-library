@@ -28,6 +28,7 @@ The website is for people. If you are an agent acting for a member, use the MCP 
 - [auth.md](${site}/auth.md): how an agent gets access, and why it cannot register anybody.
 - [MCP Server Card](${site}/.well-known/mcp/server-card.json): the server's name, address and sign-in, before connecting.
 - [API catalogue](${site}/.well-known/api-catalog): both of the above, as an RFC 9727 linkset.
+- [ARD manifest](${site}/.well-known/ard.json): the same two, for Agentic Resource Discovery.
 
 ## What the tools do
 
