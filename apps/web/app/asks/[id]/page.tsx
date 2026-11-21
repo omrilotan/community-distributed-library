@@ -63,11 +63,15 @@ export default async function AskPage({
 			{!open ? (
 				<Callout>{t.askOver}</Callout>
 			) : ask.mine ? (
-				<p>
-					<a className="btn" href="/loans#asks">
-						{ask.offerCount ? t.askOffersCount(ask.offerCount) : t.askMine}
-					</a>
-				</p>
+				ask.offerCount ? (
+					<p>
+						<a className="btn" href="/loans#asks">
+							{t.askOffersCount(ask.offerCount)}
+						</a>
+					</p>
+				) : (
+					<p className="muted">{t.askNoOffers}</p>
+				)
 			) : mine ? (
 				<section className="ask-card">
 					<strong>{t.askYouOffered}</strong>
