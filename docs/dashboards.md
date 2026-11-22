@@ -17,7 +17,7 @@ are also what the ops tools read, so a question to the ops MCP gives the same nu
 | `cdl_events` (Analytics Engine)         | Requests by route, domain events, checks, jobs, the daily snapshot (core)     | 3 months |
 | D1, per library (`check_results`, jobs) | The latest check values and job runs, exact                                   | 30 d     |
 
-In `cdl_events`, every count is `SUM(_sample_interval * double4)`: `double4` is our own weight (1
+Through the Analytics SQL API every query needs a time range, and none may `ORDER BY` once it names columns with `AS`. In `cdl_events`, every count is `SUM(_sample_interval * double4)`: `double4` is our own weight (1
 for anything kept in full, `1 / rate` for sampled reads), and `_sample_interval` is Analytics
 Engine's. Never `COUNT()`. Distinct counts (members, items) come only from the snapshot points.
 
@@ -57,7 +57,7 @@ From `cdl_events`, through the SQL API or `query_events`:
 
 ```sql
 -- Checks failing now, per library: the last run's value (they run every 15 minutes).
-SELECT index1 AS library, blob2 AS check, max(double3) AS value
+SELECT index1 AS library, blob2 AS check, APPROX_MAX(double3) AS value
 FROM cdl_events
 WHERE blob1 = 'check' AND timestamp > NOW() - INTERVAL '16' MINUTE
 GROUP BY library, check
@@ -70,12 +70,11 @@ The light business view: counts only, never people. From the daily snapshot in `
 
 ```sql
 -- One library's numbers, day by day.
-SELECT toStartOfInterval(timestamp, INTERVAL '1' DAY) AS day, blob2 AS metric, max(double3) AS value
+SELECT toStartOfInterval(timestamp, INTERVAL '1' DAY) AS day, blob2 AS metric, APPROX_MAX(double3) AS value
 FROM cdl_events
 WHERE blob1 = 'snapshot' AND index1 = 'our-street'
   AND timestamp > NOW() - INTERVAL '30' DAY
 GROUP BY day, metric
-ORDER BY toStartOfInterval(timestamp, INTERVAL '1' DAY)
 ```
 
 The metrics: `members`, `members_active_7d`, `members_active_30d`, `items`, `items_lendable`,

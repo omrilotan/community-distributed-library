@@ -87,4 +87,22 @@ describe("the checks", () => {
 			"backup_missing",
 		]);
 	});
+
+	it("tell a cover on another site from one of ours, however long our address", async () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		const ours =
+			"https://images.a-library-with-a-long-name.community-distributed-library.com";
+		const old = at() - 3 * 86_400;
+		await env.DB.batch([
+			env.DB.prepare(
+				`INSERT INTO editions (id, work_id, title, search_key, cover_url, created_at) VALUES
+				 ('ours', '01J0WRK0000000000000000ZZ0', 'Oz', 'oz', ?1, ?3),
+				 ('theirs', '01J0WRK0000000000000000ZZ0', 'Oz', 'oz', ?2, ?3)`,
+			).bind(`${ours}/covers/1.jpg`, "https://covers.ok/b/1.jpg", old),
+		]);
+		const check = CHECKS.find((one) => one.name === "covers_external")!;
+		expect(await check.count({ ...env, COVERS_PUBLIC_URL: ours }, at())).toBe(
+			1,
+		);
+	});
 });

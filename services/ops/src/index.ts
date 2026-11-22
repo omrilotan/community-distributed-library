@@ -112,11 +112,18 @@ async function keepAlert(env: Env, request: Request): Promise<Response> {
 		data?: Record<string, unknown>;
 	} | null;
 	if (!body) return new Response("Not JSON", { status: 400 });
-	const name = String(body.name ?? body.alert_type ?? "alert").slice(0, 200);
 	const text = String(body.text ?? JSON.stringify(body.data ?? {})).slice(
 		0,
 		4000,
 	);
+	// Cloudflare names the webhook, not the alert, in `name`: an Issue says
+	// what failed, and where, in its text.
+	const issue = /Real-Time Issue '(.+?)' detected in ([\w-]+)/.exec(text);
+	const name = (
+		issue
+			? `${issue[1]} (${issue[2]})`
+			: String(body.name ?? body.alert_type ?? "alert")
+	).slice(0, 200);
 	// The policies are named "CDL: <slug>: …" (scripts/observe.mjs).
 	const named = /^CDL: ([a-z][a-z0-9-]*):/.exec(name)?.[1];
 	const library =

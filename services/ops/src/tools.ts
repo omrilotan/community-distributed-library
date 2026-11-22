@@ -179,13 +179,18 @@ export const TOOLS: Tool[] = [
 			).catch((error: Error) => ({ unavailable: error.message }));
 			const slowest = await sql(
 				env,
-				`SELECT blob2 AS route, SUM(double2 * double4) / SUM(double4) AS avg_ms, MAX(double2) AS max_ms
+				`SELECT blob2 AS route, SUM(double2 * double4) / SUM(double4) AS avg_ms, APPROX_MAX(double2) AS max_ms
 				   FROM ${DATASET}
 				  WHERE index1 = $slug AND blob1 = 'request'
 				    AND timestamp > NOW() - INTERVAL '1' DAY
-				  GROUP BY route ORDER BY SUM(double2 * double4) / SUM(double4) DESC LIMIT 5`,
+				  GROUP BY route`,
 				{ slug: lib.slug },
-			).catch((error: Error) => ({ unavailable: error.message }));
+			)
+				// Analytics SQL orders by nothing a query names: sort here.
+				.then((rows) =>
+					rows.sort((a, b) => Number(b.avg_ms) - Number(a.avg_ms)).slice(0, 5),
+				)
+				.catch((error: Error) => ({ unavailable: error.message }));
 			return { ...now, lastDay: { traffic, slowest } };
 		},
 	},
@@ -307,7 +312,7 @@ export const TOOLS: Tool[] = [
 	},
 	{
 		name: "query_events",
-		description: `Read-only SQL over ${DATASET} (every library's counts). Columns: index1 library, blob1 kind (request, domain, check, job, snapshot), blob2 name, blob3 outcome, blob4 surface, double2 ms, double3 value, double4 weight; count with SUM(double4), never COUNT(). At most 1000 rows.`,
+		description: `Read-only SQL over ${DATASET} (every library's counts). Columns: index1 library, blob1 kind (request, domain, check, job, snapshot), blob2 name, blob3 outcome, blob4 surface, double2 ms, double3 value, double4 weight; count with SUM(double4), never COUNT(). Every query needs a time range (WHERE timestamp > NOW() - INTERVAL '1' DAY), and may not ORDER BY when it names columns with AS. At most 1000 rows.`,
 		inputSchema: {
 			type: "object",
 			properties: { sql: { type: "string" } },
@@ -340,15 +345,22 @@ export const TOOLS: Tool[] = [
 			},
 		},
 		run: (env, args) =>
-			sql(
+			sql<{ library: string; week: string; metric: string }>(
 				env,
 				`SELECT index1 AS library, toStartOfInterval(timestamp, INTERVAL '7' DAY) AS week,
-				        blob2 AS metric, MAX(double3) AS value
+				        blob2 AS metric, APPROX_MAX(double3) AS value
 				   FROM ${DATASET}
 				  WHERE blob1 = 'snapshot' AND timestamp > NOW() - INTERVAL '${days(args.weeks, 8, 13) * 7}' DAY
 				    ${typeof args.slug === "string" ? "AND index1 = $slug" : ""}
-				  GROUP BY library, week, metric ORDER BY index1, toStartOfInterval(timestamp, INTERVAL '7' DAY), blob2`,
+				  GROUP BY library, week, metric`,
 				typeof args.slug === "string" ? { slug: args.slug } : {},
+			).then((rows) =>
+				rows.sort(
+					(a, b) =>
+						a.library.localeCompare(b.library) ||
+						String(a.week).localeCompare(String(b.week)) ||
+						a.metric.localeCompare(b.metric),
+				),
 			),
 	},
 	{
@@ -378,10 +390,12 @@ export const TOOLS: Tool[] = [
 				   FROM ${DATASET}
 				  WHERE blob1 = 'snapshot' AND blob2 = $metric
 				    AND timestamp > NOW() - INTERVAL '${span}' DAY
-				  GROUP BY library ORDER BY argMax(double3, timestamp) DESC`,
+				  GROUP BY library`,
 				{ metric: String(args.metric) },
 			);
-			return rows.map((row) => ({ ...row, change: row.last - row.first }));
+			return rows
+				.map((row) => ({ ...row, change: row.last - row.first }))
+				.sort((a, b) => b.last - a.last);
 		},
 	},
 	{
@@ -416,7 +430,7 @@ export const TOOLS: Tool[] = [
 				        SUM(CASE WHEN double4 = 1 THEN 1 ELSE 0 END) / SUM(1) AS share_in_full
 				   FROM ${DATASET}
 				  WHERE timestamp > NOW() - INTERVAL '7' DAY
-				  GROUP BY library, kind ORDER BY index1, blob1`,
+				  GROUP BY library, kind`,
 			).catch((error: Error) => ({ unavailable: error.message }));
 			return {
 				rates: libraries(env).map((lib) => ({

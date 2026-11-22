@@ -165,11 +165,13 @@ export async function rehostCovers(
 	const { results } = await env.DB.prepare(
 		`SELECT id, cover_url FROM editions
 		  WHERE cover_url IS NOT NULL
-		    AND cover_url NOT LIKE ?
+		    -- A prefix, not LIKE: D1 refuses a LIKE pattern over 50 bytes, and
+		    -- a library's images address is often longer.
+		    AND substr(cover_url, 1, length(?1)) != ?1
 		  ORDER BY coalesce(cover_tried_at, 0), id
-		  LIMIT ?`,
+		  LIMIT ?2`,
 	)
-		.bind(`${bucket}/%`, limit)
+		.bind(`${bucket}/`, limit)
 		.all<{ id: string; cover_url: string }>();
 
 	let taken = 0;

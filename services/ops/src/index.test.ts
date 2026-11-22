@@ -177,6 +177,24 @@ describe("the ops MCP", () => {
 });
 
 describe("the alert inbox", () => {
+	it("names an Issue by what failed and where", async () => {
+		const { env: e, db } = env();
+		await worker.fetch(
+			new Request("https://ops.test/alerts", {
+				method: "POST",
+				headers: { "cf-webhook-auth": "the webhook's key" },
+				body: JSON.stringify({
+					name: "CDL: ops",
+					text: "Real-Time Issue 'job.missed backup' detected in our-street-core. - Issue ID: 1",
+				}),
+			}),
+			e,
+		);
+		const [insert] = db.kept;
+		expect(insert?.[3]).toBe("our-street");
+		expect(insert?.[4]).toBe("job.missed backup (our-street-core)");
+	});
+
 	it("keeps what Cloudflare posts with the webhook's key, and nothing else", async () => {
 		const { env: e, db } = env();
 		const post = (secret: string) =>
@@ -196,6 +214,7 @@ describe("the alert inbox", () => {
 		expect((await post("the webhook's key")).status).toBe(204);
 		const [insert] = db.kept;
 		expect(insert?.[3]).toBe("our-street");
+		expect(insert?.[4]).toBe("CDL: our-street: a Worker is failing");
 	});
 });
 

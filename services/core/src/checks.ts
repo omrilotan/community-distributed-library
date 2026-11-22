@@ -177,9 +177,11 @@ export const CHECKS: Check[] = [
 				env,
 				`SELECT COUNT(*) AS n FROM editions
 				  WHERE cover_tried_at IS NULL AND cover_url IS NOT NULL
-				    AND created_at < ? AND cover_url NOT LIKE ?`,
+				    AND created_at < ?1
+				    -- A prefix, not LIKE: D1 refuses a LIKE pattern over 50 bytes.
+				    AND substr(cover_url, 1, length(?2)) != ?2`,
 				at - 2 * DAY,
-				`${env.COVERS_PUBLIC_URL.replace(/\/$/, "")}/%`,
+				`${env.COVERS_PUBLIC_URL.replace(/\/$/, "")}/`,
 			),
 	},
 	{
