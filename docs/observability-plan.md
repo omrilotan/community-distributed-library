@@ -1,6 +1,7 @@
 # Observability plan
 
-Status: plan, nothing built yet. Written 2026-11-22.
+Status: built, phases 0 to 5, 2026-11-22. Where the build differs from the plan, **As built** at
+the end says how and why.
 
 This plan covers the running libraries: the per-library Workers (`<slug>-web`, `-core`, `-mcp`,
 `-notify`, `-convo`) and the shared ones (`cdl-metadata`, `cdl-reports`, `cdl-landing`). It does not
@@ -512,3 +513,38 @@ after a month: delete any alert that fired without anyone needing to act on it.
   `/admin/attention`, or are checks operator-only?
 - Is one ops host for the whole fleet right, or should a self-hoster who runs one library get
   `ops` inside that library's own MCP, behind an operator scope?
+
+## As built
+
+What changed from the plan while building it:
+
+- **Alerts go through Workers Issues, not Monitors.** Monitors have no public API, and `npm run
+observe` sets everything up through the API. So each alert the plan gave a Monitor is an error
+  the code logs instead, with the thing it is about in the message (`job.missed backup`,
+  `check.failed emails_stuck`), so Issues keeps one Issue per job and check and emails the
+  library's admins on the first one. Critical checks log at error; warn and info checks are logged
+  and kept for the digest and the ops tools.
+- **Health** is `/v1/health` in core (`/api/v1/health` through the web app). It reports the parts
+  and the late jobs, and answers 503 when anything is wrong.
+- **Jobs** keep one row each in `job_status` (every run) and a history in `job_runs` (daily jobs
+  and failures only), so the every-minute jobs do not write a row a minute.
+- **The outside probe** is `scripts/probe.mjs` (`npm run probe`), needing nothing installed. The
+  GitHub workflow reads the hosts from the repository variable `CDL_LIBRARY_HOSTS`, which
+  `npm run observe` sets with the GitHub CLI, since the manifest is not in git.
+- **Outcomes that leave no row** (a sign-in email that did not go, an email given up, a push
+  thrown away) are counted by the hour in `tallies`, for the checks to read.
+- **`cdl_events` is written by core only.** The web app and the MCP say which surface a call came
+  from (`x-cdl-surface`) and the visitor's request id (`x-cdl-request`), so core counts every
+  surface and keeps one visit's points together. The library slug, the deploy time and the read
+  rate are vars a deploy writes.
+- **Dashboards are made by hand.** Custom Dashboards have no API; `docs/dashboards.md` gives each
+  chart's dataset and the sentence for **Ask AI**, and the queries for `cdl_events`.
+- **The ops MCP's key is a bearer token** (`.keys/ops.key`, made by `npm run ops`) rather than
+  Cloudflare Access with OAuth: one operator, one key, and any MCP client that sends a header can
+  use it. Access can still be put in front of the host. Ops reaches each library's core over its
+  `Internal` entrypoint, never the public API, and stores alerts from a Cloudflare webhook
+  destination that `npm run observe` adds to every CDL policy.
+- **The weekly digest** goes from the ops Worker to every admin of every library, through Email
+  Sending from the first library's address.
+- **Sending Issues to a Claude Code routine** needs a routine of the operator's own, so it is set
+  up by hand, as `docs/runbooks/README.md` describes.

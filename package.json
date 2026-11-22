@@ -28,6 +28,7 @@
     "deploy:shared": "node scripts/deploy.mjs shared",
     "provision": "node scripts/provision.mjs",
     "observe": "node scripts/observe.mjs",
+    "ops": "node scripts/ops.mjs",
     "check:setup": "node scripts/check-setup.mjs",
     "check:libraries": "node scripts/check-libraries.mjs",
     "probe": "node scripts/probe.mjs",

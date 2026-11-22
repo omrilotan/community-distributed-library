@@ -49,7 +49,9 @@ const RECIPIENT_LIMIT = 20;
  */
 export function workers(data) {
 	const shared = SHARED_SERVICES.filter(
-		(service) => service.name !== "reports" || data.shared?.reports?.host,
+		(service) =>
+			(service.name !== "reports" || data.shared?.reports?.host) &&
+			(!service.optional || data.shared?.[service.name]?.databaseId),
 	).map((service) => ({ worker: `cdl-${service.name}`, slug: null }));
 	return [
 		...data.libraries.flatMap((lib) =>
@@ -249,6 +251,23 @@ async function main() {
 	// 2. Alert policies: where an alert goes. Found by name, so a rerun brings
 	// the recipients up to date.
 	console.log("\n━━ Alerts");
+	// The ops MCP's inbox (scripts/ops.mjs), if it is set up: every alert is
+	// posted there too, so the ops tools can say what fired this week.
+	let webhook = null;
+	const alertsKey = `${root}.keys/alerts.key`;
+	if (data.shared?.ops?.host && existsSync(alertsKey)) {
+		const route = `/accounts/${account}/alerting/v3/destinations/webhooks`;
+		const hooks = (await api("GET", route)) ?? [];
+		const body = {
+			name: `${MARK}ops`,
+			url: `https://${data.shared.ops.host}/alerts`,
+			secret: readFileSync(alertsKey, "utf8").trim(),
+		};
+		const found = hooks.find((entry) => entry.name === body.name);
+		if (found) await api("PUT", `${route}/${found.id}`, body);
+		webhook = found?.id ?? (await api("POST", route, body))?.id ?? null;
+		if (webhook) console.log(`✓ Alerts also go to ${body.url}`);
+	}
 	const policies =
 		(await api("GET", `/accounts/${account}/alerting/v3/policies`)) ?? [];
 	async function policy(name, alertType, description, emails) {
@@ -258,7 +277,10 @@ async function main() {
 			alert_type: alertType,
 			enabled: true,
 			filters: {},
-			mechanisms: { email: emails.map((id) => ({ id })) },
+			mechanisms: {
+				email: emails.map((id) => ({ id })),
+				...(webhook ? { webhooks: [{ id: webhook }] } : {}),
+			},
 		};
 		const found = policies.find((entry) => entry.name === body.name);
 		if (!emails.length) {

@@ -123,12 +123,14 @@ set -a; . ./.env; set +a; npm run provision -- <slug> --host <address> --name "<
 ```
 
 It takes a few minutes. If it stops, read the last error, fix the cause, and run the same command
-again: it keeps what it already made. If it ends with **Alerts are not set up yet**, the library is
-open; fix the token as its lines say, then run `set -a; . ./.env; set +a; npm run observe`.
+again: it keeps what it already made. If it ends with **Alerts are not set up yet** or **The ops
+MCP is not set up yet**, the library is open; fix what its lines say, then run
+`set -a; . ./.env; set +a; npm run ops && npm run observe`.
 
 ## 8. Check it works
 
 - `curl -s -o /dev/null -w "%{http_code}" https://<address>/about` gives `200`.
+- `npm run probe` says every library answers and its jobs run.
 - `curl -s -o /dev/null -w "%{http_code}" https://mcp.<address>/.well-known/oauth-authorization-server`
   gives `200`. A new address can take a minute or two to answer; try again before worrying.
 
@@ -137,6 +139,10 @@ Then tell them:
 1. Open `https://<address>`, sign in with `<email>`, and follow the link in the email.
 2. In **Moderation** > **Settings**: a description, the languages and a colour.
 3. Invite the first neighbours from the menu.
+4. To ask questions about their libraries ("is anything wrong?", "did every backup run this
+   week?"), connect the ops MCP once; the command prints it as its last lines:
+   `claude mcp add --transport http cdl-ops https://ops.<their domain>/mcp --header "Authorization: Bearer $(cat .keys/ops.key)"`.
+   Every admin also gets a summary of the week by email on Mondays.
 
 ## 9. What to keep safe
 
@@ -147,8 +153,9 @@ Make sure they understand, in plain words:
 - `.keys/<slug>.vapid.json` is the library's private notification key. Cloudflare will not show it
   again. Keep a copy.
 - `.env` holds their Cloudflare token.
+- `.keys/ops.key` opens the ops MCP; whoever holds it can ask about every library.
 
-All three stay out of git on their own.
+All of them stay out of git on their own.
 
 Updates later: the `update-libraries` skill. Another admin: the `make-admin` skill. Another library:
 this skill again, with a different name and address.

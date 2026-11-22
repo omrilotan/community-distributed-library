@@ -35,17 +35,17 @@ deploys it to each of them, applying database changes first.
    them:
 
    ```sh
-   set -a; . ./.env; set +a; npm run deploy -- shared metadata && npm run deploy -- all
+   set -a; . ./.env; set +a; npm run deploy -- shared && npm run deploy -- all
    ```
 
    Each library gets its database changes, then its Workers. If one library fails, the others still
    go; read the error, fix it, and deploy that one again with `npm run deploy -- <slug>`.
 
-6. Bring the alerts up to date, for every library in `libraries.json` (it changes only what it
-   made, and is safe to run again):
+6. Bring the ops MCP and the alerts up to date, for every library in `libraries.json` (each
+   changes only what it made, and is safe to run again):
 
    ```sh
-   set -a; . ./.env; set +a; npm run observe
+   set -a; . ./.env; set +a; npm run ops && npm run observe
    ```
 
    Each library's admins are told when it breaks, and every admin when something the libraries
@@ -54,4 +54,5 @@ deploys it to each of them, applying database changes first.
    needs a permission, ask them to add it to the token in Cloudflare (**My Profile** > **API Tokens**,
    edit), then run it again.
 
-7. Check each library's `https://<host>/about` answers `200`, and tell them it is done.
+7. Run `npm run probe`: every library answers, its health route says each part works and no job
+   is late. Tell them it is done.

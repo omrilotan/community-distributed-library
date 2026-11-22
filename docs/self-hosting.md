@@ -143,6 +143,33 @@ When it finishes, open your library's address and sign in with your email. In **
 **Settings** you can give it a description, its languages and a colour, and invite your first
 neighbours.
 
+## When something goes wrong
+
+Opening a library also sets up how you hear about trouble, and how to ask about it:
+
+- **Alerts by email.** Each library's admins get an email from Cloudflare when one of its Workers
+  fails in a new way, when a scheduled job stops running, or when a check finds the library quietly
+  wrong (sign-in emails failing, loan requests not reaching owners, last night's backup missing,
+  conversations kept past 90 days). Every admin hears about the shared Workers and certificates.
+  Each alert has a page in [docs/runbooks](runbooks/README.md): what it means, where to look, and a
+  prompt for Claude Code to find the cause.
+- **From outside.** A GitHub workflow asks every library every 15 minutes whether it works, and
+  opens an issue when one does not (it needs the GitHub CLI signed in when you run
+  `npm run observe`). `npm run probe` asks the same from your computer.
+- **Asking.** The ops MCP answers questions about all your libraries: "is anything wrong?", "did
+  every backup run this week?", "which library is growing?". Connect it once:
+
+  ```sh
+  claude mcp add --transport http cdl-ops https://ops.<your domain>/mcp \
+    --header "Authorization: Bearer $(cat .keys/ops.key)"
+  ```
+
+- **Every Monday**, every admin gets a short email: what is failing, which alerts fired, and the
+  week's numbers. A quiet week says so in one line.
+- **Dashboards** to make by hand, once, are in [docs/dashboards.md](dashboards.md).
+
+Run `npm run ops && npm run observe` again after adding a library or an admin.
+
 ## Keep these safe
 
 | File                      | What it is                                                                                                                                                                                          |
@@ -150,8 +177,9 @@ neighbours.
 | `libraries.json`          | The manifest: the list of your libraries and what each one owns in Cloudflare. Every later deploy reads it. Keep it in your own private repository or back it up.                                   |
 | `.keys/<slug>.vapid.json` | The library's private push key. Cloudflare keeps a copy it will not show you again; without this file you cannot move the library elsewhere without asking every member's phone to subscribe again. |
 | `.env`                    | Your Cloudflare token.                                                                                                                                                                              |
+| `.keys/ops.key`           | Opens the ops MCP. Whoever holds it can ask about every library. `.keys/alerts.key` lets Cloudflare post alerts to it.                                                                              |
 
-Git ignores all three.
+Git ignores all of them.
 
 ## Update
 
@@ -161,8 +189,9 @@ To bring your libraries up to the latest code:
 git pull
 npm install
 set -a; . ./.env; set +a
-npm run deploy -- shared metadata
+npm run deploy -- shared
 npm run deploy -- all
+npm run ops && npm run observe
 ```
 
 Database changes are applied before the new code goes live. Libraries are updated in the order the
@@ -208,3 +237,7 @@ books and data, and none of them can see another's.
   (`SAMPLING` in `scripts/libraries.mjs`). To change a share, add
   `"sampling": { "web": { "logs": 0.5, "traces": 0.1 } }` to `libraries.json`, either at the top
   for every library or on one library, then deploy that Worker. Each value is a share from 0 to 1.
+  Core also counts requests for the dashboards and the ops MCP; it keeps every error, write,
+  sign-in and assistant call, and `"sampling": { "core": { "reads": 0.25 } }` keeps a share of the
+  ordinary reads. To count every read for a while, set `"samplingBoostUntil": "<ISO time>"` on the
+  library and deploy its core.

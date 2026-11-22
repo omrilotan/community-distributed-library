@@ -2,7 +2,7 @@
 // Deploy libraries. Usage:
 //
 //   node scripts/deploy.mjs <library|all> [service ...]
-//   node scripts/deploy.mjs shared [metadata|reports|landing ...]
+//   node scripts/deploy.mjs shared [metadata|reports|landing|ops ...]
 //
 // Libraries come from the manifest (scripts/libraries.mjs). For each, in the
 // manifest's order: the database migrations of the services being deployed,
@@ -124,9 +124,14 @@ const pick = (list) =>
 	list.filter((service) => only.length === 0 || only.includes(service.name));
 
 if (target === "shared") {
-	const list = pick(SHARED_SERVICES).flatMap((service) =>
-		steps(service, sharedConfigFor(data, service.name)),
-	);
+	// An optional shared Worker goes only once it is set up, or when named.
+	const ready = (service) =>
+		!service.optional ||
+		only.includes(service.name) ||
+		Boolean(data.shared?.[service.name]?.databaseId);
+	const list = pick(SHARED_SERVICES)
+		.filter(ready)
+		.flatMap((service) => steps(service, sharedConfigFor(data, service.name)));
 	if (!list.every((step) => step())) {
 		console.error("\n✗ Shared Workers stopped.");
 		process.exit(1);

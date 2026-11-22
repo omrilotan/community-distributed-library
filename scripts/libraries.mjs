@@ -40,6 +40,8 @@ export const SHARED_SERVICES = [
 	{ name: "metadata", dir: "services/metadata", database: true },
 	{ name: "reports", dir: "services/reports" },
 	{ name: "landing", dir: "apps/landing" },
+	// The operator's MCP (services/ops); only once scripts/ops.mjs set it up.
+	{ name: "ops", dir: "services/ops", database: true, optional: true },
 ];
 export const SHARED = new Set(["cdl-metadata"]);
 
@@ -60,6 +62,7 @@ export const SAMPLING = {
 	metadata: { logs: 0.25, traces: 0.05 },
 	reports: { logs: 0.1, traces: 0 },
 	landing: { logs: 0.1, traces: 0 },
+	ops: { logs: 1, traces: 1 },
 };
 
 /** A Worker's rates: the default, then the fleet's, then the library's. */
@@ -260,6 +263,39 @@ export function configFor(data, slug, name) {
 	return write(service.dir, slug, config);
 }
 
+/** A binding name for a library's core, as the ops Worker calls it. */
+export const opsBinding = (slug) =>
+	`LIBRARY_${slug.replace(/-/g, "_").toUpperCase()}`;
+
+/**
+ * The ops Worker reaches each library's core through its Internal
+ * entrypoint (services/core/src/ops.ts), never the public API.
+ */
+function opsConfig(config, data) {
+	config.services = data.libraries.map((lib) => ({
+		binding: opsBinding(lib.slug),
+		service: `${lib.slug}-core`,
+		entrypoint: "Internal",
+	}));
+	config.vars = {
+		...config.vars,
+		LIBRARIES: JSON.stringify(
+			data.libraries.map((lib) => ({
+				slug: lib.slug,
+				host: lib.host,
+				binding: opsBinding(lib.slug),
+				sampling: Object.fromEntries(
+					Object.keys(SAMPLING).map((worker) => [
+						worker,
+						sampling(worker, data, lib),
+					]),
+				),
+			})),
+		),
+		FROM_ADDRESS: data.libraries[0].address,
+	};
+}
+
 /** A shared Worker's config; returns the file's path. */
 export function sharedConfigFor(data, name) {
 	const service = SHARED_SERVICES.find((entry) => entry.name === name);
@@ -283,6 +319,7 @@ export function sharedConfigFor(data, name) {
 				custom_domain: true,
 			},
 		];
+	if (name === "ops") opsConfig(config, data);
 	config.observability = observability(config, sampling(name, data));
 	return write(service.dir, "shared", config);
 }

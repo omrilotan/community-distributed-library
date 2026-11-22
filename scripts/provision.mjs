@@ -407,6 +407,16 @@ save();
 // the one just made among them, hear when it fails. A token without the
 // permissions for them does not stop the library opening.
 console.log(`\n━━ ${slug}: alerts`);
+// The operator's MCP first (scripts/ops.mjs), so it reaches this library and
+// every alert reaches it; then the alerts themselves.
+console.log("$ node scripts/ops.mjs");
+const opened = dry
+	? { status: 0 }
+	: spawnSync("node", ["scripts/ops.mjs"], {
+			cwd: root,
+			env: { ...env, CDL_LIBRARIES: path },
+			stdio: "inherit",
+		});
 console.log("$ node scripts/observe.mjs");
 const observed = dry
 	? { status: 0 }
@@ -417,6 +427,10 @@ const observed = dry
 		});
 console.log(`\n✓ ${values.name} is open at https://${values.host}`);
 console.log(`  Sign in there as ${admin}.`);
+if (opened.status !== 0)
+	console.log(
+		"! The ops MCP is not set up yet. Fix what the lines above say, then run npm run ops.",
+	);
 if (observed.status !== 0)
 	console.log(
 		"! Alerts are not set up yet. Fix what the lines above say, then run npm run observe.",

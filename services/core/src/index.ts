@@ -8,6 +8,7 @@ import { deliverPending } from "./events.ts";
 import { runChecks } from "./checks.ts";
 import { record, snapshot } from "./telemetry.ts";
 import { allJobs } from "./jobs.ts";
+import * as ops from "./ops.ts";
 import { sendHeldNotices, sendPendingEmails } from "./notify.ts";
 import { runReminders } from "./reminders.ts";
 import { redeemConsent, revokeAbandonedConsents } from "./tokens-store.ts";
@@ -20,6 +21,26 @@ export class Internal extends WorkerEntrypoint<Env> {
 	/** The OAuth server trades a consent code for the member's scoped token. */
 	redeemConsent(code: string) {
 		return redeemConsent(this.env, code);
+	}
+
+	// The ops MCP's questions (ops.ts, services/ops). Counts and ids only.
+	opsStatus() {
+		return ops.status(this.env);
+	}
+	opsJobRuns(job: string | null, days: number) {
+		return ops.jobRuns(this.env, job, days);
+	}
+	opsDeliveryTrace(loanId: string) {
+		return ops.deliveryTrace(this.env, loanId);
+	}
+	opsAdmins() {
+		return ops.admins(this.env);
+	}
+	opsRunCheck(name?: string) {
+		return ops.runCheck(this.env, name);
+	}
+	opsTakeBackup() {
+		return ops.takeBackup(this.env);
 	}
 }
 
