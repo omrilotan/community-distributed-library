@@ -14,6 +14,7 @@ import {
 	type AdminMemberDetail,
 	type LogPage,
 	type MemberReport,
+	log,
 } from "@cdl/contracts";
 import {
 	BACK_WITH_OWNER,
@@ -90,9 +91,7 @@ admin.use("/v1/admin/*", async (c, next) => {
 				action.endsWith("/erase") || action === "POST /v1/admin/invites/email"
 					? null
 					: details || null,
-		}).catch((error: unknown) =>
-			console.error("[audit] could not record", error),
-		);
+		}).catch((error: unknown) => log.error("audit.not_recorded", {}, error));
 	}
 });
 
@@ -282,13 +281,13 @@ admin.post("/v1/admin/loans/:id/close", async (c) => {
 		relaysEnded(c.env, c.executionCtx, relays, at);
 	c.executionCtx.waitUntil(
 		c.env.CONVO.closed(id, at).catch((error: unknown) =>
-			console.error("[convo] close failed", id, error),
+			log.error("convo.close_failed", { id }, error),
 		),
 	);
 	if (outcome !== "lost")
 		c.executionCtx.waitUntil(
 			onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
-				console.error("[waitlist] offer failed", loan.copy_id, error),
+				log.error("waitlist.offer_failed", { copyId: loan.copy_id }, error),
 			),
 		);
 	c.executionCtx.waitUntil(
@@ -773,7 +772,11 @@ admin.post("/v1/admin/members/:id/status", async (c) => {
 		for (const row of held.results)
 			c.executionCtx.waitUntil(
 				onCopyAvailable(c.env, row.offered_copy_id).catch((error: unknown) =>
-					console.error("[waitlist] offer failed", row.offered_copy_id, error),
+					log.error(
+						"waitlist.offer_failed",
+						{ copyId: row.offered_copy_id },
+						error,
+					),
 				),
 			);
 	}

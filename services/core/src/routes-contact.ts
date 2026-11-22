@@ -4,6 +4,7 @@ import {
 	problem,
 	type ContactMessagePage,
 	type ContactMessageView,
+	log,
 } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { libraryAdmin, viewer } from "./auth.ts";
@@ -91,9 +92,7 @@ contact.post("/v1/contact", async (c) => {
 			fromEmail: email,
 			fromName: member?.display_name ?? null,
 			body,
-		}).catch((error: unknown) =>
-			console.error("[contact] notify failed", error),
-		),
+		}).catch((error: unknown) => log.error("contact.notify_failed", {}, error)),
 	);
 
 	return c.json({ id }, 201);

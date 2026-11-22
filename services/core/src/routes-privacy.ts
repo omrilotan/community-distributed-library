@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { problem } from "@cdl/contracts";
+import { problem, log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { libraryAdmin } from "./auth.ts";
 import { json } from "./problem.ts";
@@ -358,7 +358,7 @@ privacy.post("/v1/admin/members/:id/erase", async (c) => {
 				row.cover_url,
 			]),
 		).catch((error: unknown) =>
-			console.error("[privacy] images not deleted", error),
+			log.error("privacy.images_not_deleted", {}, error),
 		),
 	);
 	return c.json({ erased: true, messages: erasedMessages });

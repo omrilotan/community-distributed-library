@@ -143,6 +143,8 @@ beforeEach(async () => {
 			"DELETE FROM contact_messages",
 			"DELETE FROM job_status",
 			"DELETE FROM job_runs",
+			"DELETE FROM tallies",
+			"DELETE FROM check_results",
 			"DELETE FROM cover_cache",
 			"DELETE FROM work_tags",
 			"DELETE FROM work_distinct",

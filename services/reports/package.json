@@ -2,6 +2,9 @@
   "name": "@cdl/reports",
   "version": "0.0.0",
   "private": true,
+  "dependencies": {
+    "@cdl/contracts": "*"
+  },
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

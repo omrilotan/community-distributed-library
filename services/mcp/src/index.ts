@@ -1,6 +1,6 @@
 import { OAuthProvider } from "@cloudflare/workers-oauth-provider";
 import { createMcpHandler } from "agents/mcp/server";
-import { SCOPES } from "@cdl/contracts";
+import { SCOPES, log } from "@cdl/contracts";
 import type { Env, Props } from "./env.ts";
 import { consentHandler } from "./consent.ts";
 import { libraryInfo } from "./library.ts";
@@ -27,7 +27,7 @@ const mcpHandler = {
 				: null;
 			if (token)
 				await env.OAUTH_PROVIDER.revokeGrant(token.grantId, token.userId).catch(
-					(error: unknown) => console.error("[mcp] grant not revoked", error),
+					(error: unknown) => log.error("mcp.grant_not_revoked", {}, error),
 				);
 		};
 		return createMcpHandler(() => createServer(env, props, library, onRevoked))(

@@ -10,6 +10,7 @@ import {
 	type LoanThread,
 	type ThreadReport,
 	type LoanView,
+	log,
 } from "@cdl/contracts";
 import { BACK_WITH_OWNER, CLAIMED, OWNER_OUT } from "./sets.ts";
 import type { Env } from "./env.ts";
@@ -300,9 +301,7 @@ async function decide(c: Context<{ Bindings: Env }>, accept: boolean) {
 				bookTitle: titles(group.map((one) => one.title)),
 				lenderName: group[0]!.lender_name,
 				accepted: accept,
-			}).catch((error: unknown) =>
-				console.error("[loans] notify failed", error),
-			),
+			}).catch((error: unknown) => log.error("loans.notify_failed", {}, error)),
 		);
 	return c.body(null, 204);
 }
@@ -389,12 +388,12 @@ async function decideOne(
 	} else {
 		c.executionCtx.waitUntil(
 			c.env.CONVO.closed(id, now()).catch((error: unknown) =>
-				console.error("[convo] close failed", id, error),
+				log.error("convo.close_failed", { id }, error),
 			),
 		);
 		c.executionCtx.waitUntil(
 			onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
-				console.error("[waitlist] offer failed", loan.copy_id, error),
+				log.error("waitlist.offer_failed", { copyId: loan.copy_id }, error),
 			),
 		);
 	}
@@ -434,12 +433,12 @@ loans.post("/v1/loans/:id/cancel", async (c) => {
 	if (!cancelled?.meta.changes) return json(c, movedOn());
 	c.executionCtx.waitUntil(
 		c.env.CONVO.closed(id, at).catch((error: unknown) =>
-			console.error("[convo] close failed", id, error),
+			log.error("convo.close_failed", { id }, error),
 		),
 	);
 	c.executionCtx.waitUntil(
 		onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
-			console.error("[waitlist] offer failed", loan.copy_id, error),
+			log.error("waitlist.offer_failed", { copyId: loan.copy_id }, error),
 		),
 	);
 	c.executionCtx.waitUntil(
@@ -573,12 +572,12 @@ loans.post("/v1/loans/:id/returned", async (c) => {
 	if (!returned?.meta.changes) return json(c, movedOn());
 	c.executionCtx.waitUntil(
 		c.env.CONVO.closed(id, at).catch((error: unknown) =>
-			console.error("[convo] close failed", id, error),
+			log.error("convo.close_failed", { id }, error),
 		),
 	);
 	c.executionCtx.waitUntil(
 		onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
-			console.error("[waitlist] offer failed", loan.copy_id, error),
+			log.error("waitlist.offer_failed", { copyId: loan.copy_id }, error),
 		),
 	);
 	c.executionCtx.waitUntil(
@@ -730,7 +729,7 @@ loans.post("/v1/loans/:id/nudge", async (c) => {
 			fromName: me.name,
 			stage,
 			days,
-		}).catch((error: unknown) => console.error("[loans] notify failed", error)),
+		}).catch((error: unknown) => log.error("loans.notify_failed", {}, error)),
 	);
 	return c.body(null, 204);
 });
@@ -809,9 +808,7 @@ loans.post("/v1/loans/:id/messages", async (c) => {
 				bookTitle: party.title,
 				fromName: me.name,
 				body: message.body,
-			}).catch((error: unknown) =>
-				console.error("[loans] notify failed", error),
-			),
+			}).catch((error: unknown) => log.error("loans.notify_failed", {}, error)),
 		);
 	return c.json(message, 201);
 });

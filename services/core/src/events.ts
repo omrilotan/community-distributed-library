@@ -1,3 +1,4 @@
+import { log } from "@cdl/contracts";
 import type { EventKind } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { ulid, now } from "./ids.ts";
@@ -74,7 +75,7 @@ export async function emit(
 		);
 		ctx.waitUntil(deliverPending(env).catch(() => undefined));
 	} catch (error) {
-		console.error("[events] emit failed", kind, error);
+		log.error("events.emit_failed", { kind }, error);
 	}
 }
 

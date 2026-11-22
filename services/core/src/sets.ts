@@ -1,3 +1,4 @@
+import { log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { emit } from "./events.ts";
 
@@ -83,7 +84,7 @@ export function relaysEnded(
 	for (const relay of ids) {
 		ctx.waitUntil(
 			env.CONVO.closed(relay, at).catch((error: unknown) =>
-				console.error("[convo] close failed", relay, error),
+				log.error("convo.close_failed", { loanId: relay }, error),
 			),
 		);
 		ctx.waitUntil(emit(env, ctx, "loan.closed", { loanId: relay }));

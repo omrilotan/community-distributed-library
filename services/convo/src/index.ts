@@ -130,6 +130,20 @@ export default class Convo extends WorkerEntrypoint<Env> {
 		});
 	}
 
+	/**
+	 * Core asks every 15 minutes (core's checks.ts): threads a day past
+	 * their purge, which should be none. A day's grace, as the purge runs
+	 * once a day.
+	 */
+	async checks(): Promise<{ threads_past_purge: number }> {
+		const row = await this.env.DB.prepare(
+			"SELECT COUNT(*) AS n FROM threads WHERE closed_at < ?",
+		)
+			.bind(now() - (RETENTION_DAYS + 1) * 86_400)
+			.first<{ n: number }>();
+		return { threads_past_purge: row?.n ?? 0 };
+	}
+
 	/** Core asks, for the health route and the late-job check. */
 	async jobs(): Promise<JobState[]> {
 		return jobStates(this.env.DB, SCHEDULE);

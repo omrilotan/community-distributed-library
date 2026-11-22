@@ -1,9 +1,11 @@
+import { tally } from "./tallies.ts";
 import {
 	NEWS_KINDS,
 	REQUEST_HOLD_MINUTES,
 	type LibraryType,
 	type Message,
 	type NewsKind,
+	log,
 } from "@cdl/contracts";
 import type { Env, PushOutcome } from "./env.ts";
 import { ulid, now } from "./ids.ts";
@@ -75,7 +77,7 @@ export async function sendHeldNotices(
 			continue;
 		}
 		await tell(env, JSON.parse(row.message) as Message).catch(
-			(error: unknown) => console.error("[notify] held notice failed", error),
+			(error: unknown) => log.error("notify.held_notice_failed", {}, error),
 		);
 		sent += 1;
 	}
@@ -128,7 +130,7 @@ export async function tell(
 
 	const outcome = await env.NOTIFY.push(results, message).catch(
 		(error: unknown): PushOutcome => {
-			console.error("[notify] push failed", error);
+			log.error("push.failed", {}, error);
 			return { sent: 0, gone: [] };
 		},
 	);
@@ -188,7 +190,7 @@ export async function keepNotice(
 			)
 			.run();
 	} catch (error) {
-		console.error("[notify] notice not kept", message.kind, error);
+		log.error("notify.notice_not_kept", { kind: message.kind }, error);
 	}
 }
 
@@ -218,6 +220,7 @@ function detailOf(message: Message): string | null {
  * row; one that takes a push is forgiven its count.
  */
 export async function countPushes(env: Env, outcome: PushOutcome) {
+	await tally(env, "push_gone", outcome.gone.length);
 	const statements = [
 		...outcome.gone.map((id) =>
 			env.DB.prepare("DELETE FROM push_subscriptions WHERE id = ?").bind(id),
@@ -307,12 +310,13 @@ async function sendNow(
 	attempts = 0,
 ) {
 	const delivery = await env.NOTIFY.send(message).catch((error: unknown) => {
-		console.error("[notify] send failed", error);
+		log.error("email.send_failed", {}, error);
 		return { delivered: false, channel: "email" as const, retry: true };
 	});
 	if (delivery.delivered || !delivery.retry || !memberId) return delivery;
 	if (attempts + 1 >= MAX_ATTEMPTS) {
-		console.error("[notify] email given up after retries", message.kind);
+		log.error("email.given_up", { kind: message.kind });
+		await tally(env, "email_given_up");
 		return delivery;
 	}
 	await env.DB.prepare(

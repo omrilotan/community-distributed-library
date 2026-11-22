@@ -113,6 +113,10 @@ export default class Stub extends WorkerEntrypoint {
 	jobs() {
 		return [];
 	}
+	/** convo: nothing kept past its time here. */
+	checks() {
+		return { threads_past_purge: 0 };
+	}
 	/** When core closed a loan's thread, for tests to read back. */
 	closedAt(loanId) {
 		return closedThreads.get(loanId) ?? null;

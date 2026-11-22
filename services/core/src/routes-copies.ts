@@ -5,6 +5,7 @@ import {
 	traits,
 	type CopyDetail,
 	type LibraryType,
+	log,
 } from "@cdl/contracts";
 import { CLAIMED } from "./sets.ts";
 import {
@@ -182,7 +183,7 @@ copies.patch("/v1/copies/:id", async (c) => {
 	if (body.lending === "lendable" && detail.lending !== "lendable") {
 		c.executionCtx.waitUntil(
 			onCopyAvailable(c.env, id).catch((error: unknown) =>
-				console.error("[waitlist] offer failed", id, error),
+				log.error("waitlist.offer_failed", { id }, error),
 			),
 		);
 	}
@@ -237,7 +238,7 @@ copies.delete("/v1/copies/:id", async (c) => {
 				...detail.photos,
 				edition?.meta.changes ? detail.edition.coverUrl : null,
 			]).catch((error: unknown) =>
-				console.error("[copies] images not deleted", error),
+				log.error("copies.images_not_deleted", {}, error),
 			),
 		);
 	}

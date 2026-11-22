@@ -1,3 +1,4 @@
+import { log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { fragment } from "./cache.ts";
 import { distanceM, snapArea } from "./geo.ts";
@@ -116,7 +117,7 @@ async function lookup<T>(
 	try {
 		return await fragment(env, ctx, key, MONTH, build);
 	} catch (error) {
-		console.error("[places]", error);
+		log.error("places.failed", {}, error);
 		return fallback;
 	}
 }

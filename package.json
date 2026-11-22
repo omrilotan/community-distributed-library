@@ -20,7 +20,7 @@
     "types": "npm run types --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
-    "test": "node scripts/check-hosts.mjs && npm run test --workspaces --if-present",
+    "test": "node scripts/check-hosts.mjs && node scripts/check-logs.mjs && npm run test --workspaces --if-present",
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "deploy": "node scripts/deploy.mjs",

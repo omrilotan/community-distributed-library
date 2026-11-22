@@ -1,3 +1,4 @@
+import { log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { NEWS_DAYS, tell } from "./notify.ts";
 import { pruneRateLimits } from "./rate-limit.ts";
@@ -96,7 +97,7 @@ export async function runReminders(
 	// what only remembers people once it is spent is forgotten.
 	await pruneRateLimits(env).catch(() => 0);
 	await forgetSpent(env, at).catch((error: unknown) =>
-		console.error("[housekeeping] forget failed", error),
+		log.error("housekeeping.forget_failed", {}, error),
 	);
 
 	const base = `SELECT l.id, l.status, l.requested_at, l.due_at, l.community_id, e.title,
@@ -212,10 +213,10 @@ export async function runReminders(
 	// Waitlist holds that lapsed pass to the next in line, and copies that
 	// came free unannounced (an owner back from away) find their waiters.
 	await expireHolds(env).catch((error: unknown) =>
-		console.error("[waitlist] expire failed", error),
+		log.error("waitlist.expire_failed", {}, error),
 	);
 	await offerWaitedFor(env).catch((error: unknown) =>
-		console.error("[waitlist] offers failed", error),
+		log.error("waitlist.offers_failed", {}, error),
 	);
 
 	return { sent, escalated };

@@ -5,6 +5,7 @@ import { backup } from "./backup.ts";
 import { rehostCovers } from "./covers.ts";
 import type { Env } from "./env.ts";
 import { deliverPending } from "./events.ts";
+import { runChecks } from "./checks.ts";
 import { allJobs } from "./jobs.ts";
 import { sendHeldNotices, sendPendingEmails } from "./notify.ts";
 import { runReminders } from "./reminders.ts";
@@ -58,7 +59,11 @@ export default {
 		// The email that follows a push nobody picked up.
 		job("emails", () => sendPendingEmails(env), quiet);
 		const minute = new Date(event.scheduledTime).getUTCMinutes();
-		if (minute % 15 === 0)
+		if (minute % 15 === 0) {
+			job("checks", async () => ({
+				failing: (await runChecks(env)).filter((check) => !check.ok).length,
+			}));
 			ctx.waitUntil(allJobs(env).then((states) => reportLate(states, "core")));
+		}
 	},
 };

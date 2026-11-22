@@ -1,5 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { Message, type Delivery } from "@cdl/contracts";
+import { Message, type Delivery, log } from "@cdl/contracts";
 import { render } from "./templates.ts";
 import { sendPush, type Subscription } from "./push.ts";
 
@@ -49,7 +49,7 @@ export default class Notify extends WorkerEntrypoint<Env> {
 		};
 		const vapid = this.env.VAPID_PRIVATE_JWK;
 		if (!vapid || !this.env.VAPID_PUBLIC_KEY) {
-			console.log("[notify:push] no VAPID keys; skipping", notification.title);
+			log.info("push.skipped_no_keys");
 			return { sent: 0, gone: [], delivered: [], failed: [] };
 		}
 		const config = {
@@ -68,7 +68,7 @@ export default class Notify extends WorkerEntrypoint<Env> {
 					notification,
 					config,
 				).catch((error: unknown) => {
-					console.error("[notify:push] failed", error);
+					log.error("push.failed", {}, error);
 					return null;
 				});
 				// 404 and 410 mean the browser threw the subscription away.
@@ -77,8 +77,7 @@ export default class Notify extends WorkerEntrypoint<Env> {
 				} else if (response?.ok) {
 					delivered.push(subscription.id);
 				} else {
-					if (response)
-						console.error("[notify:push] rejected", response.status);
+					if (response) log.warn("push.rejected", { status: response.status });
 					failed.push(subscription.id);
 				}
 			}),
@@ -94,6 +93,7 @@ export default class Notify extends WorkerEntrypoint<Env> {
 			// No binding means a test or a deploy gone wrong: say what would have
 			// gone, never a sign-in link, which core already hands a developer
 			// as debugUrl.
+			// telemetry: development and tests only; a library binds EMAIL.
 			console.log(
 				`[notify:console] to=${message.to} subject=${rendered.subject}${
 					// Either one carries a link that signs somebody in.
@@ -116,7 +116,10 @@ export default class Notify extends WorkerEntrypoint<Env> {
 			(error: unknown) => error as { code?: string; message?: string },
 		);
 		if (!failure) return { delivered: true, channel: "email" };
-		console.error("[notify:email] send failed", failure.code, failure.message);
+		log.error("email.send_failed", {
+			code: failure.code,
+			reason: failure.message,
+		});
 		// The address bounced before, or the message itself is wrong: later
 		// would fail the same. Anything else (limits, delivery, Cloudflare's
 		// own trouble) is worth another go.

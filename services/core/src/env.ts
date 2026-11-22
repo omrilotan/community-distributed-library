@@ -57,6 +57,8 @@ export interface ConvoService {
 	closed(loanId: string, closedAt: number): Promise<void>;
 	/** Convo's scheduled jobs, and whether any is late. */
 	jobs(): Promise<JobState[]>;
+	/** Convo's invariant counts, each of which should be 0 (checks.ts). */
+	checks(): Promise<{ threads_past_purge: number }>;
 }
 
 export interface Env {

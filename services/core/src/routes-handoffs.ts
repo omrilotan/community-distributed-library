@@ -7,6 +7,7 @@ import {
 	type HandoffView,
 	type Period,
 	type SlotOption,
+	log,
 } from "@cdl/contracts";
 import { dropStaleHandoffs } from "./stale-handoffs.ts";
 import { BACK_WITH_OWNER } from "./sets.ts";
@@ -240,7 +241,7 @@ handoffs.post("/v1/loans/:id/handoff/propose", async (c) => {
 			place: null,
 			code: null,
 		}).catch((error: unknown) =>
-			console.error("[handoffs] notify failed", error),
+			log.error("handoffs.notify_failed", {}, error),
 		),
 	);
 	for (const [each, handoffId] of ids)
@@ -363,7 +364,7 @@ handoffs.post("/v1/loans/:id/handoff/confirm", async (c) => {
 	];
 	c.executionCtx.waitUntil(
 		Promise.all(sends).catch((error: unknown) =>
-			console.error("[handoffs]", error),
+			log.error("handoffs.failed", {}, error),
 		),
 	);
 	return c.body(null, 204);
@@ -581,12 +582,12 @@ async function handOver(
 		// Only now is the copy back on the shelf for the waitlist to find.
 		c.executionCtx.waitUntil(
 			c.env.CONVO.closed(loanId, at).catch((error: unknown) =>
-				console.error("[convo] close failed", loanId, error),
+				log.error("convo.close_failed", { loanId }, error),
 			),
 		);
 		c.executionCtx.waitUntil(
 			onCopyAvailable(c.env, changedCopy).catch((error: unknown) =>
-				console.error("[waitlist] offer failed", changedCopy, error),
+				log.error("waitlist.offer_failed", { copyId: changedCopy }, error),
 			),
 		);
 	}
@@ -694,7 +695,7 @@ export function relayed(
 ) {
 	c.executionCtx.waitUntil(
 		c.env.CONVO.closed(previousLoanId, at).catch((error: unknown) =>
-			console.error("[convo] close failed", previousLoanId, error),
+			log.error("convo.close_failed", { loanId: previousLoanId }, error),
 		),
 	);
 	c.executionCtx.waitUntil(

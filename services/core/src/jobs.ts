@@ -20,6 +20,8 @@ export const SCHEDULE: JobSchedule = {
 	backup: DAILY,
 	"revoke-consents": DAILY,
 	"rehost-covers": DAILY,
+	// Every 15 minutes (checks.ts).
+	checks: 40 * 60,
 };
 
 /** Every job of this library, core's and convo's, each with where it runs. */

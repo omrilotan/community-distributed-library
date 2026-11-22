@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { JoinWaitlist, problem, type WaitlistEntry } from "@cdl/contracts";
+import { JoinWaitlist, problem, type WaitlistEntry, log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { viewerWith } from "./auth.ts";
 import { denied, json } from "./problem.ts";
@@ -57,7 +57,11 @@ waitlist.delete("/v1/waitlist/:id", async (c) => {
 	if (left.offered_copy_id && (left.offer_expires_at ?? 0) > now())
 		c.executionCtx.waitUntil(
 			onCopyAvailable(c.env, left.offered_copy_id).catch((error: unknown) =>
-				console.error("[waitlist] offer failed", left.offered_copy_id, error),
+				log.error(
+					"waitlist.offer_failed",
+					{ copyId: left.offered_copy_id },
+					error,
+				),
 			),
 		);
 	return c.body(null, 204);

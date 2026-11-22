@@ -1,3 +1,4 @@
+import { log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { tell } from "./notify.ts";
 import { ulid, now } from "./ids.ts";
@@ -53,7 +54,7 @@ export async function onCopyAvailable(
 			bookTitle: copy.title,
 			ownerName: copy.owner_name,
 		}).catch((error: unknown) =>
-			console.error("[waitlist] notify failed", error),
+			log.error("waitlist.notify_failed", {}, error),
 		);
 		return;
 	}
@@ -110,9 +111,7 @@ export async function onCopyAvailable(
 		bookTitle: copy.title,
 		ownerName: copy.owner_name,
 		hours: HOLD_HOURS,
-	}).catch((error: unknown) =>
-		console.error("[waitlist] notify failed", error),
-	);
+	}).catch((error: unknown) => log.error("waitlist.notify_failed", {}, error));
 }
 
 /**
@@ -147,7 +146,7 @@ export async function offerWaitedFor(env: Env): Promise<number> {
 	// One copy's failure, a D1 error say, must not keep the rest from being offered.
 	for (const row of results)
 		await onCopyAvailable(env, row.id).catch((error: unknown) =>
-			console.error("[waitlist] offer failed", row.id, error),
+			log.error("waitlist.offer_failed", { id: row.id }, error),
 		);
 	return results.length;
 }
@@ -215,7 +214,11 @@ export async function expireHolds(env: Env): Promise<number> {
 		// hold up the other lapsed holds.
 		await onCopyAvailable(env, row.offered_copy_id, row.member_id).catch(
 			(error: unknown) =>
-				console.error("[waitlist] pass-on failed", row.offered_copy_id, error),
+				log.error(
+					"waitlist.pass_on_failed",
+					{ copyId: row.offered_copy_id },
+					error,
+				),
 		);
 	}
 	return passed;
@@ -314,7 +317,7 @@ async function tellWishers(
 				bookTitle: copy.title,
 				ownerName: copy.owner_name,
 			}).catch((error: unknown) =>
-				console.error("[wishlist] notify failed", error),
+				log.error("wishlist.notify_failed", {}, error),
 			),
 		),
 	);

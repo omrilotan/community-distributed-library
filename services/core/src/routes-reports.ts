@@ -6,6 +6,7 @@ import {
 	problem,
 	type ReportThread,
 	type ReportView,
+	log,
 } from "@cdl/contracts";
 import {
 	endWaitingRelays,
@@ -117,7 +118,7 @@ reports.post("/v1/loans/:id/report", async (c) => {
 		);
 		c.executionCtx.waitUntil(
 			c.env.CONVO.closed(loanId, at).catch((error: unknown) =>
-				console.error("[convo] close failed", loanId, error),
+				log.error("convo.close_failed", { loanId }, error),
 			),
 		);
 	}
@@ -140,7 +141,7 @@ reports.post("/v1/loans/:id/report", async (c) => {
 				fromName: loan.relay_name,
 				body: parsed.data.body ?? null,
 			}).catch((error: unknown) =>
-				console.error("[reports] owner notify failed", error),
+				log.error("reports.owner_notify_failed", {}, error),
 			),
 		);
 	}
@@ -174,9 +175,7 @@ reports.post("/v1/loans/:id/report", async (c) => {
 					body: parsed.data.body ?? null,
 				}),
 			),
-		).catch((error: unknown) =>
-			console.error("[reports] notify failed", error),
-		),
+		).catch((error: unknown) => log.error("reports.notify_failed", {}, error)),
 	);
 	return c.json({ id }, 201);
 });
@@ -296,7 +295,7 @@ reports.post("/v1/reports/:id/replies", async (c) => {
 				}),
 			),
 		).catch((error: unknown) =>
-			console.error("[reports] reply notify failed", error),
+			log.error("reports.reply_notify_failed", {}, error),
 		),
 	);
 	return c.body(null, 204);
@@ -385,7 +384,7 @@ reports.post("/v1/admin/reports/:id/:action", async (c) => {
 			if (found?.meta.changes)
 				c.executionCtx.waitUntil(
 					onCopyAvailable(c.env, loan.copy_id).catch((error: unknown) =>
-						console.error("[waitlist] offer failed", loan.copy_id, error),
+						log.error("waitlist.offer_failed", { copyId: loan.copy_id }, error),
 					),
 				);
 		}
@@ -485,6 +484,6 @@ function tellReporter(
 	})
 		.then(() => undefined)
 		.catch((error: unknown) =>
-			console.error("[reports] reporter notify failed", error),
+			log.error("reports.reporter_notify_failed", {}, error),
 		);
 }

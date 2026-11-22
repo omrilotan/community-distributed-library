@@ -10,6 +10,7 @@ import {
 	parseTags,
 	problem,
 	traits,
+	log,
 } from "@cdl/contracts";
 import { theLibrary } from "./library.ts";
 import type { Env } from "./env.ts";
@@ -231,7 +232,7 @@ app.post("/v1/copies", async (c) => {
 	// Someone may have been waiting for exactly this book.
 	c.executionCtx.waitUntil(
 		onCopyAvailable(c.env, id).catch((error: unknown) =>
-			console.error("[waitlist] offer failed", id, error),
+			log.error("waitlist.offer_failed", { id }, error),
 		),
 	);
 	c.executionCtx.waitUntil(
@@ -434,7 +435,12 @@ app.get("/v1/search", async (c) => {
 app.notFound((c) => json(c, problem(404, "Not found")));
 
 app.onError((error, c) => {
-	console.error(error);
+	// The route as declared, never the URL: ids and search terms stay out.
+	log.error(
+		"request.failed",
+		{ method: c.req.method, route: c.req.routePath },
+		error,
+	);
 	return json(c, problem(500, "Something went wrong"));
 });
 

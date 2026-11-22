@@ -16,6 +16,7 @@ import {
 	type OfferCome,
 	type OfferView,
 	type Period,
+	log,
 } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { viewerWith, type Viewer } from "./auth.ts";
@@ -230,7 +231,7 @@ asks.post("/v1/asks", async (c) => {
 	if (by === "today")
 		c.executionCtx.waitUntil(
 			announce(c.env, member, id, what).catch((error: unknown) =>
-				console.error("[asks] announce failed", error),
+				log.error("asks.announce_failed", {}, error),
 			),
 		);
 	return c.json({ id }, 201);
@@ -290,7 +291,7 @@ async function announce(env: Env, asker: Viewer, askId: string, what: string) {
 				by: "today",
 			},
 		).catch((error: unknown) => {
-			console.error("[asks] push failed", error);
+			log.error("asks.push_failed", {}, error);
 			return null;
 		});
 		if (outcome) await countPushes(env, outcome);
@@ -333,7 +334,7 @@ asks.post("/v1/asks/:id/close", async (c) => {
 	if (!closed.meta.changes) return json(c, problem(404, "No such open ask"));
 	c.executionCtx.waitUntil(
 		thank(c.env, id, null).catch((error: unknown) =>
-			console.error("[asks] notify failed", error),
+			log.error("asks.notify_failed", {}, error),
 		),
 	);
 	return c.body(null, 204);
@@ -464,7 +465,7 @@ asks.post("/v1/asks/:id/offers", async (c) => {
 			otherName: ask.my_name,
 			offered: name,
 			by: null,
-		}).catch((error: unknown) => console.error("[asks] notify failed", error)),
+		}).catch((error: unknown) => log.error("asks.notify_failed", {}, error)),
 	);
 	return c.json({ id: offer?.id ?? id }, 201);
 });
@@ -618,7 +619,7 @@ asks.post("/v1/asks/:id/offers/:offerId/take", async (c) => {
 				by: null,
 			}),
 			thank(c.env, askId, offerId),
-		]).catch((error: unknown) => console.error("[asks] notify failed", error)),
+		]).catch((error: unknown) => log.error("asks.notify_failed", {}, error)),
 	);
 	return c.json({ loanId }, 201);
 });

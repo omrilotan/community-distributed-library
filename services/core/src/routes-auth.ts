@@ -1,3 +1,4 @@
+import { tally } from "./tallies.ts";
 import { Hono, type Context } from "hono";
 import {
 	CodeRequest,
@@ -6,6 +7,7 @@ import {
 	MagicLinkRequest,
 	UpdateMe,
 	problem,
+	log,
 } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { moderator, viewer, viewerWith } from "./auth.ts";
@@ -133,6 +135,7 @@ auth.post("/v1/auth/magic-link", async (c) => {
 		const url = `${c.env.APP_URL}/auth/callback?token=${encodeURIComponent(token)}`;
 		// Development always logs the link, whether or not notify also emails it.
 		if (c.env.DEV_AUTH === "true")
+			// telemetry: development only, never in a library.
 			console.log(`[auth] magic link for ${email}: ${url}`);
 		const delivery = await c.env.NOTIFY.send({
 			kind: "magic_link",
@@ -142,6 +145,9 @@ auth.post("/v1/auth/magic-link", async (c) => {
 			expiresInMinutes: MAGIC_LINK_MINUTES,
 			...(code ? { code } : {}),
 		});
+		// A sign-in email that did not go leaves no trace but this count, which
+		// the sign_in_mail_failing check reads (checks.ts).
+		if (!delivery.delivered) await tally(c.env, "sign_in_mail_failed");
 		return { url, code, delivery };
 	};
 
@@ -160,7 +166,10 @@ auth.post("/v1/auth/magic-link", async (c) => {
 	c.executionCtx.waitUntil(
 		issue().then(
 			() => undefined,
-			(error: unknown) => console.error("[auth] magic link not sent", error),
+			async (error: unknown) => {
+				log.error("auth.magic_link_not_sent", {}, error);
+				await tally(c.env, "sign_in_mail_failed");
+			},
 		),
 	);
 	return c.json({ ok: true });
@@ -533,7 +542,7 @@ auth.patch("/v1/me", async (c) => {
 		} else {
 			c.executionCtx.waitUntil(
 				offerWaitedFor(c.env).catch((error: unknown) =>
-					console.error("[waitlist] offers failed", error),
+					log.error("waitlist.offers_failed", {}, error),
 				),
 			);
 		}

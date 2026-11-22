@@ -1,3 +1,4 @@
+import { log } from "@cdl/contracts";
 /**
  * Where browsers post what went wrong: content security policy refusals and
  * network errors, named as `cdl-csp` and `cdl-nel` in the pages'
@@ -116,7 +117,7 @@ export default {
 			try {
 				write(env, url, report, userAgent);
 			} catch (error) {
-				console.error("failed to write a report", error);
+				log.error("reports.write_failed", {}, error);
 			}
 		}
 		return new Response(null, { status: 204 });
