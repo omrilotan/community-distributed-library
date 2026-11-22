@@ -71,7 +71,7 @@ Then work out the rest and confirm it in one short summary:
 Send them to the pre-filled token page. The link is in `docs/self-hosting.md`, step 2; copy it from
 there exactly. Tell them:
 
-1. Check the page lists the nine permissions in the table in `docs/self-hosting.md`, step 2,
+1. Check the page lists the twelve permissions in the table in `docs/self-hosting.md`, step 2,
    including **Email Sending: Edit** (picture: `docs/images/cloudflare-token-permissions.png`). If
    one is missing, **+ Add more** adds it.
 2. Select **Continue to summary**, then **Create Token**.
@@ -103,13 +103,18 @@ the check again. Common ones:
 - **The token cannot reach Email Sending:** the token is missing **Email Sending: Edit**. In
   Cloudflare, **My Profile** > **API Tokens**, edit the token and add it; the token itself stays the
   same.
+- **The token cannot reach alerts, Workers Issues or tracing:** the same way, add
+  **Notifications: Edit**, **Workers Observability: Edit** or **Zone Observability: Edit**. The
+  library opens without them, but nobody is told when it breaks.
 
 ## 7. Open it
 
 Tell them what is about to happen: their Cloudflare account gets the library's 5 Workers, 2
 databases, 2 storage buckets, a sign-in store and 3 addresses (`<address>`, `mcp.<address>`,
 `images.<address>`); Cloudflare Email Sending is turned on for their domain, which adds its mail
-records to their DNS; and they become its admin. Their first library also makes the book lookup
+records to their DNS; and they become its admin. Cloudflare will email the library's admins when one of its Workers fails,
+and every admin when a certificate or a shared Worker has a problem, and keeps full traces of sign-ins and loan changes
+(their first library sets this up; each later one is added to it). Their first library also makes the book lookup
 Worker and its database, which every later library shares. The library sends mail from
 `<slug>@<their domain>`. Get a yes, then:
 
@@ -118,7 +123,8 @@ set -a; . ./.env; set +a; npm run provision -- <slug> --host <address> --name "<
 ```
 
 It takes a few minutes. If it stops, read the last error, fix the cause, and run the same command
-again: it keeps what it already made.
+again: it keeps what it already made. If it ends with **Alerts are not set up yet**, the library is
+open; fix the token as its lines say, then run `set -a; . ./.env; set +a; npm run observe`.
 
 ## 8. Check it works
 

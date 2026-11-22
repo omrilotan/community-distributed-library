@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Open a new library: make its Cloudflare resources, add it to the manifest,
-// deploy it, set its secrets, and make its first admin. Usage:
+// deploy it, set its secrets, make its first admin, and set up the alerts
+// (scripts/observe.mjs). Usage:
 //
 //   node scripts/provision.mjs <slug> --host <host> --name "<name>" \
 //     --centre <lat,lng> --admin <email> [--type books|things] \
@@ -401,5 +402,22 @@ if (
 
 lib.provisioned = true;
 save();
+
+// 6. Alerts and traces, for every library now in the manifest: its admins,
+// the one just made among them, hear when it fails. A token without the
+// permissions for them does not stop the library opening.
+console.log(`\n━━ ${slug}: alerts`);
+console.log("$ node scripts/observe.mjs");
+const observed = dry
+	? { status: 0 }
+	: spawnSync("node", ["scripts/observe.mjs"], {
+			cwd: root,
+			env: { ...env, CDL_LIBRARIES: path },
+			stdio: "inherit",
+		});
 console.log(`\n✓ ${values.name} is open at https://${values.host}`);
 console.log(`  Sign in there as ${admin}.`);
+if (observed.status !== 0)
+	console.log(
+		"! Alerts are not set up yet. Fix what the lines above say, then run npm run observe.",
+	);

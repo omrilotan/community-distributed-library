@@ -21,4 +21,11 @@ that is not possible, for example when no admin can sign in.
 
    It makes the member if they are new, and prints their email and role when done.
 
-4. Tell them that person can now sign in at the library's address with that email.
+4. When the role given or taken away is `admin`, bring the alerts up to date, so the library's
+   admins are the ones told when it breaks:
+
+   ```sh
+   set -a; . ./.env; set +a; npm run observe
+   ```
+
+5. Tell them that person can now sign in at the library's address with that email.

@@ -2,6 +2,14 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "cdl-landing",
   "compatibility_date": "2026-08-22",
+  // Logs and Issues, sampled per the manifest (scripts/libraries.mjs).
+  "observability": {
+    "enabled": true,
+    "redact_query_string": true,
+    "logs": { "invocation_logs": true },
+    "traces": { "enabled": true },
+    "issues": { "enabled": true },
+  },
   // Static files, which build.mjs writes to dist/. Code runs only for the
   // pages, to give an agent their Markdown when it asks, and for /video/*, to
   // answer the byte ranges a video player asks for (worker.js).

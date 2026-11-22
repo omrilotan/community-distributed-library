@@ -88,6 +88,18 @@ else {
 		const d1 = await cf(`/accounts/${account}/d1/database`);
 		if (d1.success) ok("The token can manage D1 databases");
 		else bad("The token cannot reach D1: it needs D1: Edit");
+		// Alerts (scripts/observe.mjs): where they go, and which failures send one.
+		const alerts = await cf(`/accounts/${account}/alerting/v3/policies`);
+		if (alerts.success) ok("The token can manage alerts");
+		else bad("The token cannot reach alerts: it needs Notifications: Edit");
+		const issues = await cf(
+			`/accounts/${account}/workers/observability/issues/automations`,
+		);
+		if (issues.success) ok("The token can choose which failures alert");
+		else
+			bad(
+				"The token cannot reach Workers Issues: it needs Workers Observability: Edit",
+			);
 	}
 
 	if (values.host && account) {
@@ -100,6 +112,14 @@ else {
 			else
 				bad(
 					"The token cannot reach Email Sending: it needs Email Sending: Edit (step 2)",
+				);
+			const tracing = await cf(
+				`/zones/${zone.id}/observability/tracing/settings`,
+			);
+			if (tracing.success) ok("The token can set which requests are traced");
+			else
+				bad(
+					"The token cannot reach tracing: it needs Zone Observability: Edit (step 2)",
 				);
 		} else if (zone)
 			bad(

@@ -6,6 +6,7 @@
     "reports": { "host": "reports.example.org", "zone": "example.org" },
     "landing": { "host": "example.org" }
   },
+  "sampling": { "web": { "logs": 0.25, "traces": 0.05 } },
   "libraries": [
     {
       "slug": "our-street",
@@ -18,7 +19,8 @@
         "core": "00000000-0000-4000-8000-000000000001",
         "convo": "00000000-0000-4000-8000-000000000002"
       },
-      "oauthKv": "00000000000040008000000000000004"
+      "oauthKv": "00000000000040008000000000000004",
+      "sampling": { "core": { "traces": 0.25 } }
     }
   ]
 }

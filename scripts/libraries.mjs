@@ -43,6 +43,62 @@ export const SHARED_SERVICES = [
 ];
 export const SHARED = new Set(["cdl-metadata"]);
 
+// How much of each Worker's traffic Cloudflare keeps: the share of requests
+// whose logs and traces are stored (head sampling, decided before the
+// outcome is known). Workers whose logs carry the errors and the delivery
+// steps keep every request; those that mostly serve static files or cache
+// hits keep a share. The manifest can change any of them, for the whole
+// fleet (`sampling`) or for one library (`libraries[].sampling`), as
+// `{ "<worker>": { "logs": 0.5, "traces": 0.1 } }`. See
+// docs/observability-plan.md, section 1.6.
+export const SAMPLING = {
+	notify: { logs: 1, traces: 1 },
+	convo: { logs: 1, traces: 0.25 },
+	core: { logs: 1, traces: 0.25 },
+	mcp: { logs: 1, traces: 1 },
+	web: { logs: 0.25, traces: 0.05 },
+	metadata: { logs: 0.25, traces: 0.05 },
+	reports: { logs: 0.1, traces: 0 },
+	landing: { logs: 0.1, traces: 0 },
+};
+
+/** A Worker's rates: the default, then the fleet's, then the library's. */
+export function sampling(name, data, lib) {
+	return {
+		...SAMPLING[name],
+		...data.sampling?.[name],
+		...lib?.sampling?.[name],
+	};
+}
+
+/** The template's observability block with this Worker's rates in it. */
+function observability(config, rates) {
+	const block = structuredClone(config.observability ?? { enabled: true });
+	block.logs = { ...block.logs, head_sampling_rate: rates.logs };
+	block.traces = {
+		...block.traces,
+		enabled: rates.traces > 0,
+		head_sampling_rate: rates.traces,
+	};
+	return block;
+}
+
+/** Every rate the manifest sets names a Worker and is a share from 0 to 1. */
+function checkSampling(where, value, say) {
+	if (value === undefined) return;
+	const workers = Object.keys(SAMPLING);
+	for (const [name, rates] of Object.entries(value ?? {})) {
+		if (!workers.includes(name))
+			say(`${where}.${name} is not a Worker (${workers.join(", ")})`);
+		for (const [kind, rate] of Object.entries(rates ?? {})) {
+			if (kind !== "logs" && kind !== "traces")
+				say(`${where}.${name}.${kind} must be logs or traces`);
+			if (typeof rate !== "number" || rate < 0 || rate > 1)
+				say(`${where}.${name}.${kind} must be a number from 0 to 1`);
+		}
+	}
+}
+
 /** The vars each Worker of a library gets, from the manifest. */
 function vars(service, lib, data) {
 	const app = `https://${lib.host}`;
@@ -93,9 +149,17 @@ export function manifest(path = manifestPath()) {
 	if (!data.accountId) say("accountId is missing");
 	if (!Array.isArray(data.libraries) || data.libraries.length === 0)
 		say("lists no libraries");
+	checkSampling("sampling", data.sampling, say);
+	// Where alerts go (scripts/observe.mjs); optional until alerts are set up.
+	if (
+		data.alerts?.email !== undefined &&
+		!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.alerts.email)
+	)
+		say(`alerts.email "${data.alerts.email}" is not an email address`);
 	for (const lib of data.libraries) {
 		if (!/^[a-z][a-z0-9-]*$/.test(lib.slug ?? ""))
 			say(`"${lib.slug}" is not a slug`);
+		checkSampling(`${lib.slug}: sampling`, lib.sampling, say);
 		for (const key of [
 			"host",
 			"address",
@@ -179,6 +243,7 @@ export function configFor(data, slug, name) {
 		if (!(key in wanted))
 			throw new Error(`${name}: var ${key} has no value for ${slug}`);
 	if (Object.keys(wanted).length) config.vars = wanted;
+	config.observability = observability(config, sampling(name, data, lib));
 	for (const key of Object.keys(config))
 		if (config[key] === undefined) delete config[key];
 	return write(service.dir, slug, config);
@@ -207,5 +272,6 @@ export function sharedConfigFor(data, name) {
 				custom_domain: true,
 			},
 		];
+	config.observability = observability(config, sampling(name, data));
 	return write(service.dir, "shared", config);
 }

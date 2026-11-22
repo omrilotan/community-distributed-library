@@ -41,4 +41,17 @@ deploys it to each of them, applying database changes first.
    Each library gets its database changes, then its Workers. If one library fails, the others still
    go; read the error, fix it, and deploy that one again with `npm run deploy -- <slug>`.
 
-6. Check each library's `https://<host>/about` answers `200`, and tell them it is done.
+6. Bring the alerts up to date, for every library in `libraries.json` (it changes only what it
+   made, and is safe to run again):
+
+   ```sh
+   set -a; . ./.env; set +a; npm run observe
+   ```
+
+   Each library's admins are told when it breaks, and every admin when something the libraries
+   share breaks. If it says there is **nobody to tell**, ask who should hear (usually the person
+   themselves) and run it again with `-- --email <address>`. If it says the token
+   needs a permission, ask them to add it to the token in Cloudflare (**My Profile** > **API Tokens**,
+   edit), then run it again.
+
+7. Check each library's `https://<host>/about` answers `200`, and tell them it is done.

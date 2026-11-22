@@ -41,23 +41,27 @@ npm install
 The token is how the command in step 5 makes things in your Cloudflare account.
 
 1. Sign in to Cloudflare, then open
-   [this link](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_kv_storage%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_r2%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22d1%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22zone%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22dns%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22email_sending%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=*&zoneId=all&name=Community%20Distributed%20Library).
-   It opens a new token with its permissions already filled in. Check that it lists these nine:
+   [this link](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22workers_scripts%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_kv_storage%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_r2%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22d1%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22workers_routes%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22zone%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22dns%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22email_sending%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22notifications%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_observability%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22zone_observability%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=*&zoneId=all&name=Community%20Distributed%20Library).
+   It opens a new token with its permissions already filled in. Check that it lists these twelve:
 
-   | Scope   | Permission         | Access |
-   | ------- | ------------------ | ------ |
-   | Account | Workers Scripts    | Edit   |
-   | Account | Workers KV Storage | Edit   |
-   | Account | Workers R2 Storage | Edit   |
-   | Account | D1                 | Edit   |
-   | Account | Account Settings   | Read   |
-   | Account | Email Sending      | Edit   |
-   | Zone    | Workers Routes     | Edit   |
-   | Zone    | Zone               | Read   |
-   | Zone    | DNS                | Edit   |
+   | Scope   | Permission            | Access |
+   | ------- | --------------------- | ------ |
+   | Account | Workers Scripts       | Edit   |
+   | Account | Workers KV Storage    | Edit   |
+   | Account | Workers R2 Storage    | Edit   |
+   | Account | D1                    | Edit   |
+   | Account | Account Settings      | Read   |
+   | Account | Email Sending         | Edit   |
+   | Account | Notifications         | Edit   |
+   | Account | Workers Observability | Edit   |
+   | Zone    | Workers Routes        | Edit   |
+   | Zone    | Zone                  | Read   |
+   | Zone    | DNS                   | Edit   |
+   | Zone    | Zone Observability    | Edit   |
 
    If one is missing, select **+ Add more** and add it. Email Sending is the one that lets the
-   library send its mail.
+   library send its mail; Notifications, Workers Observability and Zone Observability let it email
+   you when something goes wrong.
 
    ![The Create Token page with the permissions filled in](images/cloudflare-token-permissions.png)
 
@@ -198,3 +202,9 @@ books and data, and none of them can see another's.
 - **Error reports.** Add `"reports": { "host": "reports.example.org", "zone": "example.org" }` under
   `shared` in `libraries.json`, then `npm run deploy -- shared reports` and `npm run deploy -- all web`.
   Browsers then report blocked content and network errors there.
+- **How much Cloudflare keeps of logs and traces.** Every Worker stores its logs, traces and errors
+  in your Cloudflare account for 7 days. Query strings are left out. The Workers that carry errors
+  and deliveries keep every request; the web app, covers lookup and reports keep a share
+  (`SAMPLING` in `scripts/libraries.mjs`). To change a share, add
+  `"sampling": { "web": { "logs": 0.5, "traces": 0.1 } }` to `libraries.json`, either at the top
+  for every library or on one library, then deploy that Worker. Each value is a share from 0 to 1.

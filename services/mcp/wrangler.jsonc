@@ -4,7 +4,16 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-08-22",
   "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
+  // Logs, traces and Issues. A deploy sets the sampling rates for each library
+  // and Worker from the manifest (scripts/libraries.mjs); query strings stay
+  // out, so a search never reaches the logs.
+  "observability": {
+    "enabled": true,
+    "redact_query_string": true,
+    "logs": { "invocation_logs": true },
+    "traces": { "enabled": true },
+    "issues": { "enabled": true },
+  },
   // Stack traces of uncaught exceptions name src/ files, not the bundle.
   "upload_source_maps": true,
   // Public: MCP clients connect here. It holds no data and no logic of its
