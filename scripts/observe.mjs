@@ -270,7 +270,18 @@ async function main() {
 	}
 	const policies =
 		(await api("GET", `/accounts/${account}/alerting/v3/policies`)) ?? [];
-	async function policy(name, alertType, description, emails) {
+	// A failure (an Issue) goes to the ops inbox only, when there is one: ops
+	// drops scanners' probes and emails the rest (services/ops/src/relay.ts),
+	// as Cloudflare cannot filter Issues by type. Without ops, Cloudflare
+	// emails every failure itself.
+	async function policy(
+		name,
+		alertType,
+		description,
+		emails,
+		{ relayed } = {},
+	) {
+		const viaOps = Boolean(relayed && webhook);
 		const body = {
 			name: `${MARK}${name}`,
 			description,
@@ -278,12 +289,12 @@ async function main() {
 			enabled: true,
 			filters: {},
 			mechanisms: {
-				email: emails.map((id) => ({ id })),
+				...(viaOps ? {} : { email: emails.map((id) => ({ id })) }),
 				...(webhook ? { webhooks: [{ id: webhook }] } : {}),
 			},
 		};
 		const found = policies.find((entry) => entry.name === body.name);
-		if (!emails.length) {
+		if (!emails.length && !viaOps) {
 			console.log(`! ${body.name}: nobody to tell, left as it is`);
 			return found?.id;
 		}
@@ -296,7 +307,9 @@ async function main() {
 		const made = found
 			? found
 			: await api("POST", `/accounts/${account}/alerting/v3/policies`, body);
-		console.log(`✓ ${body.name}${found ? "" : " (new)"}, to ${count(emails)}`);
+		console.log(
+			`✓ ${body.name}${found ? "" : " (new)"}, ${viaOps ? "emailed by ops" : "to"} ${count(emails)}`,
+		);
 		return made?.id ?? `<${name}>`;
 	}
 	const failing = new Map();
@@ -308,6 +321,7 @@ async function main() {
 				"workers_observability_real_time_issue",
 				`One of ${lib.host}'s Workers threw, failed, answered 5xx or logged an error. The email links to the issue.`,
 				told.get(lib.slug),
+				{ relayed: true },
 			),
 		);
 	failing.set(
@@ -317,6 +331,7 @@ async function main() {
 			"workers_observability_real_time_issue",
 			"The book lookup, the error reports or the front page threw, failed, answered 5xx or logged an error.",
 			everyone,
+			{ relayed: true },
 		),
 	);
 	await policy(

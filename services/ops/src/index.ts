@@ -1,6 +1,7 @@
 import { log, runJob } from "@cdl/contracts";
 import { sendDigest } from "./digest.ts";
 import { libraries, type Env } from "./env.ts";
+import { isScanner, relay } from "./relay.ts";
 import { TOOLS } from "./tools.ts";
 
 /**
@@ -100,8 +101,15 @@ export async function answer(env: Env, message: Message) {
 	}
 }
 
-/** Cloudflare's alert webhook: keep what it says, 90 days. */
-async function keepAlert(env: Env, request: Request): Promise<Response> {
+/**
+ * Cloudflare's alert webhook: keep what it says, 90 days, and email a
+ * failure to whoever looks after it (src/relay.ts).
+ */
+async function keepAlert(
+	env: Env,
+	request: Request,
+	ctx?: ExecutionContext,
+): Promise<Response> {
 	const given = request.headers.get("cf-webhook-auth") ?? "";
 	if (!(await same(given, env.ALERTS_SECRET ?? "")))
 		return new Response("Not allowed", { status: 403 });
@@ -146,15 +154,33 @@ async function keepAlert(env: Env, request: Request): Promise<Response> {
 			at - 90 * 86_400,
 		),
 	]);
-	log.info("alert.received", { library, alertType: body.alert_type ?? null });
+	const scanner = isScanner(issue?.[1] ?? name);
+	log.info("alert.received", {
+		library,
+		alertType: body.alert_type ?? null,
+		scanner,
+	});
+	// Only Issues: a certificate policy still emails by itself.
+	if (body.alert_type === "workers_observability_real_time_issue" && !scanner) {
+		const sending = relay(env, { library, name, text }).then(
+			(sent) => log.info("alert.relayed", { library, sent }),
+			(error: unknown) => log.error("alert.not_relayed", {}, error),
+		);
+		if (ctx) ctx.waitUntil(sending);
+		else await sending;
+	}
 	return new Response(null, { status: 204 });
 }
 
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
+	async fetch(
+		request: Request,
+		env: Env,
+		ctx?: ExecutionContext,
+	): Promise<Response> {
 		const url = new URL(request.url);
 		if (url.pathname === "/alerts" && request.method === "POST")
-			return keepAlert(env, request);
+			return keepAlert(env, request, ctx);
 		if (url.pathname !== "/mcp")
 			return new Response("cdl-ops: the operator's MCP is at /mcp\n");
 		const bearer = /^Bearer (.+)$/.exec(

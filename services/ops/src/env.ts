@@ -47,6 +47,8 @@ export interface Env {
 	/** JSON: Library[]. */
 	LIBRARIES: string;
 	FROM_ADDRESS: string;
+	/** The operator's address, told of every failure; may be empty. */
+	ALERTS_EMAIL?: string;
 	/** Secret: the bearer token MCP clients send (.keys/ops.key). */
 	OPS_TOKEN?: string;
 	/** Secret: what Cloudflare's alert webhook sends in cf-webhook-auth. */

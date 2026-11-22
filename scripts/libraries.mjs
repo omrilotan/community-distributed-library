@@ -293,6 +293,8 @@ function opsConfig(config, data) {
 			})),
 		),
 		FROM_ADDRESS: data.libraries[0].address,
+		// The operator (scripts/observe.mjs --email), told of every failure.
+		ALERTS_EMAIL: data.alerts?.email ?? "",
 	};
 }
 

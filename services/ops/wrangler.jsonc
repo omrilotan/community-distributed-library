@@ -30,7 +30,7 @@
   ],
   // The cdl_events dataset and Workers Logs, read without an API token.
   "analytics": { "binding": "ANALYTICS_SQL" },
-  // The weekly digest.
+  // The weekly digest, and the failure alerts it relays (src/relay.ts).
   "send_email": [{ "name": "EMAIL" }],
   // Mondays, 08:00 UTC: the weekly digest (src/digest.ts).
   "triggers": { "crons": ["0 8 * * 1"] },
@@ -39,5 +39,8 @@
     "LIBRARIES": "[]",
     // The digest's sender: an address on a domain that sends (the first library's).
     "FROM_ADDRESS": "",
+    // The operator's address (scripts/observe.mjs --email): told of every
+    // failure, besides the library's admins. A deploy writes it.
+    "ALERTS_EMAIL": "",
   },
 }

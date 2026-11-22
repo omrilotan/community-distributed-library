@@ -1,5 +1,6 @@
 import { log } from "@cdl/contracts";
 import { core, libraries, type Env } from "./env.ts";
+import { isScanner } from "./relay.ts";
 
 /**
  * The Monday email (docs/observability-plan.md, layer 3): for each library,
@@ -8,11 +9,16 @@ import { core, libraries, type Env } from "./env.ts";
  */
 export async function digest(env: Env, at = Date.now()): Promise<string> {
 	const week = Math.floor(at / 1000) - 7 * 86_400;
-	const { results: alerts } = await env.DB.prepare(
+	const { results: rows } = await env.DB.prepare(
 		"SELECT library, name, COUNT(*) AS n FROM alerts WHERE received_at > ? GROUP BY library, name",
 	)
 		.bind(week)
 		.all<{ library: string | null; name: string; n: number }>();
+	// Bots probing for weak spots: one count, not a line each.
+	const probes = rows
+		.filter((one) => isScanner(one.name))
+		.reduce((sum, one) => sum + one.n, 0);
+	const alerts = rows.filter((one) => !isScanner(one.name));
 	const sections: string[] = [];
 	let quiet = true;
 	for (const lib of libraries(env)) {
@@ -49,6 +55,10 @@ export async function digest(env: Env, at = Date.now()): Promise<string> {
 			].join("\n"),
 		);
 	}
+	if (probes)
+		sections.push(
+			`Bots probed for weak spots ${probes} times (Cloudflare's "Potential vulnerability scan" Issues): nothing to do.`,
+		);
 	return [
 		quiet
 			? "Nothing to report this week: every library works, and no alert fired."

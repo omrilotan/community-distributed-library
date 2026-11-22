@@ -147,15 +147,21 @@ neighbours.
 
 Opening a library also sets up how you hear about trouble, and how to ask about it:
 
-- **Alerts by email.** Each library's admins get an email from Cloudflare when one of its Workers
+- **Alerts by email.** Each library's admins get an email when one of its Workers
   fails in a new way, when a scheduled job stops running, or when a check finds the library quietly
   wrong (sign-in emails failing, loan requests not reaching owners, last night's backup missing,
   conversations kept past 90 days). Every admin hears about the shared Workers and certificates.
   Each alert has a page in [docs/runbooks](runbooks/README.md): what it means, where to look, and a
-  prompt for Claude Code to find the cause.
+  prompt for Claude Code to find the cause. Once the ops Worker is set up, Cloudflare posts each
+  failure to it and the ops Worker sends the email, from the library's address. It skips Cloudflare's
+  "Potential vulnerability scan" Issues (bots probing for `wp-config.php` and the like), which the
+  Monday email counts instead. Certificate alerts still come from Cloudflare.
 - **From outside.** A GitHub workflow asks every library every 15 minutes whether it works, and
   opens an issue when one does not (it needs the GitHub CLI signed in when you run
-  `npm run observe`). `npm run probe` asks the same from your computer.
+  `npm run observe`). `npm run probe` asks the same from your computer. Keep **Bot Fight Mode**
+  off for your domain (**Security** > **Settings**): it challenges GitHub's runners, so the probe
+  sees 403 from every library. It can't be skipped for one caller, and the WAF's managed rules
+  still block the scanners.
 - **Asking.** The ops MCP answers questions about all your libraries: "is anything wrong?", "did
   every backup run this week?", "which library is growing?". Connect it once:
 

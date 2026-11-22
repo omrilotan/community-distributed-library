@@ -218,6 +218,55 @@ describe("the alert inbox", () => {
 	});
 });
 
+describe("the alert relay", () => {
+	const issue = (title: string, worker: string) =>
+		new Request("https://ops.test/alerts", {
+			method: "POST",
+			headers: { "cf-webhook-auth": "the webhook's key" },
+			body: JSON.stringify({
+				name: "CDL: ops",
+				alert_type: "workers_observability_real_time_issue",
+				text: `Real-Time Issue '${title}' detected in ${worker}. - Issue ID: 1`,
+			}),
+		});
+
+	function mailed() {
+		const made = env();
+		const send = vi.fn(async () => {});
+		Object.assign(made.env, {
+			EMAIL: { send },
+			ALERTS_EMAIL: "Operator@example.com",
+		});
+		return { ...made, send };
+	}
+
+	it("emails a failure to the library's admins and the operator", async () => {
+		const { env: e, send } = mailed();
+		await worker.fetch(issue("job.missed backup", "our-street-core"), e);
+		const to = send.mock.calls.map(
+			(call) => (call as unknown as [{ to: string; subject: string }])[0],
+		);
+		expect(to.map((one) => one.to).sort()).toEqual([
+			"dana@example.com",
+			"operator@example.com",
+		]);
+		expect(to[0]?.subject).toMatch(/our-street\.example\.org/);
+	});
+
+	it("keeps a scanner's probing, and emails nobody", async () => {
+		const { env: e, db, send } = mailed();
+		await worker.fetch(
+			issue(
+				"Potential vulnerability scan · secret-files · low risk",
+				"cdl-reports",
+			),
+			e,
+		);
+		expect(db.kept).toHaveLength(2);
+		expect(send).not.toHaveBeenCalled();
+	});
+});
+
 describe("the runbooks", () => {
 	it("are found from what an alert says", () => {
 		expect(runbookFor("check.failed emails_stuck")).toBe(
