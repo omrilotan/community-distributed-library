@@ -206,9 +206,14 @@ async function main() {
 		});
 		const json = await reply.json().catch(() => ({}));
 		if (!reply.ok || json.success === false) {
-			const said = (json.errors ?? [])
-				.map((error) => `${error.code}: ${error.message}`)
-				.join("; ");
+			// Most routes answer with errors; some answer a validation error
+			// (Zod's issues) instead.
+			const said = [
+				...(json.errors ?? []).map(
+					(error) => `${error.code}: ${error.message}`,
+				),
+				...(json._c?.issues ?? []).map((issue) => issue.message),
+			].join("; ");
 			const denied =
 				reply.status === 403 || /auth/i.test(said)
 					? " The token needs Notifications: Edit, Workers Observability: Edit and Zone Observability: Edit (docs/self-hosting.md, step 2)."
@@ -317,10 +322,9 @@ async function main() {
 			name: `${MARK}${worker}`,
 			policyId,
 			service: worker,
-			// The first time a failure happens, and again when one comes back
-			// after a quiet week.
+			// The first time a failure happens. Cloudflare takes this or a
+			// quiet spell (afterInactivitySeconds), never both.
 			afterOccurrences: 1,
-			afterInactivitySeconds: 7 * 24 * 3600,
 			enabled: true,
 		};
 		const found = automations.find((entry) => entry.service === worker);
