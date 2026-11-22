@@ -75,7 +75,7 @@ FROM cdl_events
 WHERE blob1 = 'snapshot' AND index1 = 'our-street'
   AND timestamp > NOW() - INTERVAL '30' DAY
 GROUP BY day, metric
-ORDER BY day
+ORDER BY toStartOfInterval(timestamp, INTERVAL '1' DAY)
 ```
 
 The metrics: `members`, `members_active_7d`, `members_active_30d`, `items`, `items_lendable`,

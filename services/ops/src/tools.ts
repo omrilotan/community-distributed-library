@@ -183,7 +183,7 @@ export const TOOLS: Tool[] = [
 				   FROM ${DATASET}
 				  WHERE index1 = $slug AND blob1 = 'request'
 				    AND timestamp > NOW() - INTERVAL '1' DAY
-				  GROUP BY route ORDER BY avg_ms DESC LIMIT 5`,
+				  GROUP BY route ORDER BY SUM(double2 * double4) / SUM(double4) DESC LIMIT 5`,
 				{ slug: lib.slug },
 			).catch((error: Error) => ({ unavailable: error.message }));
 			return { ...now, lastDay: { traffic, slowest } };
@@ -347,7 +347,7 @@ export const TOOLS: Tool[] = [
 				   FROM ${DATASET}
 				  WHERE blob1 = 'snapshot' AND timestamp > NOW() - INTERVAL '${days(args.weeks, 8, 13) * 7}' DAY
 				    ${typeof args.slug === "string" ? "AND index1 = $slug" : ""}
-				  GROUP BY library, week, metric ORDER BY library, week, metric`,
+				  GROUP BY library, week, metric ORDER BY index1, toStartOfInterval(timestamp, INTERVAL '7' DAY), blob2`,
 				typeof args.slug === "string" ? { slug: args.slug } : {},
 			),
 	},
@@ -378,7 +378,7 @@ export const TOOLS: Tool[] = [
 				   FROM ${DATASET}
 				  WHERE blob1 = 'snapshot' AND blob2 = $metric
 				    AND timestamp > NOW() - INTERVAL '${span}' DAY
-				  GROUP BY library ORDER BY last DESC`,
+				  GROUP BY library ORDER BY argMax(double3, timestamp) DESC`,
 				{ metric: String(args.metric) },
 			);
 			return rows.map((row) => ({ ...row, change: row.last - row.first }));
@@ -416,7 +416,7 @@ export const TOOLS: Tool[] = [
 				        SUM(CASE WHEN double4 = 1 THEN 1 ELSE 0 END) / SUM(1) AS share_in_full
 				   FROM ${DATASET}
 				  WHERE timestamp > NOW() - INTERVAL '7' DAY
-				  GROUP BY library, kind ORDER BY library, kind`,
+				  GROUP BY library, kind ORDER BY index1, blob1`,
 			).catch((error: Error) => ({ unavailable: error.message }));
 			return {
 				rates: libraries(env).map((lib) => ({
