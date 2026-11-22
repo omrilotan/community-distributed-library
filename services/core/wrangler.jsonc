@@ -51,5 +51,16 @@
     "COVERS_PUBLIC_URL": "http://localhost:8787/v1/covers",
     // Where the contact form's messages go: a person, not a queue.
     "CONTACT_ADDRESS": "library@example.org",
+    // What cdl_events names this library by, and how it samples reads
+    // (src/telemetry.ts). A deploy writes them from the manifest.
+    "LIBRARY": "local",
+    "DEPLOYED_AT": "",
+    "READS_SAMPLE_RATE": "",
+    "SAMPLING_BOOST_UNTIL": "",
   },
+  // Counts for the dashboards and the ops tools, one dataset for every
+  // library (src/telemetry.ts).
+  "analytics_engine_datasets": [
+    { "binding": "EVENTS", "dataset": "cdl_events" },
+  ],
 }

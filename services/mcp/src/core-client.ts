@@ -15,6 +15,8 @@ export function coreClient(env: Env, props: Props, onRevoked?: OnRevoked) {
 		const headers: Record<string, string> = {
 			accept: "application/json",
 			authorization: `Bearer ${props.coreToken}`,
+			// What core counts the call by (core's telemetry.ts).
+			"x-cdl-surface": "mcp",
 		};
 		const request: RequestInit = { method: init.method ?? "GET", headers };
 		if (init.body !== undefined) {

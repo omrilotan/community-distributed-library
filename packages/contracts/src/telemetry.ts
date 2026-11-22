@@ -76,7 +76,11 @@ export async function runJob<T>(
 	db: JobDatabase,
 	job: string,
 	work: () => Promise<T>,
-	options: { quiet?: boolean } = {},
+	options: {
+		quiet?: boolean;
+		/** Told how the run went, to count it elsewhere (core's cdl_events). */
+		onDone?: (outcome: "ok" | "failed", ms: number) => void;
+	} = {},
 ): Promise<T | undefined> {
 	const started = Date.now();
 	const at = Math.floor(started / 1000);
@@ -91,6 +95,7 @@ export async function runJob<T>(
 	}
 	const ms = Date.now() - started;
 	const detail = outcome === "ok" ? summary(result) : null;
+	options.onDone?.(outcome, ms);
 	if (outcome === "failed")
 		log.error("job.failed", { key: job, job, ms }, failure);
 	else if (!options.quiet || busy(result))

@@ -82,4 +82,14 @@ export interface Env {
 	 * again (seal.ts). Without it, a link is shown once.
 	 */
 	INVITE_KEY?: string;
+	/** The cdl_events dataset (telemetry.ts); absent in tests. */
+	EVENTS?: AnalyticsEngineDataset;
+	/** This library's slug, as the manifest names it. */
+	LIBRARY?: string;
+	/** When this version was deployed, ms; every read is counted for an hour after. */
+	DEPLOYED_AT?: string;
+	/** The share of fast successful reads counted, 0 to 1; empty is all. */
+	READS_SAMPLE_RATE?: string;
+	/** An ISO time until which every read is counted, while chasing a problem. */
+	SAMPLING_BOOST_UNTIL?: string;
 }

@@ -38,15 +38,44 @@ export async function clientIp(): Promise<Record<string, string>> {
 	}
 }
 
-export function coreRaw(path: string, init: RequestInit): Promise<Response> {
+/**
+ * What core counts each call by (services/core/src/telemetry.ts): where it
+ * came from, and the visitor's request, so every point one page view makes
+ * is kept or sampled together. Always set here, never taken from a visitor.
+ */
+export const SURFACE_HEADER = "x-cdl-surface";
+export const REQUEST_HEADER = "x-cdl-request";
+
+/** web: the app's pages; api: the REST proxy; webmcp: the page's own tools. */
+export type Surface = "web" | "api" | "webmcp";
+
+async function traced(request: Request, surface: Surface): Promise<Request> {
+	const headers = new Headers(request.headers);
+	headers.set(SURFACE_HEADER, surface);
+	headers.delete(REQUEST_HEADER);
+	try {
+		const ray = (await requestHeaders()).get("cf-ray");
+		if (ray) headers.set(REQUEST_HEADER, ray);
+	} catch {
+		// Outside a request: core makes up its own id.
+	}
+	return new Request(request, { headers });
+}
+
+export function coreRaw(
+	path: string,
+	init: RequestInit,
+	surface: Surface = "web",
+): Promise<Response> {
 	const bindings = env as unknown as CoreEnv;
 	const useBinding = !isDevelopment && Boolean(bindings.CORE);
-	return send(
+	return traced(
 		new Request(
 			new URL(path, useBinding ? "http://cdl-core" : DEV_CORE_URL),
 			init,
 		),
-	);
+		surface,
+	).then(send);
 }
 
 async function send(request: Request): Promise<Response> {
@@ -70,7 +99,7 @@ async function send(request: Request): Promise<Response> {
 
 export async function core<T>(
 	path: string,
-	init: RequestInit & { token?: string | null } = {},
+	init: RequestInit & { token?: string | null; surface?: Surface } = {},
 ): Promise<{ status: number; body: T; headers: Headers }> {
 	const bindings = env as unknown as CoreEnv;
 	const useBinding = !isDevelopment && Boolean(bindings.CORE);
@@ -93,7 +122,7 @@ export async function core<T>(
 		},
 	});
 
-	const response = await send(request);
+	const response = await send(await traced(request, init.surface ?? "web"));
 	// A failing core may answer with plain text; the status still says what
 	// happened, and that is what callers go by.
 	const body =

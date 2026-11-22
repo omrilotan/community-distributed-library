@@ -91,7 +91,12 @@ function checkSampling(where, value, say) {
 		if (!workers.includes(name))
 			say(`${where}.${name} is not a Worker (${workers.join(", ")})`);
 		for (const [kind, rate] of Object.entries(rates ?? {})) {
-			if (kind !== "logs" && kind !== "traces")
+			// core also samples its own counts of ordinary reads (cdl_events).
+			if (
+				kind !== "logs" &&
+				kind !== "traces" &&
+				!(kind === "reads" && name === "core")
+			)
 				say(`${where}.${name}.${kind} must be logs or traces`);
 			if (typeof rate !== "number" || rate < 0 || rate > 1)
 				say(`${where}.${name}.${kind} must be a number from 0 to 1`);
@@ -116,6 +121,12 @@ function vars(service, lib, data) {
 			VAPID_PUBLIC_KEY: lib.vapidPublicKey,
 			COVERS_PUBLIC_URL: images,
 			CONTACT_ADDRESS: lib.address,
+			// cdl_events (services/core/src/telemetry.ts): who, since when,
+			// and how much of the ordinary reads to count.
+			LIBRARY: lib.slug,
+			DEPLOYED_AT: String(Date.now()),
+			READS_SAMPLE_RATE: String(sampling("core", data, lib).reads ?? ""),
+			SAMPLING_BOOST_UNTIL: lib.samplingBoostUntil ?? "",
 		},
 		mcp: { APP_URL: app, SELF_URL: mcp },
 		web: {

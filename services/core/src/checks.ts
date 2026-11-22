@@ -1,6 +1,7 @@
 import { log } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { tallied } from "./tallies.ts";
+import { record } from "./telemetry.ts";
 
 /**
  * Whether the library is quietly wrong (docs/observability-plan.md, 1.4):
@@ -225,6 +226,13 @@ export async function runChecks(
 			value,
 			ok: !failing,
 			failingSince,
+		});
+		record(env, {
+			kind: "check",
+			name: check.name,
+			outcome: failing ? "failed" : "ok",
+			surface: "cron",
+			value,
 		});
 		const fields = { key: check.name, check: check.name, value };
 		if (failing && check.severity === "critical")

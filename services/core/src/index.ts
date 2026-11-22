@@ -6,6 +6,7 @@ import { rehostCovers } from "./covers.ts";
 import type { Env } from "./env.ts";
 import { deliverPending } from "./events.ts";
 import { runChecks } from "./checks.ts";
+import { record, snapshot } from "./telemetry.ts";
 import { allJobs } from "./jobs.ts";
 import { sendHeldNotices, sendPendingEmails } from "./notify.ts";
 import { runReminders } from "./reminders.ts";
@@ -36,7 +37,14 @@ export default {
 			name: string,
 			work: () => Promise<T>,
 			options?: { quiet?: boolean },
-		) => ctx.waitUntil(runJob(env.DB, name, work, options));
+		) =>
+			ctx.waitUntil(
+				runJob(env.DB, name, work, {
+					...options,
+					onDone: (outcome, ms) =>
+						record(env, { kind: "job", name, outcome, surface: "cron", ms }),
+				}),
+			);
 		if (event.cron === "0 8 * * *") job("reminders", () => runReminders(env));
 		if (event.cron === "20 3 * * *") {
 			job("backup", async () => (await backup(env)) ?? { skipped: true });
@@ -46,6 +54,8 @@ export default {
 			}));
 			// Covers that still live on somebody else's server.
 			job("rehost-covers", () => rehostCovers(env));
+			// The day's counts about the library as a community (telemetry.ts).
+			job("snapshot", () => snapshot(env));
 		}
 		if (event.cron !== "* * * * *") return;
 		const quiet = { quiet: true };

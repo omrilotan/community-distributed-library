@@ -3,6 +3,7 @@ import type { EventKind } from "@cdl/contracts";
 import type { Env } from "./env.ts";
 import { ulid, now } from "./ids.ts";
 import { publicTarget } from "./webhook-target.ts";
+import { record } from "./telemetry.ts";
 
 /** Retry schedule in seconds; the fifth miss spends the delivery. */
 const BACKOFF = [60, 900, 3600, 21_600, 86_400];
@@ -48,6 +49,7 @@ export async function emit(
 				now(),
 			)
 			.run();
+		record(env, { kind: "domain", name: kind, outcome: "ok", surface: "api" });
 
 		const hooks = await env.DB.prepare(
 			// Only members still in the community hear what happens in it.

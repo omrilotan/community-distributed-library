@@ -25,11 +25,15 @@ async function proxy(
 	const ip = request.headers.get("cf-connecting-ip");
 	if (ip) headers.set(CLIENT_IP_HEADER, ip);
 	const hasBody = request.method !== "GET" && request.method !== "HEAD";
-	const response = await coreRaw(target, {
-		method: request.method,
-		headers,
-		...(hasBody ? { body: await request.arrayBuffer() } : {}),
-	});
+	const response = await coreRaw(
+		target,
+		{
+			method: request.method,
+			headers,
+			...(hasBody ? { body: await request.arrayBuffer() } : {}),
+		},
+		"api",
+	);
 	// Strip hop-by-hop noise; keep the content type, cache hints, and when a
 	// refused client may try again.
 	const out = new Headers();

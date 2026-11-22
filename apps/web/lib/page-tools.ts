@@ -59,6 +59,7 @@ export function described(tool: Tool) {
 /** Core, as the member whose session this is. */
 export const sessionCall: Call = async (path, init = {}) => {
 	const { status, body } = await core(path, {
+		surface: "webmcp",
 		method: init.method ?? "GET",
 		...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
 	});
@@ -80,15 +81,19 @@ export const sessionUpload: Upload = async (data, contentType) => {
 	const form = new FormData();
 	form.set("file", new File([binary], "cover", { type }), "cover");
 	const token = await sessionToken();
-	const response = await coreRaw("/v1/covers", {
-		method: "POST",
-		headers: {
-			accept: "application/json",
-			...(token ? { authorization: `Bearer ${token}` } : {}),
-			...(await clientIp()),
+	const response = await coreRaw(
+		"/v1/covers",
+		{
+			method: "POST",
+			headers: {
+				accept: "application/json",
+				...(token ? { authorization: `Bearer ${token}` } : {}),
+				...(await clientIp()),
+			},
+			body: form,
 		},
-		body: form,
-	});
+		"webmcp",
+	);
 	return {
 		status: response.status,
 		body: (await response.json().catch(() => ({}))) as { coverUrl?: string },

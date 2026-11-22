@@ -56,8 +56,12 @@ import { privacy } from "./routes-privacy.ts";
 import { reading } from "./routes-reading.ts";
 import { assistantLimits } from "./assistant-limits.ts";
 import { health } from "./health.ts";
+import { requests } from "./telemetry.ts";
 
 export const app = new Hono<{ Bindings: Env }>();
+
+// Every request counted in cdl_events, by its route (telemetry.ts).
+app.use("*", requests());
 
 app.get("/health", (c) => c.json({ ok: true }));
 
