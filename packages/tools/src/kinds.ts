@@ -46,6 +46,13 @@ export const KINDS: Record<string, { kind: Kind; destructive?: boolean }> = {
 	nudge: { kind: "others" },
 	post_loan_message: { kind: "others" },
 
+	// The admin's view of how the library is doing: reads, and checks run
+	// again, which change nothing anybody sees.
+	library_health: { kind: "read" },
+	job_runs: { kind: "read" },
+	delivery_trace: { kind: "read" },
+	library_numbers: { kind: "read" },
+	run_checks: { kind: "read" },
 	// Moderators' tools: they change what the whole library sees.
 	edit_item: { kind: "others", destructive: true },
 	set_item_cover: { kind: "others", destructive: true },

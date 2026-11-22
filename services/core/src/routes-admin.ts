@@ -43,6 +43,9 @@ import { dropStaleHandoffs } from "./stale-handoffs.ts";
 import { onCopyAvailable, releaseHolds } from "./waitlist.ts";
 import { readTexts } from "./library.ts";
 import { resolvePlace } from "./places.ts";
+import * as ops from "./ops.ts";
+import { CHECKS } from "./checks.ts";
+import { snapshotNumbers } from "./telemetry.ts";
 
 export const admin = new Hono<{
 	Bindings: Env;
@@ -342,6 +345,43 @@ admin.get("/v1/admin/members", async (c) => {
 			lastSeenAt: row.last_seen_at,
 		})),
 	});
+});
+
+/**
+ * How the library itself is doing, for its admin (and their assistant):
+ * the same counts the operator's ops MCP reads (ops.ts), for this library
+ * only. Ids, counts and statuses; never another member's words.
+ */
+admin.get("/v1/admin/health", async (c) => {
+	if (!(await libraryAdmin(c))) return json(c, problem(403, "Admins only"));
+	return c.json(await ops.status(c.env));
+});
+
+admin.get("/v1/admin/jobs", async (c) => {
+	if (!(await libraryAdmin(c))) return json(c, problem(403, "Admins only"));
+	const job = c.req.query("job") || null;
+	const days = Math.min(Math.max(Number(c.req.query("days")) || 7, 1), 30);
+	return c.json({ items: await ops.jobRuns(c.env, job, days) });
+});
+
+admin.get("/v1/admin/loans/:id/delivery", async (c) => {
+	if (!(await libraryAdmin(c))) return json(c, problem(403, "Admins only"));
+	const trace = await ops.deliveryTrace(c.env, c.req.param("id"));
+	return trace ? c.json(trace) : json(c, problem(404, "No such loan"));
+});
+
+admin.get("/v1/admin/numbers", async (c) => {
+	if (!(await libraryAdmin(c))) return json(c, problem(403, "Admins only"));
+	return c.json(await snapshotNumbers(c.env));
+});
+
+admin.post("/v1/admin/checks", async (c) => {
+	if (!(await libraryAdmin(c))) return json(c, problem(403, "Admins only"));
+	const body = (await c.req.json().catch(() => ({}))) as { check?: unknown };
+	const name = typeof body.check === "string" ? body.check : undefined;
+	if (name && !CHECKS.some((check) => check.name === name))
+		return json(c, problem(422, "No such check"));
+	return c.json({ items: await ops.runCheck(c.env, name) });
 });
 
 /** The library's settings: the admin's to read and change. */

@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { KINDS, kindOf, memberTools, moderatorTools } from "./index.ts";
+import {
+	KINDS,
+	adminTools,
+	kindOf,
+	memberTools,
+	moderatorTools,
+} from "./index.ts";
 
 const every = (type: "books" | "things") => [
 	...memberTools(type),
 	...moderatorTools(type),
+	...adminTools(type),
 ];
 
 describe.each(["books", "things"] as const)("a library of %s", (type) => {

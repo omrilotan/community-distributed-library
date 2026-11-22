@@ -1,5 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/server";
-import { moderatorTools, type Call, type Tool, type Upload } from "@cdl/tools";
+import {
+	adminTools,
+	moderatorTools,
+	type Call,
+	type Tool,
+	type Upload,
+} from "@cdl/tools";
 import type { Props } from "./env.ts";
 
 type Result = {
@@ -34,7 +40,8 @@ export function offer(
 
 /**
  * What a moderator can do on the website, for their assistant: correct any
- * book and its cover, and keep the tag vocabulary. Registered only for a
+ * book and its cover, and keep the tag vocabulary; and for the library's
+ * admin, how the library is doing (adminTools). Registered only for a
  * grant that carries the admin scope, which the consent screen offers to
  * moderators alone, so a member's assistant never sees these tools. Core
  * checks the moderator role on every call regardless.
@@ -52,5 +59,8 @@ export function registerModeratorTools(
 ): void {
 	if (!props.scopes.includes("admin")) return;
 	for (const tool of moderatorTools(things ? "things" : "books"))
+		offer(server, tool, use);
+	// How the library is doing: core answers its admin alone.
+	for (const tool of adminTools(things ? "things" : "books"))
 		offer(server, tool, use);
 }

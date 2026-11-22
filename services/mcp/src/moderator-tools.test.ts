@@ -55,6 +55,12 @@ describe("moderator tools over MCP", () => {
 				"rename_tag_group",
 				"set_item_cover",
 				"upload_item_cover",
+				// How the library is doing: core answers its admin alone.
+				"library_health",
+				"job_runs",
+				"delivery_trace",
+				"library_numbers",
+				"run_checks",
 			].sort(),
 		);
 	});

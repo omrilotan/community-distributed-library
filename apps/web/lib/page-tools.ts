@@ -2,6 +2,7 @@ import {
 	kindOf,
 	memberTools,
 	moderatorTools,
+	adminTools,
 	type Call,
 	type Tool,
 	type Upload,
@@ -33,6 +34,7 @@ export async function pageTools(): Promise<Tool[] | null> {
 		// keeps its place in the news. Here the pages themselves show it.
 		...memberTools(info.type).filter((tool) => tool.name !== "whats_new"),
 		...(moderator ? moderatorTools(info.type) : []),
+		...(moderator && me.body.role === "admin" ? adminTools(info.type) : []),
 	];
 }
 

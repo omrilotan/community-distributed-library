@@ -258,6 +258,7 @@ export function thingHelpers(locale: "en" | "he") {
 					"לבקש חפץ, לאשר או לדחות בקשות, לשלוח הודעות בהשאלה",
 					"להזכיר בעדינות (פעם ביום)",
 					"למודרטורים: לתקן כל פריט ואת התמונה שלו, ולנהל את הקטגוריות",
+					"למנהלי הספרייה: לבדוק שהספרייה עובדת, לראות אם הגיבויים והתזכורות רצו, לברר למה מישהו לא קיבל הודעה, ולראות את מספרי השבוע",
 				]
 			: [
 					"Search the catalogue and see what is available near you",
@@ -265,6 +266,7 @@ export function thingHelpers(locale: "en" | "he") {
 					"Ask for a thing, answer requests, message on a loan",
 					"Send a gentle reminder (once a day)",
 					"For moderators: correct any item and its photo, and keep the categories",
+					"For the library's admins: check the library is working, see that backups and reminders ran, find out why someone missed a notice, and see the week's numbers",
 				],
 		counterpartSuspendedBody: (name: string) =>
 			he

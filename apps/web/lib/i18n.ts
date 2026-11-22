@@ -1975,6 +1975,7 @@ function helpers(locale: Locale) {
 					"לבקש ספר, לאשר או לדחות בקשות, לשלוח הודעות בהשאלה",
 					"להזכיר בעדינות (פעם ביום)",
 					"למודרטורים: לתקן כל ספר ואת הכריכה שלו, ולנהל את אוצר התגיות",
+					"למנהלי הספרייה: לבדוק שהספרייה עובדת, לראות אם הגיבויים והתזכורות רצו, לברר למה מישהו לא קיבל הודעה, ולראות את מספרי השבוע",
 				]
 			: [
 					"Search the catalogue and see what is available near you",
@@ -1982,6 +1983,7 @@ function helpers(locale: Locale) {
 					"Request a book, answer requests, message on a loan",
 					"Send a gentle reminder (once a day)",
 					"For moderators: correct any book and its cover, and keep the tag vocabulary",
+					"For the library's admins: check the library is working, see that backups and reminders ran, find out why someone missed a notice, and see the week's numbers",
 				],
 		assistantCannot: he
 			? [

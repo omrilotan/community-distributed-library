@@ -249,6 +249,56 @@ const Place = z.object({
 	detail: z.string().nullable(),
 });
 
+/** The library's own health, for its admin (core's ops.ts). Counts only. */
+const CheckRow = z.object({
+	name: z.string(),
+	value: z.number(),
+	previous_value: z.number().nullable(),
+	severity: z.enum(["critical", "warn", "info"]),
+	checked_at: z.number(),
+	failing_since: z.number().nullable(),
+});
+const JobStateItem = z.object({
+	job: z.string(),
+	worker: z.string(),
+	firstAt: z.number(),
+	lastOkAt: z.number().nullable(),
+	lastFailedAt: z.number().nullable(),
+	runs: z.number(),
+	failures: z.number(),
+	late: z.boolean(),
+});
+const LibraryHealthReport = z.object({
+	library: z.string(),
+	deployedAt: z.number().nullable(),
+	ok: z.boolean(),
+	parts: z.record(z.string(), z.enum(["ok", "failing"])),
+	late: z.array(z.string()),
+	checks: z.array(CheckRow),
+	jobs: z.array(JobStateItem),
+	queues: z.record(z.string(), z.number()),
+});
+const JobRun = z.object({
+	job: z.string(),
+	started_at: z.number(),
+	finished_at: z.number(),
+	outcome: z.enum(["ok", "failed"]),
+	detail: z.string().nullable(),
+});
+const DeliveryTrace = z.object({
+	loan: z.record(z.string(), z.unknown()),
+	events: z.array(z.record(z.string(), z.unknown())),
+	heldNotices: z.array(z.record(z.string(), z.unknown())),
+	webhookDeliveries: z.array(z.record(z.string(), z.unknown())),
+});
+const CheckResultItem = z.object({
+	name: z.string(),
+	severity: z.enum(["critical", "warn", "info"]),
+	value: z.number(),
+	ok: z.boolean(),
+	failingSince: z.number().nullable(),
+});
+
 export const ROUTES: readonly Route[] = [
 	// Catalogue
 	{
@@ -1463,6 +1513,56 @@ export const ROUTES: readonly Route[] = [
 			bytes: z.number().int().nonnegative(),
 		}),
 		status: 201,
+	},
+	{
+		method: "get",
+		path: "/v1/admin/health",
+		tag: "Moderator",
+		summary:
+			"How the library is doing: its parts, checks, jobs and delivery queues",
+		access: "library-admin",
+		response: LibraryHealthReport,
+	},
+	{
+		method: "get",
+		path: "/v1/admin/jobs",
+		tag: "Moderator",
+		summary:
+			"The scheduled jobs' recent runs: every daily run and every failure, 30 days",
+		access: "library-admin",
+		query: z.object({
+			job: z.string().optional(),
+			days: z.coerce.number().int().min(1).max(30).optional(),
+		}),
+		response: z.object({ items: z.array(JobRun) }),
+	},
+	{
+		method: "get",
+		path: "/v1/admin/loans/:id/delivery",
+		tag: "Moderator",
+		summary:
+			"One loan's way to the owner's notice and the webhooks: ids, times and statuses",
+		access: "library-admin",
+		response: DeliveryTrace,
+	},
+	{
+		method: "get",
+		path: "/v1/admin/numbers",
+		tag: "Moderator",
+		summary:
+			"The library's numbers now: members, items, loans, requests, answer time",
+		access: "library-admin",
+		response: z.record(z.string(), z.number()),
+	},
+	{
+		method: "post",
+		path: "/v1/admin/checks",
+		tag: "Moderator",
+		summary:
+			"Run the library's checks now (one, or all), each of which should be 0",
+		access: "library-admin",
+		body: z.object({ check: z.string().optional() }),
+		response: z.object({ items: z.array(CheckResultItem) }),
 	},
 	{
 		method: "get",

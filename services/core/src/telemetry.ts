@@ -131,7 +131,10 @@ export function requests(): MiddlewareHandler<{ Bindings: Env }> {
  * the database, never from sampled points: distinct counts cannot be rebuilt
  * from a sample. Counts only.
  */
-export async function snapshot(env: Env, at = Math.floor(Date.now() / 1000)) {
+export async function snapshotNumbers(
+	env: Env,
+	at = Math.floor(Date.now() / 1000),
+): Promise<Record<string, number>> {
 	const DAY = 86_400;
 	const one = async (sql: string, ...values: unknown[]) =>
 		(
@@ -195,6 +198,12 @@ export async function snapshot(env: Env, at = Math.floor(Date.now() / 1000)) {
 			at - 7 * DAY,
 		),
 	};
+	return numbers;
+}
+
+/** The day's numbers, counted into cdl_events (the snapshot job). */
+export async function snapshot(env: Env, at = Math.floor(Date.now() / 1000)) {
+	const numbers = await snapshotNumbers(env, at);
 	for (const [name, value] of Object.entries(numbers))
 		record(env, {
 			kind: "snapshot",
