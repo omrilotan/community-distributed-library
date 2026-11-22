@@ -6,10 +6,10 @@ stock, until someone asks for one. The library is the shared part: a
 catalogue, requests, handoff times picked from both people's week, a record of who holds what, and
 reminders.
 
-![](https://github.com/user-attachments/assets/e9172665-5d60-4f19-84c0-8964d6a620a8)
+[![A street drawn in green ink, with books, a drill and a ladder set out on a bench, under the words "Start one for your street"](apps/landing/site/video/open-a-library-drawn.jpg)](https://community-distributed-library.com/open-a-library)
 
-A minute on what a library is and how to open one for your street; more on
-[Run your own library](https://community-distributed-library.com/open-a-library).
+[Watch the one-minute video](https://community-distributed-library.com/open-a-library) on what a
+library is and how to open one for your street.
 
 What you can do next:
 
