@@ -109,6 +109,10 @@ export default class Stub extends WorkerEntrypoint {
 	closed(loanId, at) {
 		closedThreads.set(loanId, at);
 	}
+	/** convo: its scheduled jobs; none recorded here. */
+	jobs() {
+		return [];
+	}
 	/** When core closed a loan's thread, for tests to read back. */
 	closedAt(loanId) {
 		return closedThreads.get(loanId) ?? null;

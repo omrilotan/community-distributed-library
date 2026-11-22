@@ -1,11 +1,20 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import type { ThreadMessage } from "@cdl/contracts";
+import {
+	DAILY,
+	jobStates,
+	runJob,
+	type JobState,
+	type ThreadMessage,
+} from "@cdl/contracts";
 
 export interface Env {
 	DB: D1Database;
 }
 
 const RETENTION_DAYS = 90;
+
+/** Convo's one job and how long it may go without a good run. */
+const SCHEDULE = { "purge-threads": DAILY };
 const now = () => Math.floor(Date.now() / 1000);
 
 /**
@@ -105,14 +114,25 @@ export default class Convo extends WorkerEntrypoint<Env> {
 	/** Nightly cron: threads whose loan closed more than the retention window ago. */
 	override async scheduled(): Promise<void> {
 		const cutoff = now() - RETENTION_DAYS * 86_400;
-		await this.env.DB.batch([
-			this.env.DB.prepare(
-				"DELETE FROM messages WHERE loan_id IN (SELECT loan_id FROM threads WHERE closed_at < ?)",
-			).bind(cutoff),
-			this.env.DB.prepare("DELETE FROM threads WHERE closed_at < ?").bind(
-				cutoff,
-			),
-		]);
+		await runJob(this.env.DB, "purge-threads", async () => {
+			const [messages, threads] = await this.env.DB.batch([
+				this.env.DB.prepare(
+					"DELETE FROM messages WHERE loan_id IN (SELECT loan_id FROM threads WHERE closed_at < ?)",
+				).bind(cutoff),
+				this.env.DB.prepare("DELETE FROM threads WHERE closed_at < ?").bind(
+					cutoff,
+				),
+			]);
+			return {
+				messages: messages?.meta.changes ?? 0,
+				threads: threads?.meta.changes ?? 0,
+			};
+		});
+	}
+
+	/** Core asks, for the health route and the late-job check. */
+	async jobs(): Promise<JobState[]> {
+		return jobStates(this.env.DB, SCHEDULE);
 	}
 
 	override async fetch(): Promise<Response> {

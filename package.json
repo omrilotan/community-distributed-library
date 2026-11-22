@@ -30,6 +30,7 @@
     "observe": "node scripts/observe.mjs",
     "check:setup": "node scripts/check-setup.mjs",
     "check:libraries": "node scripts/check-libraries.mjs",
+    "probe": "node scripts/probe.mjs",
     "dev:mcp": "wrangler dev -c services/mcp/wrangler.jsonc --port 8788 --inspector-port 9230 --persist-to .wrangler/state --var APP_URL:http://localhost:3000 --var SELF_URL:http://localhost:8788",
     "db:pull": "node scripts/db-pull.mjs"
   },

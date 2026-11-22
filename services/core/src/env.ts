@@ -1,5 +1,6 @@
 import type {
 	Delivery,
+	JobState,
 	MetadataLookup,
 	Message,
 	ThreadMessage,
@@ -54,6 +55,8 @@ export interface ConvoService {
 		via?: string | null,
 	): Promise<ThreadMessage>;
 	closed(loanId: string, closedAt: number): Promise<void>;
+	/** Convo's scheduled jobs, and whether any is late. */
+	jobs(): Promise<JobState[]>;
 }
 
 export interface Env {

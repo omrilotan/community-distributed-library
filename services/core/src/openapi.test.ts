@@ -5,6 +5,8 @@ import { app } from "./app.ts";
 /** Served, but not the API a caller builds on. */
 const UNDOCUMENTED = [
 	"get /health",
+	// For the outside probe, not for clients (health.ts).
+	"get /v1/health",
 	// Development and tests only; it answers 404 elsewhere.
 	"post /v1/dev/library-type",
 	// The description itself.

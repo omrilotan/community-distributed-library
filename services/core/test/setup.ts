@@ -141,6 +141,8 @@ beforeEach(async () => {
 			"DELETE FROM copies WHERE id NOT IN ('01J0KPYA00000000000000000A', '01J0KPYB00000000000000000B')",
 			"DELETE FROM rate_limits",
 			"DELETE FROM contact_messages",
+			"DELETE FROM job_status",
+			"DELETE FROM job_runs",
 			"DELETE FROM cover_cache",
 			"DELETE FROM work_tags",
 			"DELETE FROM work_distinct",

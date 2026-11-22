@@ -2,7 +2,8 @@
 // Set up who hears about trouble, for every library in the manifest: each
 // library's admins get an email when one of its Workers fails; every admin
 // gets one when a shared Worker fails or a certificate has a problem; and the
-// requests that matter most are traced in full. Usage:
+// requests that matter most are traced in full; and GitHub is told which
+// hosts to probe from outside (.github/workflows/probe.yml). Usage:
 //
 //   node scripts/observe.mjs [--email <address>] [--dry-run]
 //
@@ -396,6 +397,28 @@ async function main() {
 	console.log(
 		`\nTo trace one request in full, send the header ${TRACE_HEADER} with the key in ${keyFile}.`,
 	);
+
+	// 5. The outside probe (.github/workflows/probe.yml) reads the hosts from
+	// a repository variable, since the manifest is not in git. Optional: it
+	// needs the GitHub CLI, signed in to this repository's fork.
+	console.log("\n━━ The outside probe");
+	const hosts = data.libraries.map((lib) => lib.host).join(",");
+	if (dry) console.log(`  would set CDL_LIBRARY_HOSTS to ${hosts}`);
+	else {
+		const set = spawnSync(
+			"gh",
+			["variable", "set", "CDL_LIBRARY_HOSTS", "--body", hosts],
+			{ cwd: root, encoding: "utf8" },
+		);
+		if (set.status === 0)
+			console.log(
+				`✓ GitHub probes ${data.libraries.length} libraries every 15 minutes`,
+			);
+		else
+			console.log(
+				"! The outside probe is not set up: install the GitHub CLI (gh), run gh auth login, then npm run observe again. Or set the repository variable CDL_LIBRARY_HOSTS to the libraries' hosts.",
+			);
+	}
 	console.log("✓ Alerts and traces are set up.");
 }
 

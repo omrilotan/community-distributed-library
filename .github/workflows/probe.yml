@@ -1,0 +1,67 @@
+name: Probe
+
+# Asks every library, from outside Cloudflare, whether it works: Cloudflare
+# cannot say that Cloudflare is unreachable, nor that a job stopped running
+# altogether. The hosts are the repository variable CDL_LIBRARY_HOSTS, which
+# `npm run observe` sets; without it the probe does nothing. A failure opens
+# an issue (GitHub emails the repository's watchers), and the issue is closed
+# when every library answers again. It only reads: CI never deploys.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    if: vars.CDL_LIBRARY_HOSTS != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Twice, a minute apart, so one dropped request is not an alarm.
+      - id: probe
+        env:
+          CDL_LIBRARY_HOSTS: ${{ vars.CDL_LIBRARY_HOSTS }}
+        run: |
+          node scripts/probe.mjs > first.txt 2>&1 && exit 0
+          sleep 60
+          if node scripts/probe.mjs > result.txt 2>&1; then exit 0; fi
+          cat result.txt
+          {
+            echo "problems<<EOF"
+            cat result.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          exit 1
+      - if: failure() && steps.probe.outputs.problems != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROBLEMS: ${{ steps.probe.outputs.problems }}
+        run: |
+          body="$(printf 'The outside probe found, twice in a row:\n\n```\n%s\n```\n\nRunbook: docs/runbooks/library-down.md\n\n%s' "$PROBLEMS" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
+          open="$(gh issue list --label library-down --state open --json number --jq '.[0].number')"
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "$body"
+          else
+            gh label create library-down --color B60205 --description "The outside probe found a library not working" 2>/dev/null || true
+            gh issue create --title "A library is not working" --label library-down --body "$body"
+          fi
+      - if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for number in $(gh issue list --label library-down --state open --json number --jq '.[].number'); do
+            gh issue close "$number" --comment "Every library answers again, and its jobs run."
+          done

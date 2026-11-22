@@ -54,10 +54,20 @@ import { CLAIMED } from "./sets.ts";
 import { privacy } from "./routes-privacy.ts";
 import { reading } from "./routes-reading.ts";
 import { assistantLimits } from "./assistant-limits.ts";
+import { health } from "./health.ts";
 
 export const app = new Hono<{ Bindings: Env }>();
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+/**
+ * Public, read by the outside probe: whether each part of the library
+ * answers and its jobs run (health.ts). 503 when anything is wrong.
+ */
+app.get("/v1/health", async (c) => {
+	const result = await health(c.env);
+	return c.json(result, result.ok ? 200 : 503, { "cache-control": "no-store" });
+});
 
 /**
  * Development and tests only: switch what the local library lends, so the

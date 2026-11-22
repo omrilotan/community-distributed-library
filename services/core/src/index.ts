@@ -1,9 +1,11 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
+import { reportLate, runJob } from "@cdl/contracts";
 import { app } from "./app.ts";
 import { backup } from "./backup.ts";
 import { rehostCovers } from "./covers.ts";
 import type { Env } from "./env.ts";
 import { deliverPending } from "./events.ts";
+import { allJobs } from "./jobs.ts";
 import { sendHeldNotices, sendPendingEmails } from "./notify.ts";
 import { runReminders } from "./reminders.ts";
 import { redeemConsent, revokeAbandonedConsents } from "./tokens-store.ts";
@@ -24,66 +26,39 @@ export default {
 	/**
 	 * Daily reminders (reminders.ts) and backups; and every minute, the loan
 	 * requests whose owners are due to hear of them (notify.ts), webhook
-	 * retries (events.ts) and the emails that follow an unopened push.
+	 * retries (events.ts) and the emails that follow an unopened push. Each
+	 * job is recorded (jobs.ts), and every 15 minutes a job that has stopped
+	 * running is reported.
 	 */
 	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-		if (event.cron === "0 8 * * *") {
-			ctx.waitUntil(
-				runReminders(env)
-					.then((result) => console.log("[reminders]", JSON.stringify(result)))
-					.catch((error: unknown) =>
-						console.error("[reminders] failed", error),
-					),
-			);
-		}
+		const job = <T>(
+			name: string,
+			work: () => Promise<T>,
+			options?: { quiet?: boolean },
+		) => ctx.waitUntil(runJob(env.DB, name, work, options));
+		if (event.cron === "0 8 * * *") job("reminders", () => runReminders(env));
 		if (event.cron === "20 3 * * *") {
-			ctx.waitUntil(
-				backup(env)
-					.then((result) => console.log("[backup]", JSON.stringify(result)))
-					.catch((error: unknown) => console.error("[backup] failed", error)),
-			);
+			job("backup", async () => (await backup(env)) ?? { skipped: true });
 			// Connections nobody ever collected.
-			ctx.waitUntil(
-				revokeAbandonedConsents(env)
-					.then((n) => {
-						if (n) console.log("[tokens] revoked abandoned consents", n);
-					})
-					.catch((error: unknown) => console.error("[tokens] failed", error)),
-			);
+			job("revoke-consents", async () => ({
+				revoked: await revokeAbandonedConsents(env),
+			}));
 			// Covers that still live on somebody else's server.
-			ctx.waitUntil(
-				rehostCovers(env)
-					.then((result) => {
-						if (result.taken || result.failed)
-							console.log("[covers]", JSON.stringify(result));
-					})
-					.catch((error: unknown) => console.error("[covers] failed", error)),
-			);
+			job("rehost-covers", () => rehostCovers(env));
 		}
-		ctx.waitUntil(
-			deliverPending(env)
-				.then((sent) => {
-					if (sent) console.log("[webhooks] delivered", sent);
-				})
-				.catch((error: unknown) => console.error("[webhooks] failed", error)),
+		if (event.cron !== "* * * * *") return;
+		const quiet = { quiet: true };
+		job(
+			"webhooks",
+			async () => ({ delivered: await deliverPending(env) }),
+			quiet,
 		);
 		// Requests made a few minutes ago and not taken back: now the owner hears.
-		ctx.waitUntil(
-			sendHeldNotices(env)
-				.then((result) => {
-					if (result.sent || result.dropped)
-						console.log("[requests]", JSON.stringify(result));
-				})
-				.catch((error: unknown) => console.error("[requests] failed", error)),
-		);
+		job("held-notices", () => sendHeldNotices(env), quiet);
 		// The email that follows a push nobody picked up.
-		ctx.waitUntil(
-			sendPendingEmails(env)
-				.then((result) => {
-					if (result.sent || result.dropped)
-						console.log("[notify]", JSON.stringify(result));
-				})
-				.catch((error: unknown) => console.error("[notify] failed", error)),
-		);
+		job("emails", () => sendPendingEmails(env), quiet);
+		const minute = new Date(event.scheduledTime).getUTCMinutes();
+		if (minute % 15 === 0)
+			ctx.waitUntil(allJobs(env).then((states) => reportLate(states, "core")));
 	},
 };

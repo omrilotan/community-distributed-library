@@ -19,3 +19,4 @@ export * from "./tags.ts";
 export * from "./library-types.ts";
 export * from "./openapi.ts";
 export * from "./accent.ts";
+export * from "./telemetry.ts";
