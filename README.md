@@ -6,7 +6,7 @@ stock, until someone asks for one. The library is the shared part: a
 catalogue, requests, handoff times picked from both people's week, a record of who holds what, and
 reminders.
 
-https://github.com/user-attachments/assets/e9172665-5d60-4f19-84c0-8964d6a620a8
+![](https://github.com/user-attachments/assets/e9172665-5d60-4f19-84c0-8964d6a620a8)
 
 A minute on what a library is and how to open one for your street; more on
 [Run your own library](https://community-distributed-library.com/open-a-library).
