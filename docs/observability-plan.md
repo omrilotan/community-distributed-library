@@ -511,8 +511,8 @@ after a month: delete any alert that fired without anyone needing to act on it.
   already does Web Push), or a chat webhook?
 - Should moderators see the checks that concern their community (for example `loan_no_handoff`) in
   `/admin/attention`, or are checks operator-only?
-- Is one ops host for the whole fleet right, or should a self-hoster who runs one library get
-  `ops` inside that library's own MCP, behind an operator scope?
+- Is one ops host for the whole fleet right? (Each library's admin now has their own library's
+  view in its MCP; see As built.)
 
 ## As built
 
@@ -546,5 +546,9 @@ observe` sets everything up through the API. So each alert the plan gave a Monit
   destination that `npm run observe` adds to every CDL policy.
 - **The weekly digest** goes from the ops Worker to every admin of every library, through Email
   Sending from the first library's address.
+- **Each library's admin can ask too.** The library's own MCP (and the page's WebMCP tools) offer
+  its admin `library_health`, `job_runs`, `delivery_trace`, `library_numbers` and `run_checks`,
+  over `/v1/admin/*` routes that core answers for the library's admin alone. A self-hoster who
+  runs one library needs no ops MCP; the operator keeps `cdl-ops` for the whole fleet.
 - **Sending Issues to a Claude Code routine** needs a routine of the operator's own, so it is set
   up by hand, as `docs/runbooks/README.md` describes.
