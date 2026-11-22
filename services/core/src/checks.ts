@@ -24,6 +24,8 @@ export interface Check {
 	twice?: boolean;
 	/** What it means for members, in one line (the runbook says more). */
 	means: string;
+	/** Its page under docs/runbooks/. */
+	runbook: string;
 	count(env: Env, at: number): Promise<number>;
 }
 
@@ -44,12 +46,14 @@ const count = async (
 export const CHECKS: Check[] = [
 	{
 		name: "sign_in_mail_failing",
+		runbook: "sign-in-mail-failing.md",
 		severity: "critical",
 		means: "Members asking to sign in are not getting the email.",
 		count: (env) => tallied(env, "sign_in_mail_failed", 1),
 	},
 	{
 		name: "emails_stuck",
+		runbook: "emails-stuck.md",
 		severity: "critical",
 		twice: true,
 		means: "Follow-up emails are waiting past their time and not going.",
@@ -62,6 +66,7 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "held_notices_stuck",
+		runbook: "held-notices-stuck.md",
 		severity: "critical",
 		twice: true,
 		means: "Owners are not hearing about loan requests.",
@@ -74,6 +79,7 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "backup_missing",
+		runbook: "backup-missing.md",
 		severity: "critical",
 		means: "Last night's database snapshot is not in the backups bucket.",
 		count: async (env, at) => {
@@ -96,12 +102,14 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "emails_given_up",
+		runbook: "delivery-degraded.md",
 		severity: "warn",
 		means: "Some emails were given up after five tries, in the last day.",
 		count: (env) => tallied(env, "email_given_up", 24),
 	},
 	{
 		name: "webhooks_failing",
+		runbook: "delivery-degraded.md",
 		severity: "warn",
 		means: "Webhook deliveries failed for good in the last day.",
 		count: (env, at) =>
@@ -113,6 +121,7 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "copy_loan_mismatch",
+		runbook: "data-drift.md",
 		severity: "warn",
 		means:
 			"A copy's state disagrees with its loans: on loan with no loan, or shelved while lent.",
@@ -131,6 +140,7 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "loan_no_handoff",
+		runbook: "data-drift.md",
 		severity: "warn",
 		means: "Loans agreed two weeks ago still have no handover proposed.",
 		count: (env, at) =>
@@ -144,6 +154,7 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "tokens_abandoned",
+		runbook: "job-missed.md",
 		severity: "warn",
 		means: "Assistant connections nobody collected are not being revoked.",
 		count: (env, at) =>
@@ -158,6 +169,7 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "covers_external",
+		runbook: "job-missed.md",
 		severity: "warn",
 		means: "Covers older than two days still live on another site.",
 		count: (env, at) =>
@@ -172,12 +184,14 @@ export const CHECKS: Check[] = [
 	},
 	{
 		name: "push_gone",
+		runbook: "delivery-degraded.md",
 		severity: "info",
 		means: "Browsers threw away push subscriptions in the last day.",
 		count: (env) => tallied(env, "push_gone", 24),
 	},
 	{
 		name: "threads_past_purge",
+		runbook: "threads-past-purge.md",
 		severity: "critical",
 		means:
 			"Loan conversations are kept past the 90 days members were promised.",
@@ -236,7 +250,11 @@ export async function runChecks(
 		});
 		const fields = { key: check.name, check: check.name, value };
 		if (failing && check.severity === "critical")
-			log.error("check.failed", { ...fields, means: check.means });
+			log.error("check.failed", {
+				...fields,
+				means: check.means,
+				runbook: `docs/runbooks/${check.runbook}`,
+			});
 		else if (failing && check.severity === "warn")
 			log.warn("check.failed", fields);
 		else if (failing) log.info("check.failed", fields);

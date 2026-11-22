@@ -61,6 +61,7 @@ export const EVERY_MINUTE = 10 * MINUTE;
 export const DAILY = 26 * HOUR;
 
 const KEEP_RUNS = 30 * 24 * HOUR;
+const RUNBOOK = "docs/runbooks/job-missed.md";
 const seconds = () => Math.floor(Date.now() / 1000);
 
 /**
@@ -97,7 +98,7 @@ export async function runJob<T>(
 	const detail = outcome === "ok" ? summary(result) : null;
 	options.onDone?.(outcome, ms);
 	if (outcome === "failed")
-		log.error("job.failed", { key: job, job, ms }, failure);
+		log.error("job.failed", { key: job, job, ms, runbook: RUNBOOK }, failure);
 	else if (!options.quiet || busy(result))
 		log.info("job.ran", { job, ms, result: detail });
 
@@ -204,6 +205,7 @@ export function reportLate(states: JobState[], where: string): void {
 			job: state.job,
 			worker: where,
 			lastOkAt: state.lastOkAt,
+			runbook: RUNBOOK,
 		});
 }
 
