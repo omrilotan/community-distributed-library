@@ -197,6 +197,30 @@ A member who wants to be told without asking gives their assistant a scheduled t
 - **Languages.** English and Hebrew, chosen per library. CSS uses logical properties only, so one
   layout serves both directions (`packages/design/frontend-conventions.md`).
 
+## Expectations
+
+Every change to what a library does for someone ships with an expectation (skill:
+production-expectations). [docs/expectations.md](docs/expectations.md) is the record.
+
+- They live in: `services/core/src/checks.ts`, one count that should be 0 each.
+- They run: every 15 minutes per library, from core's every-minute cron (`runChecks`).
+- A failure goes to: a critical check logs `check.failed <name>` → Workers Issues → the ops relay
+  → email to the library's admins and the operator. Others go to the weekly digest.
+- Owner: not decided (proposed: the operator).
+- The record: `docs/expectations.md`. Incident records: `docs/incidents/`, not in git.
+- Never in git: library slugs and hosts, Worker names, production ids (Issue, version, trace,
+  ray) and anything about a requester. The repo is public; these go in the incident record.
+- Release ids and times come from: the Worker version id (`version` in every log event) and
+  **Workers & Pages → Deployments**.
+- Switches: none but the release; roll the Worker back.
+- An alert is acknowledged by: its Workers Issue staying open (it emails on the first occurrence
+  only); resolving it re-arms it.
+- The owner looks first at: not decided (proposed: the operator's inbox).
+- On call: nobody. An agent does only what `docs/runbooks/README.md` (Bounds) allows.
+- Never stored or logged: names, emails, meeting places, message text, search terms. Ids and counts
+  only; member ids hashed per library.
+- Not set up yet: an owner; first runs recorded by hand; a way to acknowledge in the ops store.
+
 ## Status
 
 Built: invite-only sign-in (links to share or scan, and one-day event links with a printable sign),

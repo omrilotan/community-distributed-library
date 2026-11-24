@@ -31,3 +31,5 @@ wrangler.*.json
 libraries.json
 # TypeScript build caches
 *.tsbuildinfo
+# Incident records name hosts, Workers and request ids; kept on this machine only
+docs/incidents/

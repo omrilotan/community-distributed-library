@@ -21,6 +21,25 @@ in this repository to find and fix the cause.
 Every error a Worker logs names its runbook in the `runbook` field, so the Issue's diagnostic
 context points here.
 
+## Bounds
+
+What an agent that an alert reaches may do on its own, for every alert unless its runbook says
+otherwise. Proposed on 2026-11-24 ([../expectations.md](../expectations.md)); the owner widens them
+as repairs prove right. An agent never widens them itself, and never edits the check that alerted
+it.
+
+- **Alone:** what the runbook's "Safe now" lists; roll back the one Worker whose release the
+  evidence names; re-run a job or a check; read logs, traces and counts; open a draft PR with a
+  test that fails without the fix; write the incident record.
+- **Ask first:** deploy anything; change production data (prepare a script that lists by default
+  and writes only when told); anything that cannot be undone.
+- **Bring a person in:** still failing after one repair; no evidence explains it; a critical check
+  still rising.
+
+Nobody is on call. Alerts are email, read when the operator and admins look. An incident record
+goes in `docs/incidents/`, one file each, on this machine only (git ignores it); prepared code goes
+on a branch.
+
 ## Looking at a library
 
 Most first looks are a query against one library's database. With the token loaded
