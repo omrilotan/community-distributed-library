@@ -16,9 +16,7 @@ describe("distanceM", () => {
 	});
 
 	it("is symmetric", () => {
-		expect(distanceM(churchEnd, northElm)).toBe(
-			distanceM(northElm, churchEnd),
-		);
+		expect(distanceM(churchEnd, northElm)).toBe(distanceM(northElm, churchEnd));
 	});
 });
 
