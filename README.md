@@ -206,7 +206,7 @@ production-expectations). [docs/expectations.md](docs/expectations.md) is the re
 - They run: every 15 minutes per library, from core's every-minute cron (`runChecks`).
 - A failure goes to: a critical check logs `check.failed <name>` → Workers Issues → the ops relay
   → email to the library's admins and the operator. Others go to the weekly digest.
-- Owner: not decided (proposed: the operator).
+- Owner: `owner` in the manifest (`libraries.json`, not in git), told of every failure by email.
 - The record: `docs/expectations.md`. Incident records: `docs/incidents/`, not in git.
 - Never in git: library slugs and hosts, Worker names, production ids (Issue, version, trace,
   ray) and anything about a requester. The repo is public; these go in the incident record.
@@ -215,11 +215,11 @@ production-expectations). [docs/expectations.md](docs/expectations.md) is the re
 - Switches: none but the release; roll the Worker back.
 - An alert is acknowledged by: its Workers Issue staying open (it emails on the first occurrence
   only); resolving it re-arms it.
-- The owner looks first at: not decided (proposed: the operator's inbox).
+- The owner looks first at: their inbox (`owner.email`).
 - On call: nobody. An agent does only what `docs/runbooks/README.md` (Bounds) allows.
 - Never stored or logged: names, emails, meeting places, message text, search terms. Ids and counts
   only; member ids hashed per library.
-- Not set up yet: an owner; first runs recorded by hand; a way to acknowledge in the ops store.
+- Not set up yet: first runs recorded by hand; a way to acknowledge in the ops store.
 
 ## Status
 

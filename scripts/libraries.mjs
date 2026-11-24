@@ -13,6 +13,14 @@ import { experimental_readRawConfig } from "wrangler";
 
 export const root = fileURLToPath(new URL("..", import.meta.url));
 
+/**
+ * The address told of every failure in every library: the owner of the
+ * expectations (`owner.email`, docs/expectations.md), or else the one
+ * `scripts/observe.mjs --email` wrote (`alerts.email`). Empty for none.
+ */
+export const operatorEmail = (data) =>
+	(data.owner?.email ?? data.alerts?.email ?? "").trim().toLowerCase();
+
 // Node will not spawn a .cmd without a shell (EINVAL since 20.12), so on
 // Windows run npx's own script under this same node: the command and its
 // leading arguments, to spread into spawn.
@@ -170,6 +178,12 @@ export function manifest(path = manifestPath()) {
 		!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.alerts.email)
 	)
 		say(`alerts.email "${data.alerts.email}" is not an email address`);
+	// Who owns the expectations (docs/expectations.md); optional.
+	if (
+		data.owner !== undefined &&
+		!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.owner?.email ?? "")
+	)
+		say(`owner.email "${data.owner?.email}" is not an email address`);
 	for (const lib of data.libraries) {
 		if (!/^[a-z][a-z0-9-]*$/.test(lib.slug ?? ""))
 			say(`"${lib.slug}" is not a slug`);
@@ -293,8 +307,8 @@ function opsConfig(config, data) {
 			})),
 		),
 		FROM_ADDRESS: data.libraries[0].address,
-		// The operator (scripts/observe.mjs --email), told of every failure.
-		ALERTS_EMAIL: data.alerts?.email ?? "",
+		// The operator, told of every failure.
+		ALERTS_EMAIL: operatorEmail(data),
 	};
 }
 

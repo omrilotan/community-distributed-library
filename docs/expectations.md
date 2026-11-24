@@ -21,8 +21,10 @@ for in its own shape, so nothing was rebuilt:
 
 ## Expectations in force
 
-Each starts from the day of adoption (`change: { release: "adopted 2026-11-24" }`). Owner, bounds
-and `can_wait` are proposals until the owner approves them (`approved_by: "none"`).
+Each starts from the day of adoption (`change: { release: "adopted 2026-11-24" }`). The owner is
+`owner` in the manifest (`libraries.json`, not in git; `libraries.example.json` shows the field),
+decided 2026-11-24. `npm run observe` and the ops Worker's `ALERTS_EMAIL` send them every failure
+by email. Bounds and `can_wait` are proposals until the owner approves them (`approved_by: "none"`).
 
 | Name                   | Means (who is hurt)                                                 | Expected | Every  | Alerts           | can_wait (proposed)        |
 | ---------------------- | ------------------------------------------------------------------- | -------- | ------ | ---------------- | -------------------------- |
@@ -87,18 +89,15 @@ memory`, and `/about` should answer 200 without it.
 
 ## Open decisions
 
-1. **Owner.** Who approves changes to what is wanted? Proposed: the operator who runs the fleet.
-   Every expectation above has `owner: "proposed: operator"`, `approved_by: "none"`.
-2. **On call.** Nobody is on call: alerts are email to the library's admins and the operator, read
+1. **On call.** Nobody is on call: alerts are email to the library's admins and the operator, read
    when they look. With narrow bounds, harm stands until then. Decide what an agent may do alone
    when a critical check keeps rising and nobody answers (proposed: roll back the Worker whose
    release the evidence names, and re-run a job).
-3. **can_wait** per expectation, as proposed in the table.
-4. **Where the owner looks first.** Proposed: the operator's inbox, where the alerts already go.
-5. **Acknowledging an alert.** Issues emails on the first occurrence only, so a failing check does
+2. **can_wait** per expectation, as proposed in the table.
+3. **Acknowledging an alert.** Issues emails on the first occurrence only, so a failing check does
    not repeat by email while its Issue stays open. Resolving the Issue re-arms it. There is no way to
    acknowledge in the ops alert store. Decide whether that is enough.
-6. **A real page answered 404 from memory** cannot be counted from kept data (above). Decide whether
+4. **A real page answered 404 from memory** cannot be counted from kept data (above). Decide whether
    web should report `x-cdl-cache: memory` answers to core as `cdl_events` points, sampled.
-7. **Expectations not yet written**, proposed for later: a member's location is only ever stored
+5. **Expectations not yet written**, proposed for later: a member's location is only ever stored
    snapped (privacy promise); an erased member leaves no personal data behind.

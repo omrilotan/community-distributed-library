@@ -13,9 +13,10 @@
 //
 // Needs CLOUDFLARE_API_TOKEN with Notifications: Edit, Workers Observability:
 // Edit and Zone Observability: Edit (docs/self-hosting.md, step 2), and reads
-// each library's admins from its database. `alerts.email` in the manifest
-// (set with --email) is told about every library as well, for an operator
-// who is not an admin. Addresses are never printed.
+// each library's admins from its database. The manifest's owner
+// (`owner.email`), or else `alerts.email` (set with --email), is told about
+// every library as well, for an operator who is not an admin. Addresses are
+// never printed.
 // See docs/observability-plan.md for what each alert is for.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -28,6 +29,7 @@ import {
 	manifest,
 	manifestPath,
 	npx,
+	operatorEmail,
 	root,
 } from "./libraries.mjs";
 
@@ -228,15 +230,15 @@ async function main() {
 
 	// 1. Who hears: each library's admins hear about their own library; every
 	// admin, of any library, hears about what the libraries share. The
-	// manifest's alerts.email, if any, hears about everything.
+	// manifest's owner (or alerts.email), if any, hears about everything.
 	console.log("\n━━ Who is told");
-	const operator = data.alerts?.email ? [data.alerts.email] : [];
+	const operator = operatorEmail(data) ? [operatorEmail(data)] : [];
 	const told = new Map();
 	for (const lib of data.libraries) {
 		const found = dry && !token ? [] : admins(data, lib.slug);
 		if (found === null)
 			console.log(
-				`! ${lib.slug}: could not read its admins; only alerts.email is told for now.`,
+				`! ${lib.slug}: could not read its admins; only the owner is told for now.`,
 			);
 		told.set(lib.slug, recipients([...operator, ...(found ?? [])]));
 		console.log(`✓ ${lib.slug}: ${count(told.get(lib.slug))}`);

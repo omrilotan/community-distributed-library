@@ -1,6 +1,7 @@
 {
   "$comment": "An example manifest: one library on a made-up domain. Copy it to libraries.json and put your own values in; docs/self-hosting.md says where each one comes from.",
   "accountId": "0123456789abcdef0123456789abcdef",
+  "owner": { "name": "Dana", "email": "dana@example.org" },
   "shared": {
     "metadata": { "databaseId": "00000000-0000-4000-8000-000000000003" },
     "reports": { "host": "reports.example.org", "zone": "example.org" },
