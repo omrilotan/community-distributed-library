@@ -82,10 +82,14 @@ scanner's request for a missing file failed while the 404 page and its layout re
   `cdl_events` does not see web's own answers). Guarded by the route list being read from `app/` at
   build time and by the unit tests. Open decision below.
 - **Switch:** none but the release. Roll `<slug>-web` back to the previous version.
-- **Release:** not released. Not committed on `main`: on branch `fix/404-from-memory`.
-- **First run:** not run (not released). After release, on staging: `curl -sI
-https://<staging host>/.env` should answer 404 with `x-cdl-cache:
-memory`, and `/about` should answer 200 without it.
+- **Release:** commit `551e67c` on `main`. Released to staging first, on 2026-11-24 at 23:59 UTC,
+  then to every library at 00:01 UTC.
+- **First run:** on staging, straight after its release. `/.env`, `/backup.zip` and `/site/.env`
+  answered 404 with `x-cdl-cache: memory`. `/`, `/about`, `/login`, `/robots.txt`, `/favicon.ico`,
+  `/manifest.webmanifest`, `/llms.txt`, `/.well-known/ard.json`, `/sw.js`, `/icon.svg` and
+  `/api/v1/health` answered 200 without it, as they did before the release. Every library answered
+  the same after its own release, and `npm run probe` passed. Not checked: a signed-in member on an
+  unrouted address, and whether the scanner's error has stopped (it needs a scanner to come back).
 
 ## Open decisions
 
