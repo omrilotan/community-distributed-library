@@ -5,7 +5,8 @@
   "description": "The front door of community-distributed-library.com: one static page.",
   "scripts": {
     "build": "node build.mjs",
-    "dev": "npm run build && wrangler dev --port 3001"
+    "dev": "npm run build && wrangler dev --port 3001",
+    "test": "node --test worker.test.js"
   },
   "devDependencies": {
     "@phosphor-icons/core": "^2.1.1",

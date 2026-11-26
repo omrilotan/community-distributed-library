@@ -6,8 +6,9 @@
  * for text/markdown in Accept. The answer varies by Accept either way.
  *
  * A video: the asset server answers a Range request with the whole file, and
- * Safari will not play a video it cannot ask for in parts. So the file comes
- * from the assets whole, and the part asked for goes back as 206.
+ * Safari will not play a video it cannot ask for in parts. So for a Range
+ * request the file comes from the assets whole, and the part asked for goes
+ * back as 206. Without one, the file streams through untouched.
  */
 const TWINS = {
 	"/": "/index.md",
@@ -30,9 +31,18 @@ export default {
 
 		const out = new Headers(whole.headers);
 		out.set("Accept-Ranges", "bytes");
+		// With no range asked for, the file passes through as it comes. Read
+		// whole, it can take seconds, and a visitor who hangs up meanwhile
+		// fails the read ("Network connection lost.").
+		if (!range) {
+			return new Response(request.method === "HEAD" ? null : whole.body, {
+				status: 200,
+				headers: out,
+			});
+		}
 		const body = await whole.arrayBuffer();
 		const size = body.byteLength;
-		const part = range ? bytes(range, size) : undefined;
+		const part = bytes(range, size);
 		const head = request.method === "HEAD";
 
 		if (part === null) {
