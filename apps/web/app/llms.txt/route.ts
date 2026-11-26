@@ -19,13 +19,13 @@ export async function GET(): Promise<Response> {
 
 > A neighbourhood lending library.${about ? ` ${about}` : ""} Members list the ${things} they own; neighbours borrow them and hand them back in person. Invitation only.
 
-The website is for people. If you are an agent acting for a member, use the MCP server or the REST API below rather than the web pages — everything past the front page needs a signed-in member, and the tools can do everything the pages can.
+The website is for people. If you are an AI assistant acting for a member, use the MCP server or the REST API below rather than the web pages — everything past the front page needs a signed-in member, and the tools can do everything the pages can.
 
 ## Connect
 
 - [MCP server](${mcp}): Streamable HTTP. Authorisation is OAuth 2.1 with PKCE and dynamic client registration; the server advertises itself at /.well-known/oauth-protected-resource/mcp. The member signs in and approves your access on a consent screen.
 - [REST API](${site}/api/v1/openapi.json): OpenAPI 3.1. A Bearer token: a personal token a member creates at ${site}/connect. The MCP server's OAuth tokens are for the MCP server only.
-- [auth.md](${site}/auth.md): how an agent gets access, and why it cannot register anybody.
+- [auth.md](${site}/auth.md): how an AI assistant gets access, and why it cannot register anybody.
 - [MCP Server Card](${site}/.well-known/mcp/server-card.json): the server's name, address and sign-in, before connecting.
 - [API catalogue](${site}/.well-known/api-catalog): both of the above, as an RFC 9727 linkset.
 - [ARD manifest](${site}/.well-known/ard.json): the same two, for Agentic Resource Discovery.

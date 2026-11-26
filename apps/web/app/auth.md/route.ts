@@ -23,17 +23,17 @@ export async function GET(): Promise<Response> {
 
 	const text = `# ${name} auth.md
 
-> How an agent gets access to ${name}, a neighbourhood lending library of ${things}. Invitation only.
+> How an AI assistant gets access to ${name}, a neighbourhood lending library of ${things}. Invitation only.
 
 ## Who this is for
 
-An agent acting for one member of the library, with that member's approval. Every credential acts as that member and nobody else.
+An AI assistant acting for one member of the library, with that member's approval. Every credential acts as that member and nobody else.
 
 ## Registration
 
-Agents cannot register here, for themselves or for a person. There is no registration endpoint, anonymous or verified. A person joins by an invitation from a neighbour, accepted in a browser. If the person you act for is not a member, tell them to ask a member for an invitation.
+AI assistants cannot register here, for themselves or for a person. There is no registration endpoint, anonymous or verified. A person joins by an invitation from a neighbour, accepted in a browser. If the person you act for is not a member, tell them to ask a member for an invitation.
 
-## Access for a member's agent
+## Access for a member's AI assistant
 
 ### OAuth 2.1, for the MCP server
 

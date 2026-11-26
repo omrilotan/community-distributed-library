@@ -126,7 +126,7 @@ test.describe("agents", () => {
 		expect(response.headers()["content-type"]).toContain("text/markdown");
 		const text = await response.text();
 		expect(text.split("\n")[0]).toMatch(/^# .+ auth\.md$/);
-		expect(text).toContain("Agents cannot register here");
+		expect(text).toContain("AI assistants cannot register here");
 		expect(text).toMatch(/\/\.well-known\/oauth-protected-resource\/mcp/);
 		expect(text).toContain("`catalogue:read`");
 	});
