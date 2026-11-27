@@ -51,6 +51,35 @@ const healthy: LibraryStatus = {
 	queues: { emailsOverdue: 0, noticesOverdue: 0 },
 };
 
+/** A KV namespace in memory. */
+function memoryKv() {
+	const store = new Map<string, string>();
+	return {
+		store,
+		get: async (key: string, type?: string | { type?: string }) => {
+			const value = store.get(key);
+			if (value === undefined) return null;
+			const as = typeof type === "string" ? type : type?.type;
+			return as === "json" ? JSON.parse(value) : value;
+		},
+		put: async (key: string, value: string) => void store.set(key, value),
+		delete: async (key: string) => void store.delete(key),
+		list: async ({ prefix = "" }: { prefix?: string } = {}) => ({
+			keys: [...store.keys()]
+				.filter((key) => key.startsWith(prefix))
+				.map((name) => ({ name })),
+			list_complete: true,
+		}),
+	};
+}
+
+const allow = { limit: async () => ({ success: true }) };
+const ctx = {
+	waitUntil: () => {},
+	passThroughOnException: () => {},
+	props: {},
+} as unknown as ExecutionContext;
+
 function env(status: LibraryStatus = healthy) {
 	const db = emptyDb();
 	const library = {
@@ -72,7 +101,11 @@ function env(status: LibraryStatus = healthy) {
 				},
 			]),
 			FROM_ADDRESS: "our-street@example.org",
-			OPS_TOKEN: "the operator's key",
+			OPS_TOKEN: "the-operators-key_made-like-ops-dot-key",
+			OAUTH_KV: memoryKv(),
+			SELF_URL: "https://ops.test",
+			REGISTER_LIMIT: allow,
+			SIGNIN_LIMIT: allow,
 			ALERTS_SECRET: "the webhook's key",
 			LIBRARY_OUR_STREET: library,
 		} as unknown as Env,
@@ -100,12 +133,143 @@ describe("the ops MCP", () => {
 					body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
 				}),
 				e,
+				ctx,
 			);
 		expect((await ask()).status).toBe(401);
 		expect((await ask("Bearer a guess")).status).toBe(401);
-		const ok = await ask("Bearer the operator's key");
+		const ok = await ask("Bearer the-operators-key_made-like-ops-dot-key");
 		expect(ok.status).toBe(200);
 		expect(await ok.json()).toEqual({ jsonrpc: "2.0", id: 1, result: {} });
+	});
+
+	it("tells a client where to sign in, and has nothing else to find", async () => {
+		const { env: e } = env();
+		const get = (path: string) =>
+			worker.fetch(new Request(`https://ops.test${path}`), e, ctx);
+		const challenge = (await get("/mcp")).headers.get("www-authenticate");
+		expect(challenge).toContain("resource_metadata=");
+		const resource = await get("/.well-known/oauth-protected-resource/mcp");
+		expect(resource.status).toBe(200);
+		expect(await resource.json()).toMatchObject({
+			resource: "https://ops.test/mcp",
+		});
+		const server = await get("/.well-known/oauth-authorization-server");
+		expect(await server.json()).toMatchObject({
+			registration_endpoint: "https://ops.test/register",
+		});
+		expect((await get("/.well-known/openid-configuration")).status).toBe(404);
+		expect((await get("/anything")).status).toBe(404);
+	});
+
+	it("signs a client in with the operator's key, and with nothing else", async () => {
+		const { env: e } = env();
+		const send = (path: string, init?: RequestInit) =>
+			worker.fetch(new Request(`https://ops.test${path}`, init), e, ctx);
+		const redirect = "https://claude.ai/api/mcp/auth_callback";
+		const client = (await (
+			await send("/register", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					client_name: "Claude",
+					redirect_uris: [redirect],
+					token_endpoint_auth_method: "none",
+				}),
+			})
+		).json()) as { client_id: string };
+
+		const verifier =
+			"a-verifier-that-is-long-enough-to-count-for-pkce-0123456789";
+		const challenge = btoa(
+			String.fromCharCode(
+				...new Uint8Array(
+					await crypto.subtle.digest(
+						"SHA-256",
+						new TextEncoder().encode(verifier),
+					),
+				),
+			),
+		)
+			.replace(/\+/g, "-")
+			.replace(/\//g, "_")
+			.replace(/=+$/, "");
+		const query = new URLSearchParams({
+			response_type: "code",
+			client_id: client.client_id,
+			redirect_uri: redirect,
+			state: "the-state",
+			code_challenge: challenge,
+			code_challenge_method: "S256",
+			resource: "https://ops.test/mcp",
+		});
+		const start = async () => {
+			const page = await send(`/authorize?${query}`);
+			expect(page.status).toBe(200);
+			expect(page.headers.get("x-frame-options")).toBe("DENY");
+			const html = await page.text();
+			expect(html).toContain("Claude");
+			expect(html).toContain("claude.ai");
+			const handle = /name="handle" value="([^"]+)"/.exec(html)![1]!;
+			const cookie = page.headers
+				.getSetCookie()
+				.map((one) => one.split(";")[0])
+				.join("; ");
+			return { handle, cookie };
+		};
+		const post = (
+			{ handle, cookie }: { handle: string; cookie: string },
+			fields: Record<string, string>,
+		) =>
+			send("/authorize", {
+				method: "POST",
+				headers: {
+					cookie,
+					"content-type": "application/x-www-form-urlencoded",
+				},
+				body: new URLSearchParams({ handle, ...fields }),
+				redirect: "manual",
+			});
+
+		const first = await start();
+		expect(
+			(await post(first, { key: "a guess", decision: "allow" })).status,
+		).toBe(401);
+		const signed = await post(first, {
+			key: "the-operators-key_made-like-ops-dot-key",
+			decision: "allow",
+		});
+		expect(signed.status).toBe(302);
+		const back = new URL(signed.headers.get("location")!);
+		expect(back.origin + back.pathname).toBe(redirect);
+		expect(back.searchParams.get("state")).toBe("the-state");
+
+		const tokens = (await (
+			await send("/token", {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					grant_type: "authorization_code",
+					code: back.searchParams.get("code")!,
+					client_id: client.client_id,
+					redirect_uri: redirect,
+					code_verifier: verifier,
+					resource: "https://ops.test/mcp",
+				}),
+			})
+		).json()) as { access_token: string };
+		const ping = await send("/mcp", {
+			method: "POST",
+			headers: { authorization: `Bearer ${tokens.access_token}` },
+			body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
+		});
+		expect(ping.status).toBe(200);
+
+		// Saying no sends the client back with nothing.
+		const denied = await post(await start(), { decision: "deny" });
+		expect(denied.status).toBe(302);
+		expect(
+			new URL(denied.headers.get("location")!).searchParams.get("error"),
+		).toBe("access_denied");
 	});
 
 	it("introduces itself and lists its tools", async () => {

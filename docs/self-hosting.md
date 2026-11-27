@@ -163,12 +163,16 @@ Opening a library also sets up how you hear about trouble, and how to ask about 
   sees 403 from every library. It can't be skipped for one caller, and the WAF's managed rules
   still block the scanners.
 - **Asking.** The ops MCP answers questions about all your libraries: "is anything wrong?", "did
-  every backup run this week?", "which library is growing?". Connect it once:
+  every backup run this week?", "which library is growing?". Connect it once. In Claude Code:
 
   ```sh
   claude mcp add --transport http cdl-ops https://ops.<your domain>/mcp \
     --header "Authorization: Bearer $(cat .keys/ops.key)"
   ```
+
+  In Claude on the web, desktop or mobile, add `https://ops.<your domain>/mcp` as a custom
+  connector (**Settings** > **Connectors**). It opens a sign-in page that asks for the key in
+  `.keys/ops.key`, once.
 
 - **Every Monday**, every admin gets a short email: what is failing, which alerts fired, and the
   week's numbers. A quiet week says so in one line.
