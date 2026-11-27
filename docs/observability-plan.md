@@ -411,8 +411,11 @@ this week?", "why did Dana not get the request email yesterday?", "which library
 database and its two keys, and deploys it. It answers in the terms of the product (a library, a job,
 a check, a loan, an alert), not as log rows.
 
-- **Auth:** operator only. MCP clients send the bearer token in `.keys/ops.key`, which is separate
-  from every member and moderator token. An `admin` scope on a library is not operator access.
+- **Auth:** operator only, by the key in `.keys/ops.key`, which is separate from every member and
+  moderator token. An MCP client sends it as the bearer token, or, if it connects with OAuth
+  (Claude on the web, desktop and mobile), the operator types it once on the ops host's sign-in
+  page (`services/ops/src/signin.ts`) and the client gets a grant. An `admin` scope on a library is
+  not operator access.
 - **Reads from:**
   - `cdl_events`, through the Analytics SQL binding (`ANALYTICS_SQL`), which needs no API token in
     the Worker.
@@ -461,8 +464,8 @@ The first plan for this work had these parts. The code does not have them.
   sets everything up through the API. Each alert that a Monitor was to raise is an error the code
   logs instead, and Issues turns it into an email (1.2, Layer 3). For the same reason there is no
   `docs/monitors/*.sql` and no `scripts/monitors.mjs`.
-- **Cloudflare Access with OAuth on the ops host.** The ops MCP uses a bearer token. There is one
-  operator and one key, and any MCP client that sends a header can use it.
+- **Cloudflare Access on the ops host.** There is one operator and one key: a client sends it as a
+  header, or signs in with it through the ops host's own OAuth.
 - **`/v1/ops/checks`, `/v1/ops/jobs` and `/v1/ops/delivery` in core.** Ops calls core's `Internal`
   entrypoint instead (`opsStatus`, `opsJobRuns` and the others).
 - **Alerts on `cdl_events`.** No alert reads the dataset. There is no 5xx-burst alert (a 5xx

@@ -1,15 +1,19 @@
+import { OAuthProvider } from "@cloudflare/workers-oauth-provider";
 import { log, runJob } from "@cdl/contracts";
 import { sendDigest } from "./digest.ts";
 import { libraries, type Env } from "./env.ts";
+import { same } from "./keys.ts";
 import { isScanner, relay } from "./relay.ts";
+import { signIn } from "./signin.ts";
 import { TOOLS } from "./tools.ts";
 
 /**
  * cdl-ops: the operator's MCP server, for questions about every library
- * (docs/observability-plan.md, layer 4), at ops.<domain>/mcp. Operator only:
- * a bearer token (.keys/ops.key, the OPS_TOKEN secret), never a member's or
- * moderator's. It also keeps the alerts Cloudflare posts to /alerts, and
- * sends the weekly digest on Mondays.
+ * (docs/observability-plan.md, layer 4), at ops.<domain>/mcp. Operator only,
+ * by one key (.keys/ops.key, the OPS_TOKEN secret), never a member's or
+ * moderator's: sent as the bearer token, or typed once on the sign-in page
+ * (src/signin.ts) by a client that connects with OAuth. It also keeps the
+ * alerts Cloudflare posts to /alerts, and sends the weekly digest on Mondays.
  *
  * The MCP is stateless Streamable HTTP: each POST is one JSON-RPC message or
  * a batch, answered with JSON.
@@ -18,18 +22,6 @@ import { TOOLS } from "./tools.ts";
 const PROTOCOL = "2025-06-18";
 const INSTRUCTIONS =
 	"Questions about the community libraries this operator runs. Start with fleet_status. Answers are counts, ids and statuses: no member is ever named. run_check and take_backup change nothing members see, but ask the operator before calling them with confirm: true. For a fix, explain_alert gives the runbook and a prompt for Claude Code in the repository; never deploy.";
-
-/** Equal without saying where they differ. */
-async function same(given: string, wanted: string): Promise<boolean> {
-	const digest = async (value: string) =>
-		new Uint8Array(
-			await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
-		);
-	const [a, b] = await Promise.all([digest(given), digest(wanted)]);
-	let differ = 0;
-	for (let at = 0; at < a.length; at += 1) differ |= a[at]! ^ b[at]!;
-	return differ === 0 && wanted.length > 0;
-}
 
 interface Message {
 	jsonrpc: "2.0";
@@ -172,25 +164,9 @@ async function keepAlert(
 	return new Response(null, { status: 204 });
 }
 
-export default {
-	async fetch(
-		request: Request,
-		env: Env,
-		ctx?: ExecutionContext,
-	): Promise<Response> {
-		const url = new URL(request.url);
-		if (url.pathname === "/alerts" && request.method === "POST")
-			return keepAlert(env, request, ctx);
-		if (url.pathname !== "/mcp")
-			return new Response("cdl-ops: the operator's MCP is at /mcp\n");
-		const bearer = /^Bearer (.+)$/.exec(
-			request.headers.get("authorization") ?? "",
-		)?.[1];
-		if (!bearer || !(await same(bearer, env.OPS_TOKEN ?? "")))
-			return new Response("Operator only", {
-				status: 401,
-				headers: { "www-authenticate": 'Bearer realm="cdl-ops"' },
-			});
+/** Behind the gate: the operator's key, or a grant made with it. */
+const mcpHandler = {
+	async fetch(request: Request, env: Env): Promise<Response> {
 		if (request.method !== "POST")
 			return new Response("POST JSON-RPC here", {
 				status: 405,
@@ -207,6 +183,58 @@ export default {
 		).filter(Boolean);
 		if (!answers.length) return new Response(null, { status: 202 });
 		return Response.json(Array.isArray(body) ? answers : answers[0]);
+	},
+};
+
+/**
+ * One provider per isolate. Its tokens are bound to this Worker's /mcp. The
+ * key itself is not one of its tokens, so the provider asks
+ * resolveExternalToken about it, and a client that sends it as a header
+ * (Claude Code, scripts) gets in as before.
+ */
+let provider: OAuthProvider<Env> | undefined;
+function oauth(env: Env): OAuthProvider<Env> {
+	const resource = `${env.SELF_URL}/mcp`;
+	provider ??= new OAuthProvider<Env>({
+		apiRoute: "/mcp",
+		apiHandler: mcpHandler,
+		defaultHandler: signIn,
+		authorizeEndpoint: "/authorize",
+		tokenEndpoint: "/token",
+		clientRegistrationEndpoint: "/register",
+		resourceMetadata: { resource },
+		resolveExternalToken: async ({ token, env: given }) =>
+			(await same(token, given.OPS_TOKEN ?? ""))
+				? { props: { operator: true }, audience: resource }
+				: null,
+	});
+	return provider;
+}
+
+export default {
+	async fetch(
+		request: Request,
+		env: Env,
+		ctx?: ExecutionContext,
+	): Promise<Response> {
+		const url = new URL(request.url);
+		if (url.pathname === "/alerts" && request.method === "POST")
+			return keepAlert(env, request, ctx);
+		// Registering asks nothing of the caller and writes to storage, so it is
+		// rationed per address: plenty for an assistant, nothing to flood with.
+		if (url.pathname === "/register" && request.method === "POST") {
+			const caller = request.headers.get("cf-connecting-ip") ?? "unknown";
+			const { success } = await env.REGISTER_LIMIT.limit({ key: caller });
+			if (!success)
+				return Response.json(
+					{
+						error: "temporarily_unavailable",
+						error_description: "Too many registrations. Try again in a minute.",
+					},
+					{ status: 429, headers: { "retry-after": "60" } },
+				);
+		}
+		return oauth(env).fetch(request, env, ctx as ExecutionContext);
 	},
 
 	async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {

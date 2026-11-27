@@ -1,3 +1,4 @@
+import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
 import type { JobState } from "@cdl/contracts";
 
 /** What a library's core answers the ops MCP (services/core/src/ops.ts). */
@@ -53,6 +54,15 @@ export interface Env {
 	OPS_TOKEN?: string;
 	/** Secret: what Cloudflare's alert webhook sends in cf-webhook-auth. */
 	ALERTS_SECRET?: string;
+	/** Grants and client registrations of MCP clients that sign in. */
+	OAUTH_KV: KVNamespace;
+	OAUTH_PROVIDER: OAuthHelpers;
+	/** This Worker's public origin: the OAuth resource is its /mcp. */
+	SELF_URL: string;
+	/** Client registrations per caller address (wrangler.jsonc). */
+	REGISTER_LIMIT: RateLimit;
+	/** Tries at the key on the sign-in page, per caller address. */
+	SIGNIN_LIMIT: RateLimit;
 	[binding: string]: unknown;
 }
 

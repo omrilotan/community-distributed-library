@@ -28,6 +28,25 @@
       "migrations_dir": "migrations",
     },
   ],
+  // Grants and client registrations of MCP clients that sign in with the
+  // operator's key (src/signin.ts). Local only; the fleet's comes from the
+  // manifest (shared.ops.oauthKv).
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "00000000000040008000000000000e5a" },
+  ],
+  // Per caller address: client registrations, and tries at the key.
+  "ratelimits": [
+    {
+      "name": "REGISTER_LIMIT",
+      "namespace_id": "1002",
+      "simple": { "limit": 5, "period": 60 },
+    },
+    {
+      "name": "SIGNIN_LIMIT",
+      "namespace_id": "1003",
+      "simple": { "limit": 5, "period": 60 },
+    },
+  ],
   // The cdl_events dataset and Workers Logs, read without an API token.
   "analytics": { "binding": "ANALYTICS_SQL" },
   // The weekly digest, and the failure alerts it relays (src/relay.ts).
@@ -35,6 +54,8 @@
   // Mondays, 08:00 UTC: the weekly digest (src/digest.ts).
   "triggers": { "crons": ["0 8 * * 1"] },
   "vars": {
+    // This Worker's public origin; a deploy writes https://<ops host>.
+    "SELF_URL": "http://localhost:8789",
     // The libraries, as [{ slug, host, binding, sampling }]; a deploy writes it.
     "LIBRARIES": "[]",
     // The digest's sender: an address on a domain that sends (the first library's).

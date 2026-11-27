@@ -9,7 +9,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cdl/contracts": "*"
+    "@cdl/contracts": "*",
+    "@cloudflare/workers-oauth-provider": "^1.2.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261119.1",

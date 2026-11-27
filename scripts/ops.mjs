@@ -9,7 +9,8 @@
 // then npm run observe, so the alerts reach it too. It keeps what it made.
 //
 // Keys, in .keys/ (git ignores it): ops.key is what an MCP client sends as
-// its bearer token; alerts.key is what Cloudflare's alert webhook sends.
+// its bearer token, or what the operator types on its sign-in page;
+// alerts.key is what Cloudflare's alert webhook sends.
 // Neither is ever printed.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -79,9 +80,27 @@ if (!databaseId) {
 	}
 	if (!databaseId) fail("The cdl-ops database is nowhere to be found.");
 }
-data.shared = { ...data.shared, ops: { host, zone, databaseId } };
+// Where the grants of clients that sign in are kept.
+let oauthKv = data.shared?.ops?.oauthKv;
+if (!oauthKv) {
+	const find = () =>
+		JSON.parse(wrangler(["kv", "namespace", "list"]) || "[]").find(
+			(ns) => ns.title === "cdl-ops-oauth",
+		)?.id;
+	oauthKv = find();
+	if (!oauthKv) {
+		if (wrangler(["kv", "namespace", "create", "cdl-ops-oauth"]) === null)
+			fail("Could not make the cdl-ops-oauth namespace.");
+		oauthKv = dry ? "<cdl-ops-oauth id>" : find();
+	}
+	if (!oauthKv) fail("The cdl-ops-oauth namespace is nowhere to be found.");
+}
+data.shared = {
+	...data.shared,
+	ops: { host, zone, databaseId, oauthKv },
+};
 if (!dry) writeFileSync(manifestPath(), `${JSON.stringify(data, null, 2)}\n`);
-console.log(`✓ ${host}, database cdl-ops`);
+console.log(`✓ ${host}, database cdl-ops, namespace cdl-ops-oauth`);
 
 const token = key("ops.key");
 const alerts = key("alerts.key");
@@ -108,5 +127,8 @@ Connect an MCP client (the key is never printed; this reads it):
 
   claude mcp add --transport http cdl-ops https://${host}/mcp \\
     --header "Authorization: Bearer $(cat .keys/ops.key)"
+
+Or add https://${host}/mcp as a custom connector in Claude (web, desktop,
+mobile): it asks for the key once, on a sign-in page.
 
 Then run npm run observe, so every alert reaches it too.`);

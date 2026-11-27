@@ -286,6 +286,13 @@ export const opsBinding = (slug) =>
  * entrypoint (services/core/src/ops.ts), never the public API.
  */
 function opsConfig(config, data) {
+	const ops = data.shared?.ops ?? {};
+	if (!ops.oauthKv) throw new Error("shared.ops.oauthKv is missing");
+	config.kv_namespaces = config.kv_namespaces.map((namespace) =>
+		namespace.binding === "OAUTH_KV"
+			? { ...namespace, id: ops.oauthKv }
+			: namespace,
+	);
 	config.services = data.libraries.map((lib) => ({
 		binding: opsBinding(lib.slug),
 		service: `${lib.slug}-core`,
@@ -306,6 +313,8 @@ function opsConfig(config, data) {
 				),
 			})),
 		),
+		// The OAuth resource is its /mcp (services/ops/src/index.ts).
+		SELF_URL: `https://${ops.host}`,
 		FROM_ADDRESS: data.libraries[0].address,
 		// The operator, told of every failure.
 		ALERTS_EMAIL: operatorEmail(data),
